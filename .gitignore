@@ -1,0 +1,28 @@
+# Generic ignores files
+.idea
+.mypy_cache
+.nox
+.pytest_cache
+dist
+build
+htmlcov
+site
+__pycache__
+*.pyc
+*.egg-info
+.coverage
+.coverage.*
+.ipynb_checkpoints
+.ruff_cache
+.venv
+# Pytest report
+pytest_report.html
+assets
+
+# Dynamic versioning
+**/_version_.py
+
+
+
+# https://github.com/firecow/gitlab-ci-local
+.gitlab-ci-local/

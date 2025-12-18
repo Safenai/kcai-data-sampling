@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=80", "setuptools-scm[simple]>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kcai-dataset"
+version = "0.0.3"
+dynamic = ["dependencies"] #, "version"]
+description = "Splitting strategies package for image datasets"
+authors = [
+  {name = "Safenai", email="support@safenai.io"},   
+  {name = "IRT SystemX", email="support@irt-systemx.fr"},
+]
+
+# license = { text = "SafenAI" }
+license ="Apache-2.0"
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["dataset", "splitting", "machine-learning", "computer-vision", "pytorch"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules"    
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.uv]
+# uv specific settings (optional)
+index-url = "https://pypi.org/simple"
+
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools_scm]
+version_file = "src/kcai_dataset/_version_.py"
+root= "../.."
+
