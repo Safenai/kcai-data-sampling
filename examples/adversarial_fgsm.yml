@@ -1,0 +1,93 @@
+adversarial_pipeline:
+
+  model:
+    # modèle modèle PyTorch (checkpoint .pth) OU TorchScript .pt
+    ckpt_path: "tests/models/resnet18_finetuned_20251003_114314.pt" # modèle initial
+
+    # important : Normalisation attendue par le modèle (appliquée avant l’attaque)
+    # tous paramètres suivants dependent du modèle (si le modèle est enregistré avec des paramètres de normalisation)
+    input_range: [0.0, 1.0]        
+
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]    
+    resize: [224, 224]  # or null to disable       
+
+  dataloader:
+    type: "parquet"
+    path: "tests/data/samples_raw_split_uuid.parquet"
+    batch_size: 256
+    columns:
+      sample_uuid: "sample_uuid"
+      sample_id: "sample_id"
+      sample_type: "sample_type"
+      class_id: "class_id"
+      class_name: "class_name"
+      split: "split"
+      transform_id: "transform_id"
+      file_path: "file_path"
+      image_bytes: "image_bytes"
+      image_source: "image_bytes"    # "image_bytes" ou "file_path"
+
+  # Liste d’attaques (1 ou plusieurs). 
+  # On reprend la sémantique id/alias/level.
+  # on commence à 101 pour les différentes attaques (info: pour les images corrompues, on commence à 1)
+  attacks:
+
+    - id: 101
+      alias: "fgsm"
+      lib: "cleverhans"              # "cleverhans" | "autoattack"
+      name: "FGSM"
+      params: { targeted: false }
+      level_param: "eps"
+      sampling:                      # eps ~ U[2/255, 8/255]
+        mode: uniform
+        range: [0.0078, 0.0314]
+        round: 6
+
+  outputs:
+    image_output:
+      mode: "bytes"
+      file_ext: "png"
+
+    table_output:
+      type: "parquet"
+      path: "data/processed/adversarial.parquet"
+      compression: "snappy"
+      dataset: false
+      #partition_by: ["split", "transform_name"]  
+      existing_data_behavior: "overwrite_or_ignore"
+      max_rows_per_file: 20000
+      max_rows_per_group: 10000
+
+    metrics_output:
+      type: "parquet"
+      path: "data/processed/adversarial/metrics_raw.parquet"
+      compression: "snappy"
+
+    columns:
+      include_source_columns: false
+      ordered_front:
+        - "sample_uuid"
+        - "parent_sample_uuid"
+        - "sample_id"
+        - "sample_type"
+        - "class_id"
+        - "class_name"
+        - "split"
+        - "transform_id"
+        - "transform_name"
+        - "transform_level"
+        - "transform_params"
+        - "image_bytes"
+        - "image_hash"
+
+  run:
+    seed: 123
+    deterministic_ids: true
+    id_pattern: "{base}__{tname}__{level}__{uid}"
+    output_sample_type: "adversarial"
+
+  monitor:
+    log_every_per_level: 200
+    log_on_start: true
+    log_on_finish: true

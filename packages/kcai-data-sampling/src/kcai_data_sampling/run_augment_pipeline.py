@@ -646,13 +646,3 @@ def run_pipeline(cfg: Dict[str, Any]) -> str:
 
     mon.finish_all()
     return table_out_path
-
-if __name__ == "__main__":
-    import argparse
-    
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", required=True, help="Path to augment_pipeline.yaml")
-    args = parser.parse_args()
-    with open(args.config, "r") as f:
-        cfg = yaml.safe_load(f)
-    out_path = run_pipeline(cfg)

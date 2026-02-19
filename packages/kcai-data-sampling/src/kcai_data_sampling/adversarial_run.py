@@ -21,7 +21,7 @@ from cleverhans.torch.attacks.fast_gradient_method import fast_gradient_method  
 from cleverhans.torch.attacks.projected_gradient_descent import projected_gradient_descent # PGD
 from cleverhans.torch.attacks.carlini_wagner_l2 import carlini_wagner_l2         # C&W (L2)
 # AutoAttack / APGD
-from autoattack import AutoAttack
+from pyautoattack import AutoAttack
 
 # def _seed32(*parts, base_seed: int = 0) -> int:
 #     h = hashlib.blake2b(digest_size=8)
@@ -196,11 +196,12 @@ def run_apgd(model, x, y, eps, n_restarts=1):
 def run_pipeline(cfg: Dict[str, Any]) -> str:
     ap = cfg["adversarial_pipeline"]
 
-    # model 
+    # model & préproc
     mcfg = ap["model"]
     resize_hw = mcfg.get("resize")
     mean = mcfg.get("mean", [0.0,0.0,0.0])
     std  = mcfg.get("std",  [1.0,1.0,1.0])
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if device.type == "cuda":
         try:
@@ -276,7 +277,7 @@ def run_pipeline(cfg: Dict[str, Any]) -> str:
 
     attacks = ap["attacks"]
     all_records: List[Dict[str, Any]] = []  # Pour les métriques finales
-    
+
     # Calcul des bornes de clipping dans l'espace normalisé
     # Si input_range est [0,1] et on applique (x - mean) / std :
     # clip_min = (0 - mean) / std, clip_max = (1 - mean) / std
@@ -297,24 +298,24 @@ def run_pipeline(cfg: Dict[str, Any]) -> str:
     n = len(full_df)
     num_batches = (n + batch_size - 1) // batch_size
     total_operations = num_batches * len(attacks)
-    
+
     print(f"\n{'='*60}")
     print(f" --- Starting adversarial pipeline ---")
     print(f" 📊 {n} images | {len(attacks)} attacks | {num_batches} batches")
     print(f" ⚙️  Total: {total_operations} operations")
     print(f"{'='*60}\n")
-    
+
     pbar = tqdm(total=total_operations, desc="Global pipeline", unit="op", ncols=100)
-    
+
     # loop on attacks (for incremental writing)
     for attack_idx, a_cfg in enumerate(attacks):
         alias = a_cfg.get("alias", a_cfg["name"])
         aid = int(a_cfg.get("id", 0))
-        
+
         print(f"\n🎯 Attack {attack_idx+1}/{len(attacks)}: {alias} (id={aid})")
-        
+
         records: List[Dict[str, Any]] = []  # Records for this attack
-        
+
         # loop on batch for this attack
         for start in range(0, n, batch_size):
             part = full_df.iloc[start:start+batch_size]
@@ -371,7 +372,7 @@ def run_pipeline(cfg: Dict[str, Any]) -> str:
                 lr_cw = float(params.get("lr", 5e-3))
                 # C&W expects normalized input and works in the normalized space
                 x_adv_n = run_cw(model, x_in, y, steps=steps, c=c, k=k, lr=lr_cw, clip_min=clip_min, clip_max=clip_max)
-            elif alias.startswith("apgd") and lib == "autoattack":
+            elif alias.startswith("apgd") and lib == "pyautoattack":
                 eps = float(params["eps"])
                 n_restarts = int(params.get("n_restarts", 1))
                 # AutoAttack returns already preprocessed pixels for the model → here it's in the normalized space
@@ -512,13 +513,3 @@ def run_pipeline(cfg: Dict[str, Any]) -> str:
         else: mdf.to_parquet(mp, index=False, compression=mc)
 
     return out["table_output"]["path"]
-
-if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", required=True, help="Path to adversarial_pipeline.yaml")
-    args = parser.parse_args()
-    with open(args.config, "r") as f:
-        cfg = yaml.safe_load(f)
-    out_path = run_pipeline(cfg)
-    print("Wrote:", out_path)

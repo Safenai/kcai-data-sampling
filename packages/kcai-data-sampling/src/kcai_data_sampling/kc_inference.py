@@ -14,7 +14,7 @@ from PIL import Image
 from tqdm import tqdm
 import yaml
 
-from augment_run import _to_tensor_for_model, _normalize_tensor
+from .augment_run import _to_tensor_for_model, _normalize_tensor
 
 
 def _pil_from_bytes(b: bytes) -> Image.Image:
@@ -350,8 +350,4 @@ def main():
     
     print("\nDone!")
     print(f"Output columns: {list(df_out.columns)}")
-
-
-if __name__ == "__main__":
-    main()
 

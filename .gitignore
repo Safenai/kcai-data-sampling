@@ -19,10 +19,15 @@ __pycache__
 pytest_report.html
 assets
 
+# Local data
+data/
+
 # Dynamic versioning
 **/_version_.py
 
 
+# tests outputs
+tests/outputs
 
 # https://github.com/firecow/gitlab-ci-local
 .gitlab-ci-local/

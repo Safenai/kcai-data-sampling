@@ -1,16 +1,13 @@
 # Main dependencies for kc-dataset
-pyarrow>=10.0.0
+pyarrow>=22.0.0
 numpy>=1.20.0
 pillow>=8.0.0
 scikit-learn>=1.0.0
-torch>=1.10.0
+torch>=2.8.0
 ipykernel>=6.29.5
 torchvision>=0.20.1
-
-torch==2.5.1
-torchvision==0.20.1
 captum==0.7.0
-torch_pruning==1.3.7
+torch_pruning>=1.3.7
 tqdm==4.66.5
 click==8.1.7
 pyyaml
@@ -18,8 +15,7 @@ numpy<2
 neural-compressor==3.1.1
 thop
 tabulate
-pyarrow==17.0.0
 albumentations>=2.0.8
-autoattack @ git+https://github.com/fra31/auto-attack.git
-cleverhans @ git+https://github.com/cleverhans-lab/cleverhans.git
+pyautoattack>=0.1.1
+
 boto3>=1.40.51

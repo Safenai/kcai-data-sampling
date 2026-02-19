@@ -1,4 +1,4 @@
-# KC-DATA-SAMPLING
+# KCAI Workspace
 
 ## Installation rapide
 
@@ -8,7 +8,7 @@ source .venv/bin/activate
 uv sync 
 ```
 
-## Lancement
+## KC-DATA-SAMPLING usage
 
 ### 1. Génération d'images augmentées et adversariales
 
@@ -16,12 +16,15 @@ uv sync
 # Images corrompues (augmentations)
 python augment_run.py --config examples/augment_all.yml
 
+
+
 # Images adversariales (FGSM, PGD, C&W, APGD)
 python adversarial_run.py --config examples/adversarial_fgsm.yml
 python adversarial_run.py --config examples/adversarial_all.yml
 ```
 
 **Note**: Ces scripts génèrent maintenant les images **sans inférence**. Les colonnes générées sont :
+
 - `sample_uuid` (nouveau UUID unique)
 - `parent_sample_uuid` (lien vers l'échantillon d'origine)
 - `image_hash` (hash SHA256)

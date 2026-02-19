@@ -1,0 +1,31 @@
+inference:
+  input: "tests/data/samples_raw_split_uuid.parquet"
+  output: "data/inferences/augmented_inference.parquet"
+  image_column: "image_bytes"
+  
+  model:
+    ckpt_path: "tests/models/resnet18_finetuned_20251003_114314.pt" # modèle initial
+    resize: [224, 224]
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+  
+  output_config:
+    mode: "extended"  # Options: label_only, label_prob, top_k, all_probs, logits, extended, full
+    
+    # Column selection: keep only specific columns from input + inference results
+    output_columns:
+      mode: "select"  # Options: "all" (keep all), "select" (keep only these), "exclude" (remove these)
+      columns:
+        - "sample_uuid"
+        - "parent_sample_uuid"
+        - "class_id"
+        - "class_name"
+        - "split"
+        # Add any other columns you want to keep
+    
+    # Custom names for inference columns
+    columns:
+      label: "pred_label"
+      prob: "pred_prob"
+      all_probs: "all_class_probs"
+      logits: "all_class_logits"

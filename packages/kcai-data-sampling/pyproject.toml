@@ -9,18 +9,10 @@ description = "Samples generation utilities managed with uv"
 dynamic = ["dependencies", "version"]
 authors = [
   {name = "Safenai", email="support@safenai.io"},   
-  {name = "IRT SystemX", email="support@irt-systemx.fr"},
 ]
 readme = "README.md"
 requires-python = ">=3.11"
 license ="Apache-2.0"
-
-[tool.pytest.ini_options]
-addopts = "-q"
-
-[tool.ruff]
-line-length = 100
-
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}

@@ -18,7 +18,7 @@ theme:
     logo: material/math-integral-box
     # GitHub specific.
     repo: fontawesome/brands/github
-  favicon: static/math-integral-box.png
+  favicon: assets/favicon.png
   features:
     - content.code.annotate
     - content.code.copy
@@ -50,7 +50,7 @@ markdown_extensions:
           case: lower
   - md_in_html
 extra_css:
-  - static/stylesheets/extra.css
+  - assets/style.css
 extra:
   social:
     - icon: fontawesome/brands/github
@@ -65,12 +65,15 @@ plugins:
           options:
             show_if_no_docstring: true
             show_signature_annotations: true
+  - mkdocs-jupyter:
+      include: ["notebooks/*.ipynb"]
   # Autodoc configuration.
   # https://github.com/tlambert03/mkdocs-api-autonav#configuration
   - api-autonav:
       modules: [
-        "packages/kcai-data-sampling/src/cai-data-sampling/",
-        "packages/kcai-dataset/src/kcai-dataset/",
+        "packages/kcai-data-sampling/src/kcai_data_sampling/",
+        "packages/kcai-dataset/src/kcai_dataset/",
+        "src/kcai_workspace/",
       ]
   # This plugin is used to validate URLs (including anchors).
   - htmlproofer:
@@ -81,11 +84,16 @@ plugins:
 watch:
   # Watch src/ directory to reload on changes to docstrings for mkdocstrings plugin.
   - src
+  - packages
 site_name: KCAI
 copyright: Copyright &copy; SafenAI
 # GitHub Specific Configuration.
 repo_name: kcai-workspace
 repo_url: https://github.com/Safenai/kcai-workspace
-edit_uri: edit/main/docs/user_guide/docs/
+edit_uri: edit/main/docs/
 nav:
-  - index.md
+  - Home: index.md
+  - Tutorials:
+    - Basic Usage: notebooks/1_basic_usage.ipynb
+    - Dataset Management: notebooks/0_dataset.ipynb
+  - API Reference: api/

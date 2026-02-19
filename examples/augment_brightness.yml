@@ -1,0 +1,75 @@
+augment_pipeline:
+  # [OPTIONNEL] Configuration du modèle pour l'inférence
+  # Si absent, pas d'inférence (génération pure d'augmentations)
+  # Si présent, ajoute les colonnes: orig_pred, aug_pred, prediction_changed
+  model:
+    ckpt_path: "tests/models/resnet18_finetuned_20251003_114314.pt"
+    
+    resize: [224, 224]  
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+  dataloader:
+    type: parquet                         
+    path: tests/data/samples_raw_split_uuid.parquet
+    batch_size: 5000                      
+    columns:
+      sample_id: sample_id
+      sample_type: sample_type
+      class_id: class_id
+      class_name: class_name
+      image_bytes: image_bytes            # colonne contenant les bytes d’image
+      image_source: image_bytes           # on lit depuis les bytes (et pas file_path)
+
+  augmentation_pipelines:
+    - name: brightness_only
+      one_transform_per_image: false       # avec UNE seule transfo listée, ça ne change rien ici ;
+                                          # avec false, on aura toutes les transformations samplées sur la même images
+      transforms:
+        - name: RandomBrightnessContrast  # transfo Albumentations
+          id: 1
+          alias: brightness               # sera écrit comme transform_name
+          params: { brightness_limit: 0.0, contrast_limit: 0.0, p: 1.0 } # params de la transformation obligatoire (plaholder)
+                                          #  p=1 => toujours appliquée
+          level_param: brightness_limit   
+          sampling:
+            mode: uniform                 # tirage uniforme
+            range: [-0.30, 0.30]         # δ_b ~ U[-0.30, 0.30] (éclaircir / assombrir)
+            round: 3                     # arrondi à 3 décimales pour le logging/ID
+
+  outputs:
+    image_output:
+      mode: bytes                         
+      file_ext: png                       # les images augmentées sont encodées en PNG puis stockées en bytes
+
+    table_output:
+      type: parquet
+      path: data/augmented_brightness   # racine du dataset Parquet de sortie
+      compression: snappy
+      dataset: true                       # écriture en dataset (partitionné) 
+      #partition_by: ["transform_name", "transform_level"]
+      partition_by: ["transform_name"]    # partitions niveau
+                                          
+      existing_data_behavior: delete_matching #overwrite_or_ignore
+                                          # avant d’écrire, supprime les partitions correspondantes (clean slate)
+      max_rows_per_file: 20000            # shard automatique au-delà de 20k lignes par fichier
+      max_rows_per_group: 10000           # row group ~10k (optimise lecture colonne)
+
+    columns:
+      include_source_columns: false       # sans les colonnes source
+      ordered_front:                      
+        - sample_id
+        - sample_type
+        - class_id
+        - class_name
+        - transform_id   
+        - transform_name
+        - transform_level
+        - transform_params # à enlever
+        - image_bytes
+
+  run:
+    seed: 123                             # pour la reproductibilité
+    deterministic_ids: true               # IDs enfants stables via hash (utile pour “reruns”)
+    id_pattern: "{base}__{tname}__{level}__{uid}" # pour écrie une ID par child 
+                                          # dans les rws de sortie, avoir une ID par child
+    output_sample_type: perturbation      # étiquette logique du type d’échantillon produit

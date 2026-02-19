@@ -100,7 +100,7 @@ def lint(s: Session, command: list[str]) -> None:
 def lint_fix(s: Session) -> None:
     s.run("ruff", "check", "packages/kcai-data-sampling", "--extend-fixable", "F401", "--fix")
     s.run("ruff", "check", "packages/kcai-dataset", "--extend-fixable", "F401", "--fix")
-    )
+
 
 @session(venv_backend="none")
 def type_check(s: Session) -> None:

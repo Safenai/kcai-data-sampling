@@ -5,13 +5,20 @@ requires-python = ">=3.12"
 dependencies = [
     "pre-commit>=4.5.0",
     "pycocotools>=2.0.10",
+    "jupyterlab>=4.0.0",
+    "kcai-data-sampling",
+    "kcai-dataset",
+    "pyautoattack>=0.1.1",
+    "cleverhans @ git+https://github.com/cleverhans-lab/cleverhans.git"
 ]
 
-
 [project.urls]
-Homepage = "TODO"
-Documentation = "TODO"
-Repository = "TODO"
+Homepage = "https://github.com/Safenai/kcai-workspace"
+Documentation = "https://safenai.github.io/kcai-workspace"
+Repository = "https://github.com/Safenai/kcai-workspace"
+
+[project.scripts]
+kcai-cli = "kcai_workspace.cli.main:main"
 
 [build-system]
 requires = ["uv_build>=0.8.0,<0.9.0"]
@@ -24,7 +31,7 @@ kcai-data-sampling = { workspace = true }
 kcai-dataset = { workspace = true }
 
 [tool.uv]
-default-groups = "all"
+default-groups = ["nox", "lint", "type_check"]
 
 [tool.uv.workspace]
 members = ["packages/*"]
@@ -41,6 +48,7 @@ test = [
     "pytest",
     "pytest-cov",
     "pytest-randomly",
+    "ruamel-yaml>=0.19.1",
     # Plugin to generate a HTML report for test results
     "pytest-html",
     # Plugin to show failures and errors instantly, add a progress bar,
@@ -48,7 +56,8 @@ test = [
     "pytest-sugar",
     "pytest-timeout",
     # to download open source datasets
-    "fiftyone"
+    "fiftyone",
+    "strawberry-graphql==0.287.3" # TODO : pinning to avoid deprecated dependency issue with fiftyone
 ]
 
 type_check = [
@@ -69,6 +78,8 @@ docs = [
     "mkdocstrings[python]",
     # Autodoc.
     "mkdocs-api-autonav",
+    "mkdocs-jupyter",
+    "mkdocs-simple-hooks",
 ]
 
 licenses = [
@@ -145,6 +156,7 @@ addopts = [
     "-s",
     #"--log-cli-level=DEBUG",
 ]
+
 xfail_strict = true
 filterwarnings = [
     # When running tests, treat warnings as errors (e.g. -Werror).
@@ -154,6 +166,13 @@ filterwarnings = [
     # is throwing a deprecation warning that needs to be fixed upstream:
     # "ignore::DeprecationWarning:typer",
     "ignore::SyntaxWarning",
+    # Ignore warnings from pytorch
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning:torch.*",
+]
+
+markers = [
+    "slow: Marks tests as slow (deselect with '-m \"not slow\"')",
 ]
 
 [tool.coverage.run]
