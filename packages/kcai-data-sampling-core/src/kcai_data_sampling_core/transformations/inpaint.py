@@ -16,8 +16,8 @@ class Inpaint(UnaryTransformation):
 
     algorithm = "inpaint"
     model_role = "tool"
+    model_methods = ("inpaint",)
     parameters = {"top": None, "left": None, "height": None, "width": None}
-    requires = ("inpaint",)
     reversible = False  # what was in the region is gone; what replaces it is invented
 
     @override

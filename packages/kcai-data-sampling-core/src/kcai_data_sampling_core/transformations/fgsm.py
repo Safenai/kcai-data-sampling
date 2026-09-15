@@ -16,8 +16,8 @@ class FGSM(UnaryTransformation):
 
     algorithm = "fgsm"
     model_role = "target"
+    model_methods = ("grad",)
     parameters = {"epsilon": None}
-    requires = ("grad",)
     reversible = False
 
     @override

@@ -29,11 +29,11 @@ class Transformation:
     #: Set by every algorithm.
     algorithm: str = "?"
 
-    #: None | "tool" | "target", fixes the family and which model slot is required.
+    #: The model, if any: its role, None | "tool" | "target", which fixes the
+    #: family and the slot to fill; and the methods that model must expose
+    #: (see ``api.roles``), checked at construction.
     model_role: str | None = None
-
-    #: The methods the model in that slot must expose (see ``api.roles``).
-    requires: tuple[str, ...] = ()
+    model_methods: tuple[str, ...] = ()
 
     #: The algorithm's parameters: ``None`` for a required one, otherwise its
     #: default. Checked at construction; ``params`` is then always complete,
@@ -83,7 +83,7 @@ class Transformation:
                     f"{getattr(model, 'name', model)!r}, the family is the role of the model"
                 )
         if self.model_role is not None:
-            check_model(self.algorithm, self.model_role, needs[self.model_role], self.requires)
+            check_model(self.algorithm, self.model_role, needs[self.model_role], self.model_methods)
 
     def resolve(self, given: dict[str, Any]) -> dict[str, Any]:
         """The parameters, complete: defaults filled in, a missing required one

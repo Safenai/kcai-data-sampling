@@ -2,8 +2,8 @@
 protocol will do: a target model is the user's, wrapped in a few lines; a
 tool model is chosen by the package (``models/``).
 
-A transformation declares the methods it needs in ``requires``; the base
-class checks them at construction, and ``check_output`` checks what only a
+A transformation declares the methods it needs in ``model_methods``; the
+base class checks them at construction, and ``check_output`` checks what only a
 call can reveal.
 """
 
@@ -34,16 +34,16 @@ class ToolModel(Protocol):
         ...
 
 
-def check_model(algorithm: str, role: str, model: Any, requires: tuple[str, ...]) -> None:
+def check_model(algorithm: str, role: str, model: Any, methods: tuple[str, ...]) -> None:
     """Refuse, at construction, a model that cannot play the role."""
     name = getattr(model, "name", None)
     if not isinstance(name, str) or not name:
         raise ValueError(f"{algorithm}: the {role} model must have a non-empty `name`, the row records it")
-    missing = [m for m in requires if not callable(getattr(model, m, None))]
+    missing = [m for m in methods if not callable(getattr(model, m, None))]
     if missing:
         exposes = sorted(m for m in dir(model) if not m.startswith("_") and callable(getattr(model, m)))
         raise ValueError(
-            f"{algorithm} needs a {role} model exposing {', '.join(requires)}; "
+            f"{algorithm} needs a {role} model exposing {', '.join(methods)}; "
             f"{name!r} lacks {', '.join(missing)} (it exposes {', '.join(exposes) or 'nothing'})"
         )
 
