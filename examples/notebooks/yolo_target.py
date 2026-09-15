@@ -1,4 +1,7 @@
-"""A YOLO detector as a target model. Requires ``ultralytics`` (brings ``torch``)."""
+"""A YOLO detector wrapped as a target model, the way any user would wrap
+their own network: a ``name`` and a ``grad``, nothing from the package but
+its weights cache. Lives with the examples, not in the core. Requires
+``ultralytics`` (brings ``torch``)."""
 
 from pathlib import Path
 

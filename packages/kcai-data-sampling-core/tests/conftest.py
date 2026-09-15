@@ -1,6 +1,8 @@
 """Fixtures: the comma10k sample and YOLOv8n, nothing synthetic. Skipped,
-not faked, when the sample is not fetched or `ultralytics` is not installed."""
+not faked, when the sample is not fetched or a model's package is not installed.
+The target model is the user's, so the tests borrow the notebook's wrapper."""
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -20,8 +22,9 @@ def samples():
 
 @pytest.fixture(scope="session")
 def target():
-    pytest.importorskip("ultralytics", reason="pip install 'kcai-data-sampling-core[yolo]'")
-    from kcai_data_sampling_core.models import YoloTarget
+    pytest.importorskip("ultralytics", reason="pip install 'kcai-data-sampling-core[examples]'")
+    sys.path.insert(0, str(SAMPLE.parents[1] / "notebooks"))
+    from yolo_target import YoloTarget
 
     return YoloTarget()
 

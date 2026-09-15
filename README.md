@@ -9,7 +9,7 @@ Packages for the KCAI data sampling work.
 ## Run it
 
 ```bash
-pip install -e "packages/kcai-data-sampling-core[test,yolo,lama,examples]"
+pip install -e "packages/kcai-data-sampling-core[test,lama,examples]"
 python scripts/fetch_comma10k_sample.py               # ten frames + masks, ~20 MB, git-ignored
 python -m pytest packages/kcai-data-sampling-core -q       # 42 tests, ~2 min
 jupyter lab examples/notebooks/interface_walkthrough.ipynb
@@ -26,6 +26,7 @@ The models' weights (YOLOv8n 6 MB, LaMa 206 MB) download once, into
 | :--- | :--- |
 | [`examples/notebooks/interface_walkthrough.ipynb`](examples/notebooks/interface_walkthrough.ipynb) | the interface end to end on real driving frames, LaMa and YOLOv8n, images before and after each transformation, a region inpainted, a real detector attacked, every output row shown in full, and where the interface stops. Runs on the comma10k sample; **one line switches it to WoodScape** |
 | [`examples/notebooks/display.py`](examples/notebooks/display.py) | the notebook's display helpers, images side by side, detections drawn on, rows as a full table. Presentation only, nothing of the interface |
+| [`examples/notebooks/yolo_target.py`](examples/notebooks/yolo_target.py) | YOLOv8n wrapped as a target model, the way a user wraps their own: `name` and `grad`. Outside the package on purpose |
 | [`scripts/fetch_comma10k_sample.py`](scripts/fetch_comma10k_sample.py) | downloads the ten frames and their masks into `examples/data/comma10k_sample/` |
 
 **WoodScape**, Valeo's fisheye corpus, is also supported (`kcai_data_sampling_core.datasets.woodscape`)

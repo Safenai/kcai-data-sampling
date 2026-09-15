@@ -1,9 +1,8 @@
-"""Model adapters. A tool model is the package's choice (``LamaTool``). A
-target model is the user's: any object satisfying ``api.roles.TargetModel``,
-of which ``YoloTarget`` is one example, kept for the tests and the notebook."""
+"""The package's tool models (``LamaTool``) and their weights cache. Target
+models are the user's and live outside: any object satisfying
+``api.roles.TargetModel`` (``examples/notebooks/yolo_target.py`` is one)."""
 
 from kcai_data_sampling_core.models.lama import LamaTool
 from kcai_data_sampling_core.models.weights import weights_path
-from kcai_data_sampling_core.models.yolo import YoloTarget
 
-__all__ = ["LamaTool", "YoloTarget", "weights_path"]
+__all__ = ["LamaTool", "weights_path"]
