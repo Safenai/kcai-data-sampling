@@ -1,0 +1,25 @@
+[project]
+name = "kcai-data-sampling-job"
+version = "0.0.1"
+description = "Writing the sample generation interface's outputs to disk, and reading them back"
+authors = [
+  {name = "Safenai", email = "support@safenai.io"},
+  {name = "IRT SystemX", email = "support@irt-systemx.fr"},
+]
+license = "Apache-2.0"
+readme = "README.md"
+requires-python = ">=3.10"
+
+dependencies = [
+  "kcai-data-sampling-core",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0"]
+
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

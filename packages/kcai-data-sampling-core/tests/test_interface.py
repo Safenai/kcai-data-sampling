@@ -1,6 +1,5 @@
 """Each test asserts one claim, on the comma10k sample and YOLOv8n."""
 
-import importlib
 import json
 from pathlib import Path
 
@@ -14,12 +13,11 @@ from kcai_data_sampling_core import (
     DataSelection,
     HorizontalFlip,
     Inpaint,
-    Record,
+    Output,
     Sample,
     TransformationRunner,
 )
 from kcai_data_sampling_core.api.unary import UnaryTransformation
-from kcai_data_sampling_core.utils.io import load_image, save_outputs
 
 EPSILON = 4 / 255
 REGION = {"top": 500, "left": 700, "height": 300, "width": 500}
@@ -57,9 +55,9 @@ def test_one_interface_drives_every_family(runner, samples, target, tool):
         FGSM({"target_model": target, "epsilon": EPSILON}),
     ]
     for transformation in three:
-        for x_prime, record in runner.run(transformation, samples[:1]):
-            assert x_prime.shape == samples[0].x.shape
-            assert isinstance(record, Record)
+        for output in runner.run(transformation, samples[:1]):
+            assert output.x.shape == samples[0].x.shape
+            assert isinstance(output, Output)
 
     assert [t.family for t in three] == ["procedural", "generative", "adversarial"]
 
@@ -90,13 +88,13 @@ def test_a_transformation_is_fully_specified(samples):
     b = CropResize({"fraction": 0.4})
     c = CropResize({"fraction": 0.5})
 
-    assert np.array_equal(a.transform(samples[0])[0], b.transform(samples[0])[0])
+    assert np.array_equal(a.transform(samples[0]).x, b.transform(samples[0]).x)
     assert identity(a) == identity(b) != identity(c)
 
 
 def test_a_deterministic_algorithm_carries_no_seed(samples):
     """`seed = None` is an assertion; a seed offered anyway is refused."""
-    _, record = CropResize({"fraction": 0.4}).transform(samples[0])
+    record = CropResize({"fraction": 0.4}).transform(samples[0])
     assert record.seed is None
 
     with pytest.raises(ValueError, match="draws no randomness"):
@@ -107,10 +105,10 @@ def test_a_stochastic_algorithm_is_identified_by_its_seed(samples):
     """The seed is part of the identity exactly when the algorithm draws."""
 
     a, b, c = (Noise({"seed": s, "sigma": 0.01}) for s in (7, 7, 8))
-    assert np.array_equal(a.transform(samples[0])[0], b.transform(samples[0])[0])
+    assert np.array_equal(a.transform(samples[0]).x, b.transform(samples[0]).x)
     assert identity(a) == identity(b) != identity(c)
-    assert not np.array_equal(a.transform(samples[0])[0], c.transform(samples[0])[0])
-    assert a.transform(samples[0])[1].seed == 7
+    assert not np.array_equal(a.transform(samples[0]).x, c.transform(samples[0]).x)
+    assert a.transform(samples[0]).seed == 7
 
 
 def test_apply_is_one_array_operation_on_the_batch(samples):
@@ -130,8 +128,8 @@ def test_the_execution_batch_carries_no_meaning(runner, samples):
         runs = {size: runner.run(transformation, batch_size=size) for size in (None, 1, 2, 3)}
         reference = runs[None]
         for size, results in runs.items():
-            assert [r.parent_id for _, r in results] == [r.parent_id for _, r in reference]
-            assert all(np.array_equal(a, b) for (a, _), (b, _) in zip(results, reference)), size
+            assert [r.parent_id for r in results] == [r.parent_id for r in reference]
+            assert all(np.array_equal(a.x, b.x) for a, b in zip(results, reference)), size
 
 
 def test_an_n_ary_pairs_over_the_selection_not_the_batch(runner, samples):
@@ -139,15 +137,16 @@ def test_an_n_ary_pairs_over_the_selection_not_the_batch(runner, samples):
     runs = {size: runner.run(CutMix(), batch_size=size) for size in (None, 1, 2, 3)}
     reference = runs[None]
     assert len(reference) == len(samples)
-    assert [r.parent_id for _, r in reference] == ["00009_f,00012_f", "00012_f,00026_f", "00026_f,00009_f"]
+    assert [r.parent_id for r in reference] == ["00009_f,00012_f", "00012_f,00026_f", "00026_f,00009_f"]
     for size, results in runs.items():
-        assert [r.parent_id for _, r in results] == [r.parent_id for _, r in reference], size
-        assert all(np.array_equal(a, b) for (a, _), (b, _) in zip(results, reference)), size
-    assert reference[0][1].arity == "n-ary"
+        assert [r.parent_id for r in results] == [r.parent_id for r in reference], size
+        assert all(np.array_equal(a.x, b.x) for a, b in zip(results, reference)), size
+    assert reference[0].arity == "n-ary"
 
 
 def test_cutmix_takes_its_right_part_from_the_second_parent(runner, samples):
-    x_prime, record = runner.run(CutMix(), samples[:2])[0]
+    record = runner.run(CutMix(), samples[:2])[0]
+    x_prime = record.x
     half = x_prime.shape[-1] // 2
     assert np.array_equal(x_prime[..., :half], samples[0].x[..., :half])
     assert np.array_equal(x_prime[..., half:], samples[1].x[..., half:])
@@ -180,7 +179,7 @@ def test_the_annotation_travels_untouched(samples):
     sample = samples[0]
     mask_before = sample.y["mask"].copy()
 
-    _, record = HorizontalFlip().transform(sample)
+    record = HorizontalFlip().transform(sample)
 
     assert np.array_equal(sample.y["mask"], mask_before)
     assert not [f for f in vars(record) if "annotation" in f or "axes" in f]
@@ -191,44 +190,24 @@ def test_the_annotation_travels_untouched(samples):
 
 def test_the_row_carries_no_regime(runner, samples):
     """The regime is a downstream verdict; the row hands the judge `reversible` only."""
-    _, record = runner.run(HorizontalFlip(), samples)[0]
+    record = runner.run(HorizontalFlip(), samples)[0]
     assert not [f for f in vars(record) if "regime" in f or "judge" in f]
     assert record.reversible is True
 
 
 def test_reversibility_is_a_frozen_declaration(runner, samples):
     """Declared by the algorithm, frozen on the row."""
-    _, flip = runner.run(HorizontalFlip(), samples)[0]
-    _, zoom = runner.run(CropResize({"fraction": 0.4}), samples)[0]
+    flip = runner.run(HorizontalFlip(), samples)[0]
+    zoom = runner.run(CropResize({"fraction": 0.4}), samples)[0]
     assert (flip.reversible, zoom.reversible) == (True, False)
     assert HorizontalFlip.reversible and not CropResize.reversible
 
 
-def test_the_row_points_at_its_selection(runner, selection, samples):
-    """By path, plus the parent's id, no copy of the sample, no transform_id."""
-    _, record = runner.run(HorizontalFlip(), samples)[0]
-    assert record.data_selection_path == selection.path and Path(record.data_selection_path).exists()
-    assert record.parent_id == samples[0].id
-    assert not any(f in ("parent_path", "dataset", "transform_id") for f in vars(record))
-
-
-def test_a_selection_is_written_once(tmp_path, samples):
-    """Same content: idempotent. Different content, same name: refused."""
-    same = DataSelection("sel", dataset="comma10k", samples=samples)
-    same.save(tmp_path / "selections")
-    same.save(tmp_path / "selections")
-
-    other = DataSelection("sel", dataset="comma10k", samples=samples[:1])
-    with pytest.raises(FileExistsError, match="written once"):
-        other.save(tmp_path / "selections")
-    assert len(json.loads((tmp_path / "selections" / "sel.json").read_text())["samples"]) == len(samples)
-
-
-def test_an_unsaved_selection_is_refused(samples):
-    """A row references its selection by path, so it must exist on disk first."""
-    unsaved = DataSelection("nowhere", dataset="comma10k", samples=samples)
-    with pytest.raises(ValueError, match="has not been saved"):
-        TransformationRunner(unsaved).run(HorizontalFlip())
+def test_an_output_carries_the_bitmap_and_a_reference_no_path(runner, samples):
+    """In memory: `x` itself and the parent's id. Where anything lands is storage's business."""
+    output = runner.run(HorizontalFlip(), samples)[0]
+    assert output.x.shape == samples[0].x.shape and output.parent_id == samples[0].id
+    assert not [f for f in vars(output) if "path" in f or f in ("parent_path", "dataset", "transform_id")]
 
 
 # ----------------------------------------------------- the same-space contract
@@ -249,14 +228,14 @@ def test_a_unary_transformation_preserves_the_sample_space(samples):
 
 def test_crop_resize_keeps_delta_computable(runner, samples):
     """Resampled back, the crop stays comparable to its parent."""
-    x_prime, _ = runner.run(CropResize({"fraction": 0.4}), samples)[0]
+    x_prime = runner.run(CropResize({"fraction": 0.4}), samples)[0].x
     assert isinstance(delta_linf(samples[0], x_prime), float)
 
 
 def test_the_flip_is_its_own_inverse(samples):
     flip = HorizontalFlip()
-    once, _ = flip.transform(samples[0])
-    twice, _ = flip.transform(Sample("one", once, samples[0].y))
+    once = flip.transform(samples[0]).x
+    twice = flip.transform(Sample("one", once, samples[0].y)).x
     assert np.allclose(twice, samples[0].x)
 
 
@@ -264,7 +243,7 @@ def test_the_flip_is_its_own_inverse(samples):
 
 
 def test_fgsm_stays_within_its_budget(runner, samples, target):
-    x_prime, _ = runner.run(FGSM({"target_model": target, "epsilon": EPSILON}), samples[:1])[0]
+    x_prime = runner.run(FGSM({"target_model": target, "epsilon": EPSILON}), samples[:1])[0].x
     assert delta_linf(samples[0], x_prime) <= EPSILON + 1e-6
 
 
@@ -279,8 +258,8 @@ def test_the_gradient_comes_back_at_the_original_resolution(samples, target):
 
 def test_magnitude_does_not_decide_the_regime(runner, samples, target):
     """A flip moves every pixel and loses nothing; FGSM moves 4/255."""
-    flip = delta_linf(samples[0], runner.run(HorizontalFlip(), samples[:1])[0][0])
-    fgsm = delta_linf(samples[0], runner.run(FGSM({"target_model": target, "epsilon": EPSILON}), samples[:1])[0][0])
+    flip = delta_linf(samples[0], runner.run(HorizontalFlip(), samples[:1])[0].x)
+    fgsm = delta_linf(samples[0], runner.run(FGSM({"target_model": target, "epsilon": EPSILON}), samples[:1])[0].x)
     assert flip > fgsm
 
 
@@ -289,7 +268,8 @@ def test_magnitude_does_not_decide_the_regime(runner, samples, target):
 
 def test_inpaint_touches_only_the_region_and_invents_the_rest(runner, samples, tool):
     """Outside the rectangle, the parent to the pixel; inside, content the model produced."""
-    x_prime, record = runner.run(Inpaint({"tool_model": tool, **REGION}), samples[:1])[0]
+    record = runner.run(Inpaint({"tool_model": tool, **REGION}), samples[:1])[0]
+    x_prime = record.x
     t, l, h, w = (REGION[k] for k in ("top", "left", "height", "width"))
     inside = (slice(None), slice(t, t + h), slice(l, l + w))
     outside = np.ones(x_prime.shape[-2:], dtype=bool)
@@ -307,7 +287,7 @@ def test_model_backed_transformations_are_batch_invariant(runner, samples, targe
     for t in (FGSM({"target_model": target, "epsilon": EPSILON}), Inpaint({"tool_model": tool, **small})):
         together = runner.run(t, samples[:2])
         alone = runner.run(t, samples[:2], batch_size=1)
-        assert all(np.allclose(a, b, atol=1e-5) for (a, _), (b, _) in zip(together, alone)), t.algorithm
+        assert all(np.allclose(a.x, b.x, atol=1e-5) for a, b in zip(together, alone)), t.algorithm
 
 
 # ------------------------------------------------- the target model is the user's
@@ -322,7 +302,8 @@ def test_any_object_that_satisfies_the_role_is_a_target(runner, samples, target)
         def grad(self, xs):
             return target.grad(xs)   # here: someone else's detector, wrapped
 
-    x_prime, record = runner.run(FGSM({"target_model": Mine(), "epsilon": EPSILON}), samples[:1])[0]
+    record = runner.run(FGSM({"target_model": Mine(), "epsilon": EPSILON}), samples[:1])[0]
+    x_prime = record.x
     assert record.target_model == "mine" and record.family == "adversarial"
     assert delta_linf(samples[0], x_prime) <= EPSILON + 1e-6
 
@@ -369,7 +350,7 @@ def test_an_unknown_parameter_is_refused_not_recorded():
 
 def test_the_row_carries_every_parameter_resolved(runner, samples):
     """Defaults are on the row, so two identical runs get one name whatever was written."""
-    _, record = runner.run(CropResize({"fraction": 0.4}), samples[:1])[0]
+    record = runner.run(CropResize({"fraction": 0.4}), samples[:1])[0]
     assert record.params == {"fraction": 0.4, "top": 0, "left": 0}
     assert identity(CropResize({"fraction": 0.4})) == identity(CropResize({"fraction": 0.4, "top": 0}))
 
@@ -379,111 +360,12 @@ def test_the_row_carries_every_parameter_resolved(runner, samples):
 
 def test_the_row_carries_no_measurement(runner, samples):
     """Anything recomputable afterwards is not stored."""
-    _, record = runner.run(HorizontalFlip(), samples)[0]
+    record = runner.run(HorizontalFlip(), samples)[0]
     assert not [f for f in vars(record) if f.startswith(("delta", "psnr", "ssim", "clipped"))]
 
 
 def test_the_row_freezes_what_the_algorithm_declared(runner, samples):
     """A lookup from `algorithm` gives what the class declares now; the row says what ran."""
-    _, record = runner.run(HorizontalFlip(), samples)[0]
+    record = runner.run(HorizontalFlip(), samples)[0]
     assert (record.algorithm, record.family, record.arity, record.reversible) == \
         ("horizontal_flip", "procedural", "unary", True)
-
-
-def test_run_save_reload(tmp_path, runner, selection, samples):
-    rows = save_outputs(tmp_path / "outputs", runner.run(HorizontalFlip(), samples))
-
-    assert len(rows) == len(samples)
-    assert rows[0]["algorithm"] == "horizontal_flip"
-    assert rows[0]["family"] == "procedural"
-    assert rows[0]["tool_model"] is None and rows[0]["target_model"] is None
-    assert rows[0]["seed"] is None
-    assert rows[0]["data_selection_path"] == selection.path
-    assert Path(rows[0]["sample_path"]).name.startswith(f"{selection.name}__{samples[0].id}__horizontal_flip__")
-
-    written = {p.name for p in (tmp_path / "outputs").iterdir()}
-    assert len(written) == len(samples) + 1 and "rows.json" in written  # x′ and the rows, nothing else
-    assert load_image(rows[0]["sample_path"]).shape == samples[0].x.shape
-
-
-def test_rows_json_is_a_ledger_not_a_snapshot(tmp_path, runner, selection, samples):
-    """Two runs in one directory: both sets of rows; a re-run replaces only its own."""
-    save_outputs(tmp_path / "outputs", runner.run(HorizontalFlip(), samples))
-    save_outputs(tmp_path / "outputs", runner.run(CropResize({"fraction": 0.4}), samples))
-    save_outputs(tmp_path / "outputs", runner.run(HorizontalFlip(), samples))  # again
-
-    rows = json.loads((tmp_path / "outputs" / "rows.json").read_text())
-    assert len(rows) == 2 * len(samples)
-    assert sorted({r["algorithm"] for r in rows}) == ["crop_resize", "horizontal_flip"]
-    assert len({r["sample_path"] for r in rows}) == len(rows)
-
-
-def test_two_transformations_of_one_parent_do_not_collide(tmp_path, runner, samples):
-    """Two settings on one parent: two files, two rows."""
-    for fraction in (0.4, 0.5):
-        save_outputs(tmp_path / "outputs", runner.run(CropResize({"fraction": fraction}), samples))
-
-    rows = json.loads((tmp_path / "outputs" / "rows.json").read_text())
-    assert len(rows) == 2 * len(samples)
-    assert len({r["sample_path"] for r in rows}) == len(rows)
-    assert len(list((tmp_path / "outputs").glob("*.png"))) == 2 * len(samples)
-
-
-def test_one_identity_two_outputs_keeps_both(tmp_path, runner, samples):
-    """One identity, two different x′ (non-deterministic kernels): two files,
-    two rows identical in every field but `sample_path`."""
-
-    class Unseeded(UnaryTransformation):   # draws without declaring it, stands in for hardware noise
-        algorithm = "unseeded"
-
-        def apply(self, xs, rngs):
-            return np.clip(xs + np.random.default_rng().normal(0, 0.05, xs.shape), 0, 1)
-
-    for _ in range(2):
-        save_outputs(tmp_path / "outputs", runner.run(Unseeded(), samples[:1]))
-
-    rows = json.loads((tmp_path / "outputs" / "rows.json").read_text())
-    assert len(rows) == 2
-    fields = [{k: v for k, v in r.items() if k != "sample_path"} for r in rows]
-    assert fields[0] == fields[1]
-    assert rows[0]["sample_path"] != rows[1]["sample_path"]
-
-
-def test_a_bit_identical_rerun_is_idempotent(tmp_path, runner, samples):
-    """Same content, same name: one file, one row."""
-    for _ in range(2):
-        save_outputs(tmp_path / "outputs", runner.run(HorizontalFlip(), samples[:1]))
-
-    rows = json.loads((tmp_path / "outputs" / "rows.json").read_text())
-    assert len(rows) == 1
-    assert len([p for p in (tmp_path / "outputs").iterdir() if p.suffix == ".png"]) == 1
-
-
-def test_two_selections_do_not_collide(tmp_path, samples):
-    """The file name carries the selection."""
-    for name in ("one", "two"):
-        sel = DataSelection(name, dataset="comma10k", samples=samples)
-        sel.save(tmp_path / "selections")
-        save_outputs(tmp_path / "outputs", TransformationRunner(sel).run(HorizontalFlip()))
-
-    rows = json.loads((tmp_path / "outputs" / "rows.json").read_text())
-    assert len(rows) == 2 * len(samples)
-    assert {Path(r["sample_path"]).name.split("__")[0] for r in rows} == {"one", "two"}
-
-
-def test_a_row_alone_leads_back_to_x(tmp_path, runner, selection, samples):
-    """From one row and nothing in memory: the selection by path, the parent
-    by id, the reader the selection names, and `x` and its annotation are back."""
-    save_outputs(tmp_path / "outputs", runner.run(HorizontalFlip(), samples))
-    del selection, samples
-
-    row = json.loads((tmp_path / "outputs" / "rows.json").read_text())[1]
-    written = json.loads(Path(row["data_selection_path"]).read_text())
-    entry = next(s for s in written["samples"] if s["id"] == row["parent_id"])
-    reader = importlib.import_module(f"kcai_data_sampling_core.datasets.{written['dataset']}")
-    parent = reader.load_sample(entry["id"], entry["source"])
-    x_prime = load_image(row["sample_path"])
-
-    assert np.allclose(x_prime[..., ::-1], parent.x, atol=1 / 255)   # the flip, undone, is the parent
-    assert "mask" in parent.y
-

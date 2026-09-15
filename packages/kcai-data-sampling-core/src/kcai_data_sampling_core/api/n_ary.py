@@ -15,7 +15,7 @@ batch: pairing inside a batch would make the pairs depend on the batch size.
 
 import numpy as np
 
-from kcai_data_sampling_core.api.record import Record
+from kcai_data_sampling_core.api.output import Output
 from kcai_data_sampling_core.api.selection import Sample
 from kcai_data_sampling_core.api.transformation import Transformation
 
@@ -35,14 +35,11 @@ class NAryTransformation(Transformation):
         ``weights`` is ``(B, n)``. Returns ``(B, *sample)``."""
         raise NotImplementedError
 
-    def transform_batch(self, batch: list[tuple[list[Sample], list[float]]]) -> list[tuple[np.ndarray, Record]]:
+    def transform_batch(self, batch: list[tuple[list[Sample], list[float]]]) -> list[Output]:
         """One batch of parent sets, already chosen over the whole selection."""
         n = len(batch[0][0])
         xs = [np.stack([parents[k].x for parents, _ in batch]) for k in range(n)]
         weights = np.asarray([w for _, w in batch], dtype="float32")
         keys = [",".join(p.id for p in parents) for parents, _ in batch]
         out = np.clip(self.combine(xs, weights, self.rngs(keys)), 0.0, 1.0)
-        return [
-            (x_prime, Record(data_selection_path=None, parent_id=key, **self.describe()))
-            for x_prime, key in zip(out, keys)
-        ]
+        return [Output(x=x_prime, parent_id=key, **self.describe()) for x_prime, key in zip(out, keys)]

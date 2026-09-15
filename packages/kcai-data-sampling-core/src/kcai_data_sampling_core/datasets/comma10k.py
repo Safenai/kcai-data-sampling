@@ -8,7 +8,7 @@ import numpy as np
 from PIL import Image
 
 from kcai_data_sampling_core.api.selection import Sample
-from kcai_data_sampling_core.utils.io import load_image
+from kcai_data_sampling_core.utils.images import load_image
 
 #: The mask's colour code, from the comma10k README.
 CLASSES: dict[str, tuple[int, int, int]] = {

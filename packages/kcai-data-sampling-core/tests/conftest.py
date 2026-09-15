@@ -38,10 +38,8 @@ def tool():
 
 
 @pytest.fixture
-def selection(samples, tmp_path):
-    sel = DataSelection("comma10k-three", dataset="comma10k", samples=samples)
-    sel.save(tmp_path / "selections")
-    return sel
+def selection(samples):
+    return DataSelection("comma10k-three", dataset="comma10k", samples=samples)
 
 
 @pytest.fixture

@@ -11,7 +11,7 @@ annotation.
 from kcai_data_sampling_core.api import (
     DataSelection,
     NAryTransformation,
-    Record,
+    Output,
     Sample,
     TargetModel,
     ToolModel,
@@ -29,7 +29,7 @@ __all__ = [
     "HorizontalFlip",
     "Inpaint",
     "NAryTransformation",
-    "Record",
+    "Output",
     "Sample",
     "TargetModel",
     "ToolModel",

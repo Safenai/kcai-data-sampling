@@ -1,8 +1,6 @@
 """Display helpers for the walkthrough notebook, presentation only.
 Drawing an annotation is the dataset reader's job (`DATASET.overlay`)."""
 
-from dataclasses import asdict
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -51,9 +49,9 @@ def show_detections(panels, vehicles, height=4.0):
     plt.show()
 
 
-def rows_table(records, caption=None):
-    """Output rows as a DataFrame, every column; `None` shown as `, `."""
-    frame = pd.DataFrame([asdict(r) for r in records]).astype(object).fillna(", ")
+def rows_table(outputs, caption=None):
+    """Outputs as a DataFrame, every field but the bitmap; `None` shown as `-`."""
+    frame = pd.DataFrame([o.row() for o in outputs]).astype(object).fillna("-")
     if caption:
         print(caption)
     display(frame)

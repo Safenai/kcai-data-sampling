@@ -2,16 +2,20 @@
 
 Packages for the KCAI data sampling work.
 
+Laid out like `dqm-ml-workspace`: a core that works in memory, and a job package that owns the disk and depends on the core, never the reverse.
+
 | Package | |
 | :--- | :--- |
-| [`kcai-data-sampling-core`](packages/kcai-data-sampling-core) | the sample generation interface: transformations, their families, what one output row carries, and what it leaves to the modules downstream |
+| [`kcai-data-sampling-core`](packages/kcai-data-sampling-core) | the sample generation interface: transformations, their families, what one output carries, and what it leaves to the modules downstream. Nothing in it touches the disk |
+| [`kcai-data-sampling-job`](packages/kcai-data-sampling-job) | `Store`: writes selections and outputs, adds the two path columns, leads back from a row |
 
 ## Run it
 
 ```bash
-pip install -e "packages/kcai-data-sampling-core[test,lama,examples]"
+pip install -e "packages/kcai-data-sampling-core[test,lama,examples]" -e "packages/kcai-data-sampling-job[test]"
 python scripts/fetch_comma10k_sample.py               # ten frames + masks, ~20 MB, git-ignored
-python -m pytest packages/kcai-data-sampling-core -q       # 42 tests, ~2 min
+python -m pytest packages/kcai-data-sampling-core -q       # 33 tests, ~90 s
+python -m pytest packages/kcai-data-sampling-job -q        # 8 tests
 jupyter lab examples/notebooks/interface_walkthrough.ipynb
 ```
 
