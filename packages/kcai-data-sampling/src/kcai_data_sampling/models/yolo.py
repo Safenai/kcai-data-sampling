@@ -1,17 +1,10 @@
 """A YOLO detector as a target model. Requires ``ultralytics`` (brings ``torch``)."""
 
-import os
 from pathlib import Path
 
 import numpy as np
 
-
-def weights_path(name: str = "yolov8n.pt") -> Path:
-    """``$KCAI_WEIGHTS_DIR`` or ``~/.cache/kcai-data-sampling/weights``: never
-    the working directory, where ultralytics would otherwise save."""
-    directory = Path(os.environ.get("KCAI_WEIGHTS_DIR", Path.home() / ".cache" / "kcai-data-sampling" / "weights"))
-    directory.mkdir(parents=True, exist_ok=True)
-    return directory / name
+from kcai_data_sampling.models.weights import weights_path
 
 
 class YoloTarget:

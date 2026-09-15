@@ -9,7 +9,7 @@ annotation.
 """
 
 from kcai_data_sampling.api import DataSelection, NAryTransformation, Record, Sample, Transformation, UnaryTransformation
-from kcai_data_sampling.transformations import FGSM, CropResize, CutMix, HorizontalFlip
+from kcai_data_sampling.transformations import FGSM, CropResize, CutMix, HorizontalFlip, Inpaint
 from kcai_data_sampling.utils import TransformationRunner
 
 __all__ = [
@@ -18,6 +18,7 @@ __all__ = [
     "CutMix",
     "DataSelection",
     "HorizontalFlip",
+    "Inpaint",
     "NAryTransformation",
     "Record",
     "Sample",

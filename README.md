@@ -9,22 +9,22 @@ Packages for the KCAI data sampling work.
 ## Run it
 
 ```bash
-pip install -e "packages/kcai-data-sampling[test,yolo,examples]"
+pip install -e "packages/kcai-data-sampling[test,yolo,lama,examples]"
 python scripts/fetch_comma10k_sample.py               # ten frames + masks, ~20 MB, git-ignored
-python -m pytest packages/kcai-data-sampling -q       # 33 tests, ~30 s
+python -m pytest packages/kcai-data-sampling -q       # 34 tests, ~80 s
 jupyter lab examples/notebooks/interface_walkthrough.ipynb
 ```
 
 The data is ten [comma10k](https://github.com/commaai/comma10k) driving frames
 with their masks, MIT-licensed, fetched into `examples/data/comma10k_sample/`.
-YOLOv8n's 6 MB of weights download once, into
+The models' weights (YOLOv8n 6 MB, LaMa 206 MB) download once, into
 `~/.cache/kcai-data-sampling/weights/` (override with `$KCAI_WEIGHTS_DIR`).
 
 ## Examples
 
 | | |
 | :--- | :--- |
-| [`examples/notebooks/interface_walkthrough.ipynb`](examples/notebooks/interface_walkthrough.ipynb) | the interface end to end on real driving frames and YOLOv8n, images before and after each transformation, a real detector attacked, every output row shown in full, and where the interface stops. Runs on the comma10k sample; **one line switches it to WoodScape** |
+| [`examples/notebooks/interface_walkthrough.ipynb`](examples/notebooks/interface_walkthrough.ipynb) | the interface end to end on real driving frames, LaMa and YOLOv8n, images before and after each transformation, a region inpainted, a real detector attacked, every output row shown in full, and where the interface stops. Runs on the comma10k sample; **one line switches it to WoodScape** |
 | [`examples/notebooks/display.py`](examples/notebooks/display.py) | the notebook's display helpers, images side by side, detections drawn on, rows as a full table. Presentation only, nothing of the interface |
 | [`scripts/fetch_comma10k_sample.py`](scripts/fetch_comma10k_sample.py) | downloads the ten frames and their masks into `examples/data/comma10k_sample/` |
 

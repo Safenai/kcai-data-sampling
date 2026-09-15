@@ -13,6 +13,7 @@ from kcai_data_sampling import (
     CutMix,
     DataSelection,
     HorizontalFlip,
+    Inpaint,
     Record,
     Sample,
     TransformationRunner,
@@ -21,6 +22,7 @@ from kcai_data_sampling.api.unary import UnaryTransformation
 from kcai_data_sampling.utils.io import load_image, save_outputs
 
 EPSILON = 4 / 255
+REGION = {"top": 500, "left": 700, "height": 300, "width": 500}
 
 
 def identity(t):
@@ -35,11 +37,11 @@ def delta_linf(parent, x_prime):
 # --------------------------------------------------------------- the interface
 
 
-def test_one_interface_drives_every_family(runner, samples, target):
+def test_one_interface_drives_every_family(runner, samples, target, tool):
     """The runner never asks what family it is holding."""
     three = [
         HorizontalFlip(),
-        CropResize({"fraction": 0.4}),
+        Inpaint({"tool_model": tool, **REGION}),
         FGSM({"target_model": target, "epsilon": EPSILON}),
     ]
     for transformation in three:
@@ -47,16 +49,17 @@ def test_one_interface_drives_every_family(runner, samples, target):
             assert x_prime.shape == samples[0].x.shape
             assert isinstance(record, Record)
 
-    assert [t.family for t in three] == ["procedural", "procedural", "adversarial"]
+    assert [t.family for t in three] == ["procedural", "generative", "adversarial"]
 
 
-def test_the_family_is_the_role_of_the_model(target):
+def test_the_family_is_the_role_of_the_model(target, tool):
     """Derived, never declared: no algorithm can claim a family it does not have."""
     flip = HorizontalFlip()
+    fill = Inpaint({"tool_model": tool, **REGION})
     attack = FGSM({"target_model": target, "epsilon": EPSILON})
     assert (flip.tool_model, flip.target_model, flip.family) == (None, None, "procedural")
-    assert attack.target_model.name == "yolov8n" and attack.tool_model is None
-    assert attack.family == "adversarial"
+    assert fill.tool_model.name == "big-lama" and fill.target_model is None and fill.family == "generative"
+    assert attack.target_model.name == "yolov8n" and attack.tool_model is None and attack.family == "adversarial"
 
 
 def test_exactly_the_slot_the_role_names_must_be_filled(target):
@@ -261,6 +264,22 @@ def test_magnitude_does_not_decide_the_regime(runner, samples, target):
     flip = delta_linf(samples[0], runner.run(HorizontalFlip(), samples[:1])[0][0])
     fgsm = delta_linf(samples[0], runner.run(FGSM({"target_model": target, "epsilon": EPSILON}), samples[:1])[0][0])
     assert flip > fgsm
+
+
+# ------------------------------------------------------------- the tool model
+
+
+def test_inpaint_touches_only_the_region_and_invents_the_rest(runner, samples, tool):
+    """Outside the rectangle, the parent to the pixel; inside, content the model produced."""
+    x_prime, record = runner.run(Inpaint({"tool_model": tool, **REGION}), samples[:1])[0]
+    t, l, h, w = (REGION[k] for k in ("top", "left", "height", "width"))
+    inside = (slice(None), slice(t, t + h), slice(l, l + w))
+    outside = np.ones(x_prime.shape[-2:], dtype=bool)
+    outside[t : t + h, l : l + w] = False
+
+    assert np.array_equal(x_prime[:, outside], samples[0].x[:, outside])
+    assert np.abs(x_prime[inside] - samples[0].x[inside]).mean() > 0.01
+    assert (record.family, record.tool_model, record.reversible, record.seed) == ("generative", "big-lama", False, None)
 
 
 # ---------------------------------------------------------------------- the row

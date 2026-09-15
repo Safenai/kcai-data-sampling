@@ -26,6 +26,14 @@ def target():
     return YoloTarget()
 
 
+@pytest.fixture(scope="session")
+def tool():
+    pytest.importorskip("torch", reason="pip install 'kcai-data-sampling[lama]'")
+    from kcai_data_sampling.models import LamaTool
+
+    return LamaTool()
+
+
 @pytest.fixture
 def selection(samples, tmp_path):
     sel = DataSelection("comma10k-three", dataset="comma10k", samples=samples)

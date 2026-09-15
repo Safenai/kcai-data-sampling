@@ -1,11 +1,11 @@
 # `kcai-data-sampling`: the sample generation interface
 
-Four transformations (three procedural, one of them n-ary, and one adversarial) and enough of the contract around them to see whether the shape is right. **Nothing in it is a toy**: the dataset is ten comma10k driving frames (MIT), the target model is YOLOv8n, and the tests skip rather than fake the model when `ultralytics` is not installed.
+Five transformations (three procedural, one of them n-ary; one generative; one adversarial) and enough of the contract around them to see whether the shape is right. **Nothing in it is a toy**: the dataset is ten comma10k driving frames (MIT), the tool model is LaMa (Apache-2.0), the target model is YOLOv8n, and the tests skip rather than fake a model when its package is not installed.
 
 ```bash
-pip install -e ".[test,yolo,examples]"
+pip install -e ".[test,yolo,lama,examples]"
 python ../../scripts/fetch_comma10k_sample.py    # ten frames + masks, git-ignored
-python -m pytest -q                              # 33 tests, ~30 s
+python -m pytest -q                              # 34 tests, ~80 s
 ```
 
 A worked walkthrough of every claim below, on the real frames, with the images before and after each transformation and every output row shown in full: [`interface_walkthrough.ipynb`](../../examples/notebooks/interface_walkthrough.ipynb), on the comma10k sample, or on WoodScape by changing one line.
@@ -21,8 +21,8 @@ Mirrors `dqm-ml-core`: a base class in `api/`, one subclass per lifecycle, and t
 | `api/n_ary.py` | `metrics_processor.py` | `T : (x₁ … xₙ) ↦ x′`, no `δ`, annotation built |
 | `api/selection.py` |, | `Sample`, and the data selection: what a sample is, written once before the run |
 | `api/record.py` |, | what one output row carries, and does not |
-| `transformations/` | `metrics/` | `HorizontalFlip`, `CropResize`, `CutMix`, `FGSM` |
-| `models/yolo.py` |, | a published detector, wrapped into the one thing a target model owes: a gradient, weights resolved to one cache location, never the working directory |
+| `transformations/` | `metrics/` | `HorizontalFlip`, `CropResize`, `CutMix`, `Inpaint`, `FGSM` |
+| `models/` |, | published models wrapped into the one thing their role owes: `LamaTool.inpaint` (tool), `YoloTarget.grad` (target); weights in one cache location, never the working directory |
 | `datasets/` |, | one reader per dataset, all exposing the same five names, comma10k (fetched by script) and WoodScape (licensed) |
 | `utils/runner.py` | `utils/processor_runner.py` | the runner: checks, stamps; judges nothing; the batch size is chosen there and changes nothing |
 
