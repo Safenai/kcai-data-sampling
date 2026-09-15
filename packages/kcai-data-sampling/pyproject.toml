@@ -1,0 +1,30 @@
+[project]
+name = "kcai-data-sampling"
+version = "0.0.1"
+description = "Sample generation interface"
+authors = [
+  {name = "Safenai", email = "support@safenai.io"},
+  {name = "IRT SystemX", email = "support@irt-systemx.fr"},
+]
+license = "Apache-2.0"
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["ml", "data", "augmentation", "robustness"]
+
+dependencies = [
+  "numpy>=1.24",
+  "pillow>=10.0",
+  "typing-extensions>=4.7",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0"]
+yolo = ["ultralytics>=8.0"]
+examples = ["pandas>=2.0", "matplotlib>=3.7", "jupyterlab>=4.0"]  # the notebook and its display helpers
+
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

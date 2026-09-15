@@ -1,0 +1,26 @@
+# Datasets are not committed, only their READMEs. comma10k: scripts/fetch_comma10k_sample.py.
+# WoodScape: proprietary data, dropped in by hand by a licensee.
+examples/data/*
+!examples/data/comma10k_sample/
+examples/data/comma10k_sample/*
+!examples/data/comma10k_sample/README.md
+!examples/data/woodscape_sample/
+examples/data/woodscape_sample/*
+!examples/data/woodscape_sample/README.md
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Model weights download on first use; never committed
+*.pt
+
+# Notebook outputs and selections: regenerated on every run, never committed
+examples/notebooks/outputs/
