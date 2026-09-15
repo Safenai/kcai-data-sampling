@@ -11,7 +11,7 @@ Packages for the KCAI data sampling work.
 ```bash
 pip install -e "packages/kcai-data-sampling[test,yolo,lama,examples]"
 python scripts/fetch_comma10k_sample.py               # ten frames + masks, ~20 MB, git-ignored
-python -m pytest packages/kcai-data-sampling -q       # 34 tests, ~80 s
+python -m pytest packages/kcai-data-sampling -q       # 36 tests, ~2 min
 jupyter lab examples/notebooks/interface_walkthrough.ipynb
 ```
 

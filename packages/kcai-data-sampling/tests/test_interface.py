@@ -30,6 +30,17 @@ def identity(t):
     return (t.algorithm, json.dumps(t.params, sort_keys=True), t.seed)
 
 
+class Noise(UnaryTransformation):
+    """A stochastic algorithm for the tests: one draw per row, from that row's generator."""
+
+    algorithm = "noise"
+    stochastic = True
+
+    def apply(self, xs, rngs):
+        noise = np.stack([rng.normal(0, self.params["sigma"], xs.shape[1:]) for rng in rngs])
+        return xs + noise.astype("float32")
+
+
 def delta_linf(parent, x_prime):
     return float(np.abs(x_prime - parent.x).max())
 
@@ -94,13 +105,6 @@ def test_a_deterministic_algorithm_carries_no_seed(samples):
 def test_a_stochastic_algorithm_is_identified_by_its_seed(samples):
     """The seed is part of the identity exactly when the algorithm draws."""
 
-    class Noise(UnaryTransformation):
-        algorithm = "noise"
-        stochastic = True
-
-        def apply(self, x, rng):
-            return x + rng.normal(0, self.params["sigma"], x.shape).astype("float32")
-
     a, b, c = (Noise({"seed": s, "sigma": 0.01}) for s in (7, 7, 8))
     assert np.array_equal(a.transform(samples[0])[0], b.transform(samples[0])[0])
     assert identity(a) == identity(b) != identity(c)
@@ -108,9 +112,20 @@ def test_a_stochastic_algorithm_is_identified_by_its_seed(samples):
     assert a.transform(samples[0])[1].seed == 7
 
 
+def test_apply_is_one_array_operation_on_the_batch(samples):
+    """`apply` takes `(B, *sample)` and returns `(B, *sample)`: no loop over rows."""
+    xs = np.stack([s.x for s in samples])
+    out = HorizontalFlip().apply(xs, rngs=None)
+    assert out.shape == xs.shape and np.array_equal(out[1], samples[1].x[..., ::-1])
+
+
 def test_the_execution_batch_carries_no_meaning(runner, samples):
-    """One batch of three, three of one, or two and one: same rows, same order."""
-    for transformation in (HorizontalFlip(), CropResize({"fraction": 0.4})):
+    """One batch of three, three of one, or two and one: same rows, same order.
+
+    For a stochastic algorithm too: each output's draws are seeded by the seed
+    and its parent's id, not by its place in a batch.
+    """
+    for transformation in (HorizontalFlip(), CropResize({"fraction": 0.4}), Noise({"seed": 7, "sigma": 0.01})):
         runs = {size: runner.run(transformation, batch_size=size) for size in (None, 1, 2, 3)}
         reference = runs[None]
         for size, results in runs.items():
@@ -155,7 +170,7 @@ def test_the_input_is_never_mutated(samples):
 
 def test_the_signature_never_changes(samples):
     """`apply` returns x′ alone."""
-    x_prime = HorizontalFlip().apply(samples[0].x, rng=None)  # deterministic: no generator
+    x_prime = HorizontalFlip().apply(samples[0].x[None], rngs=None)  # deterministic: no generators
     assert isinstance(x_prime, np.ndarray)
 
 
@@ -224,8 +239,8 @@ def test_a_unary_transformation_preserves_the_sample_space(samples):
     class ShrinksTheSample(UnaryTransformation):
         algorithm = "shrinks"
 
-        def apply(self, x, rng):
-            return x[..., :400, :400]
+        def apply(self, xs, rngs):
+            return xs[..., :400, :400]
 
     with pytest.raises(ValueError, match="changed the sample space"):
         ShrinksTheSample().transform(samples[0])
@@ -254,9 +269,11 @@ def test_fgsm_stays_within_its_budget(runner, samples, target):
 
 def test_the_gradient_comes_back_at_the_original_resolution(samples, target):
     """The detector runs at 640×640; the gradient comes back at the input's shape."""
-    g = target.grad(samples[0].x)
-    assert g.shape == samples[0].x.shape
+    xs = np.stack([s.x for s in samples[:2]])
+    g = target.grad(xs)
+    assert g.shape == xs.shape
     assert np.isfinite(g).all() and np.count_nonzero(g) > 0
+    assert np.allclose(g[0], target.grad(xs[:1])[0], atol=1e-6), "each row's gradient is its own"
 
 
 def test_magnitude_does_not_decide_the_regime(runner, samples, target):
@@ -280,6 +297,16 @@ def test_inpaint_touches_only_the_region_and_invents_the_rest(runner, samples, t
     assert np.array_equal(x_prime[:, outside], samples[0].x[:, outside])
     assert np.abs(x_prime[inside] - samples[0].x[inside]).mean() > 0.01
     assert (record.family, record.tool_model, record.reversible, record.seed) == ("generative", "big-lama", False, None)
+
+
+def test_model_backed_transformations_are_batch_invariant(runner, samples, target, tool):
+    """The networks see the batch at once; a row's output still does not depend on its neighbours.
+    (A small region for LaMa: its memory grows with the batch, which is what `batch_size` is for.)"""
+    small = {"top": 500, "left": 700, "height": 100, "width": 100}
+    for t in (FGSM({"target_model": target, "epsilon": EPSILON}), Inpaint({"tool_model": tool, **small})):
+        together = runner.run(t, samples[:2])
+        alone = runner.run(t, samples[:2], batch_size=1)
+        assert all(np.allclose(a, b, atol=1e-5) for (a, _), (b, _) in zip(together, alone)), t.algorithm
 
 
 # ---------------------------------------------------------------------- the row
@@ -344,8 +371,8 @@ def test_one_identity_two_outputs_keeps_both(tmp_path, runner, samples):
     class Unseeded(UnaryTransformation):   # draws without declaring it, stands in for hardware noise
         algorithm = "unseeded"
 
-        def apply(self, x, rng):
-            return np.clip(x + np.random.default_rng().normal(0, 0.05, x.shape), 0, 1)
+        def apply(self, xs, rngs):
+            return np.clip(xs + np.random.default_rng().normal(0, 0.05, xs.shape), 0, 1)
 
     for _ in range(2):
         save_outputs(tmp_path / "outputs", runner.run(Unseeded(), samples[:1]))

@@ -18,12 +18,12 @@ class CropResize(UnaryTransformation):
     reversible = False  # content outside the window is gone
 
     @override
-    def apply(self, x: np.ndarray, rng: np.random.Generator | None) -> np.ndarray:
+    def apply(self, xs: np.ndarray, rngs: list[np.random.Generator] | None) -> np.ndarray:
         fraction = self.params["fraction"]
         top, left = self.params.get("top", 0), self.params.get("left", 0)
-        height, width = x.shape[-2], x.shape[-1]
+        height, width = xs.shape[-2], xs.shape[-1]
         window_h, window_w = max(1, int(height * fraction)), max(1, int(width * fraction))
-        window = x[..., top : top + window_h, left : left + window_w]
+        window = xs[..., top : top + window_h, left : left + window_w]
 
         # nearest-neighbour back to the original size: deterministic, no dependency
         rows = np.arange(height) * window_h // height

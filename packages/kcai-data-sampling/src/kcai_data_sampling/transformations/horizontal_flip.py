@@ -13,5 +13,5 @@ class HorizontalFlip(UnaryTransformation):
     reversible = True
 
     @override
-    def apply(self, x: np.ndarray, rng: np.random.Generator | None) -> np.ndarray:
-        return np.ascontiguousarray(x[..., ::-1])
+    def apply(self, xs: np.ndarray, rngs: list[np.random.Generator] | None) -> np.ndarray:
+        return np.ascontiguousarray(xs[..., ::-1])

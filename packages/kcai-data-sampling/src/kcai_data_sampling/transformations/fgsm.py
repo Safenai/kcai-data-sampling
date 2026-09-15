@@ -11,12 +11,12 @@ from kcai_data_sampling.api.unary import UnaryTransformation
 
 
 class FGSM(UnaryTransformation):
-    """Params: ``epsilon``. Requires ``target_model`` with ``grad(x)``."""
+    """Params: ``epsilon``. Requires ``target_model`` with ``grad(xs)``."""
 
     algorithm = "fgsm"
     model_role = "target"
     reversible = False
 
     @override
-    def apply(self, x: np.ndarray, rng: np.random.Generator | None) -> np.ndarray:
-        return x + self.params["epsilon"] * np.sign(self.target_model.grad(x))
+    def apply(self, xs: np.ndarray, rngs: list[np.random.Generator] | None) -> np.ndarray:
+        return xs + self.params["epsilon"] * np.sign(self.target_model.grad(xs))

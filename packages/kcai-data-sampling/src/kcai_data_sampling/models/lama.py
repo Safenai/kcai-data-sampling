@@ -13,13 +13,13 @@ URL = "https://github.com/enesmsahin/simple-lama-inpainting/releases/download/v0
 
 
 class LamaTool:
-    """``inpaint(x, mask)``: the one thing the interface asks of this tool model.
+    """``inpaint(xs, masks)``: the one thing the interface asks of this tool model.
 
-    ``x`` CHW float in [0, 1], ``mask`` HW bool (True = erase and fill in).
-    The network is fully convolutional and runs on a crop around the mask
-    (``margin`` pixels of context, sides padded to multiples of 8); only the
-    masked pixels are written back, the rest of ``x`` is returned untouched.
-    A full 1928×1208 frame would take 4 GB; the crop takes a fraction.
+    ``xs`` ``(B, C, H, W)`` float in [0, 1], ``masks`` ``(B, H, W)`` bool (True =
+    erase and fill in). The network is fully convolutional and runs once on
+    the batch, on a crop around the union of the masks (``margin`` pixels of
+    context, sides padded to multiples of 8); only the masked pixels are
+    written back, the rest of ``xs`` is returned untouched.
     """
 
     def __init__(self, weights: str = "big-lama.pt", margin: int = 256):
@@ -33,23 +33,23 @@ class LamaTool:
             warnings.simplefilter("ignore", FutureWarning)
             self.net = torch.jit.load(str(self.weights), map_location="cpu").eval()
 
-    def inpaint(self, x: np.ndarray, mask: np.ndarray) -> np.ndarray:
+    def inpaint(self, xs: np.ndarray, masks: np.ndarray) -> np.ndarray:
         torch = self._torch
-        rows, cols = np.where(mask)
+        rows, cols = np.where(masks.any(axis=0))
         if rows.size == 0:
-            return x.copy()
-        h, w = mask.shape
+            return xs.copy()
+        h, w = masks.shape[-2:]
         top, bottom = max(rows.min() - self.margin, 0), min(rows.max() + 1 + self.margin, h)
         left, right = max(cols.min() - self.margin, 0), min(cols.max() + 1 + self.margin, w)
-        pad_h, pad_w = (-(bottom - top)) % 8, (-(right - left)) % 8
+        pad = ((0, 0), (0, (-(bottom - top)) % 8), (0, (-(right - left)) % 8))
 
-        image = np.pad(x[:, top:bottom, left:right], ((0, 0), (0, pad_h), (0, pad_w)), mode="symmetric").astype("float32")
-        hole = np.pad(mask[top:bottom, left:right], ((0, pad_h), (0, pad_w)), mode="symmetric").astype("float32")
+        image = np.pad(xs[:, :, top:bottom, left:right], ((0, 0), *pad), mode="symmetric").astype("float32")
+        hole = np.pad(masks[:, top:bottom, left:right], pad, mode="symmetric").astype("float32")
         with torch.inference_mode():
-            out = self.net(torch.from_numpy(image)[None], torch.from_numpy(hole)[None, None])
-        filled = out[0, :, : bottom - top, : right - left].numpy()
+            out = self.net(torch.from_numpy(image), torch.from_numpy(hole)[:, None])
+        filled = out[:, :, : bottom - top, : right - left].numpy()
 
-        result = x.copy()
-        region = result[:, top:bottom, left:right]
-        region[:, mask[top:bottom, left:right]] = filled[:, mask[top:bottom, left:right]]
+        result = xs.copy()
+        region, hole = result[:, :, top:bottom, left:right], masks[:, top:bottom, left:right]
+        region[np.broadcast_to(hole[:, None], region.shape)] = filled[np.broadcast_to(hole[:, None], region.shape)]
         return result

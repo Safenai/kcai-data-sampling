@@ -7,6 +7,7 @@ parameters + seed + model. The family is derived from the model's role; the
 rest is declared by the algorithm.
 """
 
+import hashlib
 from typing import Any
 
 import numpy as np
@@ -76,9 +77,13 @@ class Transformation:
     def family(self) -> str:
         return FAMILY_BY_ROLE[self.model_role]
 
-    def rng(self) -> np.random.Generator | None:
-        """Every random draw comes from here. `None` when deterministic."""
-        return np.random.default_rng(self.seed) if self.stochastic else None
+    def rngs(self, keys: list[str]) -> list[np.random.Generator] | None:
+        """One generator per output, seeded by the seed and the output's parent
+        id(s), so that a draw depends on neither the batch nor the order of the
+        run. `None` when deterministic."""
+        if not self.stochastic:
+            return None
+        return [np.random.default_rng([self.seed, int.from_bytes(hashlib.sha1(k.encode()).digest()[:8], "big")]) for k in keys]
 
     def describe(self) -> dict[str, Any]:
         """The declaration-level fields every output row carries."""

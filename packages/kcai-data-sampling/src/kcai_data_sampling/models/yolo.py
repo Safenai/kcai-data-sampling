@@ -8,7 +8,7 @@ from kcai_data_sampling.models.weights import weights_path
 
 
 class YoloTarget:
-    """``grad(x)``: gradient of a loss w.r.t. the input, at the input's resolution.
+    """``grad(xs)``: gradient of a loss w.r.t. the input batch, at the input's resolution.
 
     Loss = −(most confident class response), so ascending it lowers that
     confidence, untargeted, no annotation needed. The network runs at
@@ -32,12 +32,16 @@ class YoloTarget:
         for parameter in self.net.parameters():
             parameter.requires_grad_(False)
 
-    def grad(self, x: np.ndarray) -> np.ndarray:
-        """∂loss / ∂x, same shape as ``x`` (CHW float32 in [0, 1])."""
+    def grad(self, xs: np.ndarray) -> np.ndarray:
+        """∂loss / ∂x for a batch, same shape as ``xs`` (``(B, C, H, W)`` float32 in [0, 1]).
+
+        The loss is a sum over the batch of per-sample terms, so each row's
+        gradient is its own.
+        """
         torch = self._torch
-        t = torch.from_numpy(np.ascontiguousarray(x, dtype="float32"))[None].requires_grad_(True)
+        t = torch.from_numpy(np.ascontiguousarray(xs, dtype="float32")).requires_grad_(True)
         resized = torch.nn.functional.interpolate(t, size=(self.size, self.size), mode="bilinear", align_corners=False)
-        prediction = self.net(resized)[0]  # (1, 4 + classes, anchors)
-        loss = -prediction[:, 4:, :].amax()
+        prediction = self.net(resized)[0]  # (B, 4 + classes, anchors)
+        loss = -prediction[:, 4:, :].amax(dim=(1, 2)).sum()
         loss.backward()
-        return t.grad[0].numpy()
+        return t.grad.numpy()
