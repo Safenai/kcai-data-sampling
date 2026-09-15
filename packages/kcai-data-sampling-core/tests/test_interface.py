@@ -35,6 +35,8 @@ class Noise(UnaryTransformation):
     stochastic = True
     parameters = {"sigma": None}
 
+    clips = True
+
     def apply(self, xs, rngs):
         noise = np.stack([rng.normal(0, self.params["sigma"], xs.shape[1:]) for rng in rngs])
         return xs + noise.astype("float32")
@@ -88,13 +90,13 @@ def test_a_transformation_is_fully_specified(samples):
     b = CropResize({"fraction": 0.4})
     c = CropResize({"fraction": 0.5})
 
-    assert np.array_equal(a.transform(samples[0]).x, b.transform(samples[0]).x)
+    assert np.array_equal(a.transform([samples[0]])[0].x, b.transform([samples[0]])[0].x)
     assert identity(a) == identity(b) != identity(c)
 
 
 def test_a_deterministic_algorithm_carries_no_seed(samples):
     """`seed = None` is an assertion; a seed offered anyway is refused."""
-    record = CropResize({"fraction": 0.4}).transform(samples[0])
+    record = CropResize({"fraction": 0.4}).transform([samples[0]])[0]
     assert record.seed is None
 
     with pytest.raises(ValueError, match="draws no randomness"):
@@ -105,10 +107,10 @@ def test_a_stochastic_algorithm_is_identified_by_its_seed(samples):
     """The seed is part of the identity exactly when the algorithm draws."""
 
     a, b, c = (Noise({"seed": s, "sigma": 0.01}) for s in (7, 7, 8))
-    assert np.array_equal(a.transform(samples[0]).x, b.transform(samples[0]).x)
+    assert np.array_equal(a.transform([samples[0]])[0].x, b.transform([samples[0]])[0].x)
     assert identity(a) == identity(b) != identity(c)
-    assert not np.array_equal(a.transform(samples[0]).x, c.transform(samples[0]).x)
-    assert a.transform(samples[0]).seed == 7
+    assert not np.array_equal(a.transform([samples[0]])[0].x, c.transform([samples[0]])[0].x)
+    assert a.transform([samples[0]])[0].seed == 7
 
 
 def test_apply_is_one_array_operation_on_the_batch(samples):
@@ -161,7 +163,7 @@ def test_the_selection_is_what_the_campaign_covers(selection, runner):
 
 def test_the_input_is_never_mutated(samples):
     before = samples[0].x.copy()
-    HorizontalFlip().transform(samples[0])
+    HorizontalFlip().transform([samples[0]])[0]
     assert np.array_equal(samples[0].x, before)
 
 
@@ -179,7 +181,7 @@ def test_the_annotation_travels_untouched(samples):
     sample = samples[0]
     mask_before = sample.y["mask"].copy()
 
-    record = HorizontalFlip().transform(sample)
+    record = HorizontalFlip().transform([sample])[0]
 
     assert np.array_equal(sample.y["mask"], mask_before)
     assert not [f for f in vars(record) if "annotation" in f or "axes" in f]
@@ -223,7 +225,41 @@ def test_a_unary_transformation_preserves_the_sample_space(samples):
             return xs[..., :400, :400]
 
     with pytest.raises(ValueError, match="changed the sample space"):
-        ShrinksTheSample().transform(samples[0])
+        ShrinksTheSample().transform([samples[0]])[0]
+
+
+def test_the_value_range_has_one_source_the_selection(runner, samples):
+    """An output outside the selection's range is refused unless the algorithm declared `clips`;
+    then it is clipped to that range, whatever it is, with no bound written in the algorithm."""
+
+    class Doubles(UnaryTransformation):
+        algorithm = "doubles"
+
+        def apply(self, xs, rngs):
+            return xs * 2
+
+    class DoublesAndClips(Doubles):
+        clips = True
+
+    with pytest.raises(ValueError, match=r"left the selection's value range \[0.0, 1.0\].*declares `clips = True`"):
+        runner.run(Doubles(), samples[:1])
+
+    clipped = runner.run(DoublesAndClips(), samples[:1])[0].x
+    assert clipped.max() <= 1.0 and np.array_equal(clipped, np.minimum(samples[0].x * 2, 1.0))
+
+    wider = TransformationRunner(DataSelection("wide", "comma10k", samples[:1], value_range=(0.0, 2.0)))
+    assert np.array_equal(wider.run(DoublesAndClips())[0].x, samples[0].x * 2)   # nothing to clip in [0, 2]
+    assert np.array_equal(wider.run(Doubles())[0].x, samples[0].x * 2)           # and nothing to refuse
+
+    unchecked = TransformationRunner(DataSelection("open", "comma10k", samples[:1], value_range=None))
+    assert unchecked.run(Doubles())[0].x.max() > 1.0
+
+
+def test_fgsm_declares_the_clip_and_carries_no_bound(runner, samples, target):
+    """The clip is declared by the algorithm and done to the selection's range; no bound on the row."""
+    output = runner.run(FGSM({"target_model": target, "epsilon": EPSILON}), samples[:1])[0]
+    assert FGSM.clips and output.params == {"epsilon": EPSILON}
+    assert output.x.min() >= 0.0 and output.x.max() <= 1.0
 
 
 def test_crop_resize_keeps_delta_computable(runner, samples):
@@ -234,8 +270,8 @@ def test_crop_resize_keeps_delta_computable(runner, samples):
 
 def test_the_flip_is_its_own_inverse(samples):
     flip = HorizontalFlip()
-    once = flip.transform(samples[0]).x
-    twice = flip.transform(Sample("one", once, samples[0].y)).x
+    once = flip.transform([samples[0]])[0].x
+    twice = flip.transform([Sample("one", once, samples[0].y)])[0].x
     assert np.allclose(twice, samples[0].x)
 
 

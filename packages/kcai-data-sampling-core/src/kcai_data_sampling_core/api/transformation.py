@@ -46,6 +46,12 @@ class Transformation:
     #: "unary" | "n-ary", fixed by the base class.
     arity: str = "unary"
 
+    #: Can the output leave the sample's range of values, so that it has to
+    #: be clipped back to it? A declaration: the base clips, to the range the
+    #: selection declares, only when it is set. An undeclared overflow is
+    #: refused. The range itself has one source, the selection.
+    clips: bool = False
+
     #: Is `x` determined by `x′`? A structural declaration about the map (a
     #: flip is a bijection, a crop discards), on trust: resolved parameters
     #: can break it where the range clips. Frozen on the row for the
@@ -84,6 +90,21 @@ class Transformation:
                 )
         if self.model_role is not None:
             check_model(self.algorithm, self.model_role, needs[self.model_role], self.model_methods)
+
+    def fit_to_range(self, out: np.ndarray, value_range: tuple[float, float] | None) -> np.ndarray:
+        """Clip if the algorithm declared it; then check. `None`: nothing to hold to."""
+        if value_range is None:
+            return out
+        low, high = value_range
+        if self.clips:
+            return np.clip(out, low, high)
+        lo, hi = float(out.min()), float(out.max())
+        if lo < low or hi > high:
+            raise ValueError(
+                f"{self.algorithm} left the selection's value range [{low}, {high}]: output in "
+                f"[{lo:.4g}, {hi:.4g}]. An algorithm whose output can leave it declares `clips = True`."
+            )
+        return out
 
     def resolve(self, given: dict[str, Any]) -> dict[str, Any]:
         """The parameters, complete: defaults filled in, a missing required one

@@ -14,7 +14,7 @@ Laid out like `dqm-ml-workspace`: a core that works in memory, and a job package
 ```bash
 pip install -e "packages/kcai-data-sampling-core[test,lama,examples]" -e "packages/kcai-data-sampling-job[test]"
 python scripts/fetch_comma10k_sample.py               # ten frames + masks, ~20 MB, git-ignored
-python -m pytest packages/kcai-data-sampling-core -q       # 33 tests, ~90 s
+python -m pytest packages/kcai-data-sampling-core -q       # 35 tests, ~2 min
 python -m pytest packages/kcai-data-sampling-job -q        # 8 tests
 jupyter lab examples/notebooks/interface_walkthrough.ipynb
 ```

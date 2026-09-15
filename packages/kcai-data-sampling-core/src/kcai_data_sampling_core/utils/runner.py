@@ -19,7 +19,8 @@ class TransformationRunner:
 
         ``batch_size`` is an execution detail: any split gives the same
         outputs in the same order. For an n-ary transformation the parent
-        sets are formed once over every sample, then split.
+        sets are formed once over every sample, then split. The selection's
+        ``value_range`` is handed to every call.
         """
         samples = self.selection.samples if samples is None else samples
         units = transformation.select_parents(samples) if transformation.arity == "n-ary" else samples
@@ -27,5 +28,5 @@ class TransformationRunner:
         return [
             out
             for start in range(0, len(units), max(size, 1))
-            for out in transformation.transform_batch(units[start : start + size])
+            for out in transformation.transform(units[start : start + size], self.selection.value_range)
         ]

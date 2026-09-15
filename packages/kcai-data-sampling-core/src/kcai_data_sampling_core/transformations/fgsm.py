@@ -1,7 +1,8 @@
 """FGSM, adversarial.
 
 One signed step up the gradient of the target model's loss, bounded in L∞ by
-``epsilon``. The loss belongs to the model adapter.
+``epsilon``; the output is clipped to the sample's range (``clips``). The loss
+belongs to the model adapter.
 """
 
 import numpy as np
@@ -18,6 +19,7 @@ class FGSM(UnaryTransformation):
     model_role = "target"
     model_methods = ("grad",)
     parameters = {"epsilon": None}
+    clips = True        # the transformation can push past the sample's range, so clipping is needed to ensure validity of the sample
     reversible = False
 
     @override

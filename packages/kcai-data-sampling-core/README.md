@@ -5,7 +5,7 @@ Five transformations (three procedural, one of them n-ary; one generative; one a
 ```bash
 pip install -e ".[test,lama,examples]"
 python ../../scripts/fetch_comma10k_sample.py    # ten frames + masks, git-ignored
-python -m pytest -q                              # 33 tests, ~90 s
+python -m pytest -q                              # 35 tests, ~2 min
 ```
 
 A worked walkthrough of every claim below, on the real frames, with the images before and after each transformation and every output row shown in full: [`interface_walkthrough.ipynb`](../../examples/notebooks/interface_walkthrough.ipynb), on the comma10k sample, or on WoodScape by changing one line.
@@ -38,6 +38,8 @@ Two levels decide what goes in, and they must not be confused:
 ## Details
 
 **One signature.** `T : x ↦ x′`. The annotation is not returned for now.
+
+**`x′` lives in the same space as `x`: the shape, and the range of values.** The shape is checked by the transformation. The range has **one source, the selection** (`value_range`, `(0, 1)` by default since that is what the image readers produce, `None` to leave it unchecked; a selection of depth maps or spectrograms declares its own) and the runner hands it to every call. Whether an output may leave it is **the algorithm's declaration**, `clips = True` (FGSM: the step can push past the range), and then the base clips it to the selection's range, with no bound written in the algorithm; an output that leaves the range without that declaration is refused. This is a choice worth knowing about: the interface neither picks the range nor decides to clip, it holds each declaration to the other. An algorithm that would shrink the sample resamples back (`CropResize`); one that would enlarge it is out of scope.
 
 **The family is derived.** `model_role` is `None` / `"tool"` / `"target"`, so procedural / generative / adversarial follows from the role of the model. The row has two slots, `tool_model` and `target_model`, each `NULL` when the algorithm has no model in that role; exactly the slot the role names must be filled, and anything else is refused at construction.
 

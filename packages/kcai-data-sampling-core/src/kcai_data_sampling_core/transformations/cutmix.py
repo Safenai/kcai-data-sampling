@@ -24,7 +24,7 @@ class CutMix(NAryTransformation):
         return [([s, samples[(i + 1) % len(samples)]], [1 - fraction, fraction]) for i, s in enumerate(samples)]
 
     @override
-    def combine(self, xs: list[np.ndarray], weights: np.ndarray, rngs: list[np.random.Generator] | None) -> np.ndarray:
+    def apply(self, xs: list[np.ndarray], weights: np.ndarray, rngs: list[np.random.Generator] | None) -> np.ndarray:
         x1, x2 = xs
         width = x1.shape[-1]
         right = np.arange(width) >= np.round(width * (1 - weights[:, 1]))[:, None]  # (B, W): from the second parent

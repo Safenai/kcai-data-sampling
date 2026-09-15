@@ -10,7 +10,7 @@ Two levels decide what goes in. The data selection decides what a *sample*
 is; the algorithm decides which samples it combines, otherwise everything
 would be unary. So ``select_parents`` sees the whole selection, never a
 batch: pairing inside a batch would make the pairs depend on the batch size.
-``combine`` then works on a batch of parent sets, one array per parent slot.
+``apply`` then works on a batch of parent sets, one array per parent slot.
 """
 
 import numpy as np
@@ -30,16 +30,19 @@ class NAryTransformation(Transformation):
         its seed fixes the pairs."""
         raise NotImplementedError
 
-    def combine(self, xs: list[np.ndarray], weights: np.ndarray, rngs: list[np.random.Generator] | None) -> np.ndarray:
+    def apply(self, xs: list[np.ndarray], weights: np.ndarray, rngs: list[np.random.Generator] | None) -> np.ndarray:
         """``xs[k]`` is the ``k``-th parent of every output, ``(B, *sample)``;
         ``weights`` is ``(B, n)``. Returns ``(B, *sample)``."""
         raise NotImplementedError
 
-    def transform_batch(self, batch: list[tuple[list[Sample], list[float]]]) -> list[Output]:
-        """One batch of parent sets, already chosen over the whole selection."""
+    def transform(
+        self, batch: list[tuple[list[Sample], list[float]]], value_range: tuple[float, float] | None = None
+    ) -> list[Output]:
+        """One batch of parent sets, already chosen over the whole selection.
+        ``value_range`` as for the unary case."""
         n = len(batch[0][0])
         xs = [np.stack([parents[k].x for parents, _ in batch]) for k in range(n)]
         weights = np.asarray([w for _, w in batch], dtype="float32")
         keys = [",".join(p.id for p in parents) for parents, _ in batch]
-        out = np.clip(self.combine(xs, weights, self.rngs(keys)), 0.0, 1.0)
+        out = self.fit_to_range(self.apply(xs, weights, self.rngs(keys)), value_range)
         return [Output(x=x_prime, parent_id=key, **self.describe()) for x_prime, key in zip(out, keys)]
