@@ -7,16 +7,20 @@ One signed step up the gradient of the target model's loss, bounded in L∞ by
 import numpy as np
 from typing_extensions import override
 
+from kcai_data_sampling_core.api.roles import check_output
 from kcai_data_sampling_core.api.unary import UnaryTransformation
 
 
 class FGSM(UnaryTransformation):
-    """Params: ``epsilon``. Requires ``target_model`` with ``grad(xs)``."""
+    """One step of ``epsilon``. The target model, the user's, must expose ``grad(xs)``."""
 
     algorithm = "fgsm"
     model_role = "target"
+    parameters = {"epsilon": None}
+    requires = ("grad",)
     reversible = False
 
     @override
     def apply(self, xs: np.ndarray, rngs: list[np.random.Generator] | None) -> np.ndarray:
-        return xs + self.params["epsilon"] * np.sign(self.target_model.grad(xs))
+        grad = check_output(self.algorithm, self.target_model, "grad", xs, self.target_model.grad(xs))
+        return xs + self.params["epsilon"] * np.sign(grad)

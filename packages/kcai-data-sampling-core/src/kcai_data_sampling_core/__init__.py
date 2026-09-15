@@ -8,7 +8,16 @@ what the algorithm declares about itself, no judgement, nothing about the
 annotation.
 """
 
-from kcai_data_sampling_core.api import DataSelection, NAryTransformation, Record, Sample, Transformation, UnaryTransformation
+from kcai_data_sampling_core.api import (
+    DataSelection,
+    NAryTransformation,
+    Record,
+    Sample,
+    TargetModel,
+    ToolModel,
+    Transformation,
+    UnaryTransformation,
+)
 from kcai_data_sampling_core.transformations import FGSM, CropResize, CutMix, HorizontalFlip, Inpaint
 from kcai_data_sampling_core.utils import TransformationRunner
 
@@ -22,6 +31,8 @@ __all__ = [
     "NAryTransformation",
     "Record",
     "Sample",
+    "TargetModel",
+    "ToolModel",
     "Transformation",
     "TransformationRunner",
     "UnaryTransformation",

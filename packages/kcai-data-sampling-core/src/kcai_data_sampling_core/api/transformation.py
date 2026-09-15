@@ -12,6 +12,8 @@ from typing import Any
 
 import numpy as np
 
+from kcai_data_sampling_core.api.roles import check_model
+
 #: Family = role of the model in computing the output.
 FAMILY_BY_ROLE: dict[str | None, str] = {
     None: "procedural",
@@ -29,6 +31,14 @@ class Transformation:
 
     #: None | "tool" | "target", fixes the family and which model slot is required.
     model_role: str | None = None
+
+    #: The methods the model in that slot must expose (see ``api.roles``).
+    requires: tuple[str, ...] = ()
+
+    #: The algorithm's parameters: ``None`` for a required one, otherwise its
+    #: default. Checked at construction; ``params`` is then always complete,
+    #: so the row carries every parameter resolved.
+    parameters: dict[str, Any] = {}
 
     #: Does the algorithm draw randomness? Only then does a seed exist.
     stochastic: bool = False
@@ -52,7 +62,7 @@ class Transformation:
         seed = config.pop("seed", None)
         self.tool_model: Any = config.pop("tool_model", None)
         self.target_model: Any = config.pop("target_model", None)
-        self.params: dict[str, Any] = config
+        self.params: dict[str, Any] = self.resolve(config)
 
         if self.stochastic:
             self.seed: int | None = 0 if seed is None else int(seed)
@@ -72,6 +82,23 @@ class Transformation:
                     f"{self.algorithm}: model_role={self.model_role!r} but {role}_model="
                     f"{getattr(model, 'name', model)!r}, the family is the role of the model"
                 )
+        if self.model_role is not None:
+            check_model(self.algorithm, self.model_role, needs[self.model_role], self.requires)
+
+    def resolve(self, given: dict[str, Any]) -> dict[str, Any]:
+        """The parameters, complete: defaults filled in, a missing required one
+        or an unknown key refused."""
+        unknown = sorted(set(given) - set(self.parameters))
+        if unknown:
+            raise ValueError(
+                f"{self.algorithm} does not take {', '.join(map(repr, unknown))}; "
+                f"it takes {', '.join(self.parameters) or 'no parameter'}"
+            )
+        missing = [k for k, d in self.parameters.items() if d is None and k not in given]
+        if missing:
+            optional = ", ".join(f"{k} ({d!r})" for k, d in self.parameters.items() if d is not None)
+            raise ValueError(f"{self.algorithm} needs {', '.join(missing)}" + (f"; optional: {optional}" if optional else ""))
+        return {k: given.get(k, d) for k, d in self.parameters.items()}
 
     @property
     def family(self) -> str:

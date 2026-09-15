@@ -35,6 +35,7 @@ class Noise(UnaryTransformation):
 
     algorithm = "noise"
     stochastic = True
+    parameters = {"sigma": None}
 
     def apply(self, xs, rngs):
         noise = np.stack([rng.normal(0, self.params["sigma"], xs.shape[1:]) for rng in rngs])
@@ -307,6 +308,70 @@ def test_model_backed_transformations_are_batch_invariant(runner, samples, targe
         together = runner.run(t, samples[:2])
         alone = runner.run(t, samples[:2], batch_size=1)
         assert all(np.allclose(a, b, atol=1e-5) for (a, _), (b, _) in zip(together, alone)), t.algorithm
+
+
+# ------------------------------------------------- the target model is the user's
+
+
+def test_any_object_that_satisfies_the_role_is_a_target(runner, samples, target):
+    """A target model is external: a few lines around any network, with `name` and `grad`."""
+
+    class Mine:
+        name = "mine"
+
+        def grad(self, xs):
+            return target.grad(xs)   # here: someone else's detector, wrapped
+
+    x_prime, record = runner.run(FGSM({"target_model": Mine(), "epsilon": EPSILON}), samples[:1])[0]
+    assert record.target_model == "mine" and record.family == "adversarial"
+    assert delta_linf(samples[0], x_prime) <= EPSILON + 1e-6
+
+
+def test_a_model_that_cannot_play_the_role_is_refused_at_construction():
+    class Scores:
+        name = "scores"
+
+        def predict(self, xs):
+            return xs
+
+    with pytest.raises(ValueError, match="needs a target model exposing grad.*lacks grad"):
+        FGSM({"target_model": Scores(), "epsilon": EPSILON})
+    with pytest.raises(ValueError, match="non-empty `name`"):
+        FGSM({"target_model": object(), "epsilon": EPSILON})
+
+
+def test_a_gradient_that_breaks_the_contract_is_refused_at_the_first_batch(runner, samples):
+    class WrongShape:
+        name = "wrong"
+
+        def grad(self, xs):
+            return xs[..., ::2, ::2]
+
+    with pytest.raises(ValueError, match="wrong.grad returned ndarray.*expected an array of shape"):
+        runner.run(FGSM({"target_model": WrongShape(), "epsilon": EPSILON}), samples[:1])
+
+
+# ---------------------------------------------- the parameters are declared
+
+
+def test_a_missing_required_parameter_is_refused_at_construction():
+    with pytest.raises(ValueError, match="crop_resize needs fraction; optional: top \\(0\\), left \\(0\\)"):
+        CropResize({})
+
+
+def test_an_unknown_parameter_is_refused_not_recorded():
+    """A typo must not land on the row as if it had mattered."""
+    with pytest.raises(ValueError, match="does not take 'fracton'"):
+        CropResize({"fracton": 0.4})
+    with pytest.raises(ValueError, match="takes no parameter"):
+        HorizontalFlip({"angle": 3})
+
+
+def test_the_row_carries_every_parameter_resolved(runner, samples):
+    """Defaults are on the row, so two identical runs get one name whatever was written."""
+    _, record = runner.run(CropResize({"fraction": 0.4}), samples[:1])[0]
+    assert record.params == {"fraction": 0.4, "top": 0, "left": 0}
+    assert identity(CropResize({"fraction": 0.4})) == identity(CropResize({"fraction": 0.4, "top": 0}))
 
 
 # ---------------------------------------------------------------------- the row

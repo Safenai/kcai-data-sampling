@@ -12,15 +12,16 @@ from kcai_data_sampling_core.api.unary import UnaryTransformation
 
 
 class CropResize(UnaryTransformation):
-    """Params: ``fraction`` of each side kept, ``top`` / ``left`` offsets (default 0)."""
+    """``fraction`` of each side kept, from ``top`` / ``left`` offsets."""
 
     algorithm = "crop_resize"
+    parameters = {"fraction": None, "top": 0, "left": 0}
     reversible = False  # content outside the window is gone
 
     @override
     def apply(self, xs: np.ndarray, rngs: list[np.random.Generator] | None) -> np.ndarray:
         fraction = self.params["fraction"]
-        top, left = self.params.get("top", 0), self.params.get("left", 0)
+        top, left = self.params["top"], self.params["left"]
         height, width = xs.shape[-2], xs.shape[-1]
         window_h, window_w = max(1, int(height * fraction)), max(1, int(width * fraction))
         window = xs[..., top : top + window_h, left : left + window_w]

@@ -12,14 +12,15 @@ from kcai_data_sampling_core.api.selection import Sample
 
 
 class CutMix(NAryTransformation):
-    """Params: ``fraction`` of the width taken from the second parent (default 0.5)."""
+    """``fraction`` of the width taken from the second parent."""
 
     algorithm = "cutmix"
+    parameters = {"fraction": 0.5}
     reversible = False  # part of each parent is gone
 
     @override
     def select_parents(self, samples: list[Sample]) -> list[tuple[list[Sample], list[float]]]:
-        fraction = self.params.get("fraction", 0.5)
+        fraction = self.params["fraction"]
         return [([s, samples[(i + 1) % len(samples)]], [1 - fraction, fraction]) for i, s in enumerate(samples)]
 
     @override
