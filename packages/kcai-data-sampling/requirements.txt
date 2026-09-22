@@ -1,0 +1,4 @@
+kcai-data-sampling-core
+kcai-data-sampling-job
+kcai-data-sampling-images
+PyYAML

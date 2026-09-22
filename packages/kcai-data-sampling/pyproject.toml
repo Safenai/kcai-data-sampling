@@ -1,0 +1,35 @@
+[project]
+name = "kcai-data-sampling"
+dynamic = ["dependencies", "version"]
+description = "Umbrella CLI for kcai data-sampling: version, list, process"
+authors = [
+  {name = "Safenai", email = "support@safenai.io"},
+]
+license = "Apache-2.0"
+readme = "README.md"
+requires-python = ">=3.12"
+keywords = ["ml", "data", "augmentation", "robustness"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.scripts]
+kcai-data-sampling = "kcai_data_sampling.cli_tools:main"
+
+[build-system]
+requires = ["setuptools>=80", "setuptools-scm[simple]>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+version_file = "src/kcai_data_sampling/_version_.py"
+root = "../.."
+fallback_version = "0.0.1"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.packages.find]
+where = ["src"]

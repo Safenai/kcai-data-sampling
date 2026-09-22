@@ -1,0 +1,38 @@
+[project]
+name = "kcai-data-sampling-job"
+dynamic = ["dependencies", "version"]
+description = "Pipeline orchestration, generic table loaders/writers, and the YAML CLI for kcai data-sampling"
+authors = [
+  {name = "Safenai", email = "support@safenai.io"},
+]
+license = "Apache-2.0"
+readme = "README.md"
+requires-python = ">=3.12"
+keywords = ["ml", "data", "augmentation", "robustness", "pipeline"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.entry-points."kcai_data_sampling.dataloaders"]
+parquet = "kcai_data_sampling_job.dataloaders.parquet:ParquetDataLoader"
+
+[project.entry-points."kcai_data_sampling.outputwriter"]
+parquet = "kcai_data_sampling_job.outputwriter.parquet:ParquetOutputWriter"
+
+[build-system]
+requires = ["setuptools>=80", "setuptools-scm[simple]>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+version_file = "src/kcai_data_sampling_job/_version_.py"
+root = "../.."
+fallback_version = "0.0.1"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,42 @@
+[project]
+name = "kcai-data-sampling-images"
+dynamic = ["dependencies", "version"]
+description = "No-model image transformations and image IO plugins for kcai data-sampling"
+authors = [
+  {name = "Safenai", email = "support@safenai.io"},
+]
+license = "Apache-2.0"
+readme = "README.md"
+requires-python = ">=3.12"
+keywords = ["ml", "data", "augmentation", "robustness", "images"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.entry-points."kcai_data_sampling.transformations"]
+horizontal_flip = "kcai_data_sampling_images.transformations.horizontal_flip:HorizontalFlip"
+crop_resize = "kcai_data_sampling_images.transformations.crop_resize:CropResize"
+
+[project.entry-points."kcai_data_sampling.dataloaders"]
+image_dir = "kcai_data_sampling_images.input_io:ImageDirDataLoader"
+
+[project.entry-points."kcai_data_sampling.outputwriter"]
+images = "kcai_data_sampling_images.output_io:ImagesOutputWriter"
+
+[build-system]
+requires = ["setuptools>=80", "setuptools-scm[simple]>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+version_file = "src/kcai_data_sampling_images/_version_.py"
+root = "../.."
+fallback_version = "0.0.1"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.packages.find]
+where = ["src"]

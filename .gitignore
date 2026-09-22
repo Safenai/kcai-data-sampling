@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+uv.lock
+ideas
+.agents
+
+# Test / tooling artifacts
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+pytest_report.html
+
+# Model weights download on first use; never committed
+*.pt
+
+# Run outputs and selections: regenerated on every run, never committed
+outputs/
+selections/

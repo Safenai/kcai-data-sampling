@@ -1,0 +1,45 @@
+# Workspace meta-package that ties together the kcai data-sampling packages
+# (core, images, fgsm, images-lama, job) and the umbrella CLI. No code lives at
+# the root: it only declares the UV workspace and how the members resolve each
+# other. Shared dev-tool sections (ruff / mypy / pytest) are deliberately deferred
+# (lint and tests are out of scope for this phase) but this file is written once
+# so the structure does not need rework later.
+[project]
+name = "kcai-workspace"
+dynamic = ["version"]
+description = "Workspace for kcai data-sampling: generate samples from input samples"
+requires-python = ">=3.12"
+dependencies = [
+    "ipykernel>=7.3.0",
+    "kcai-data-sampling>=0.0.1",
+    "kcai-data-sampling-core>=0.0.1",
+    "kcai-data-sampling-images>=0.0.1",
+    "kcai-data-sampling-job>=0.0.1",
+    "pandas>=3.0.6",
+]
+
+[build-system]
+requires = ["setuptools>=80", "setuptools-scm[simple]>=8"]
+build-backend = "setuptools.build_meta"
+
+# Root meta package uses the src-layout convention (mirrors dqm-ml-workspace).
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# UV workspace: every package under packages/ is a member, resolved locally.
+[tool.uv.workspace]
+members = ["packages/*"]
+
+# Local packages take precedence over any published versions.
+[tool.uv.sources]
+kcai-data-sampling-core = { workspace = true }
+kcai-data-sampling-images = { workspace = true }
+kcai-data-sampling-job = { workspace = true }
+kcai-data-sampling = { workspace = true }
+
+[tool.uv]
+default-groups = []
+
+[tool.setuptools_scm]
+version_file = "src/kcai_workspace/_version_.py"
+fallback_version = "0.0.1"
