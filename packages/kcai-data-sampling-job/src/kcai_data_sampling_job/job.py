@@ -7,8 +7,9 @@ goes, buffers the metadata rows, and drops the chunk. Any batching here
 changes nothing in the output (unary partition invariance; n-ary pairing is
 chunk-local).
 
-A row per output: intermediate stages are outputs too, so the ledger records
-the whole chain, not just the final pixels.
+A row per output: every transformation is applied independently to the same
+chunk, and each output is its own row — there is no chain and no intermediate
+stage between the source sample and the output.
 """
 
 import json
@@ -30,7 +31,8 @@ class SamplingJob:
 
     Attributes:
         dataloaders: Map of loader name → loader.
-        transformations: The ordered list of transformations to apply.
+        transformations: The list of transformations, each applied
+            independently to the same chunk.
         payload_writer: Writer that encodes each output to a payload file.
         ledger_writer: Writer that persists the metadata-only rows.
         errors: The merged error policy for the transformations interface.
@@ -120,7 +122,7 @@ class SamplingJob:
         return summary
 
     def _process_batch(self, selection: SourceSelection, batch: list[Sample]) -> int:
-        """Run the transformation chain over one decoded chunk.
+        """Run every transformation independently over one decoded chunk.
 
         Args:
             selection: The source selection the chunk came from.
@@ -138,14 +140,13 @@ class SamplingJob:
         )
 
         pending: list[dict[str, Any]] = []
-        current: list[Sample] = batch
         count = 0
 
         for transformation in self.transformations:
             runner = TransformationRunner(memory_selection)
             outputs = runner.run(
                 transformation,
-                samples=current,
+                samples=batch,
                 batch_size=self.transform_batch_size,
             )
             for output in outputs:
@@ -154,7 +155,6 @@ class SamplingJob:
                     artifact = self.payload_writer.write_payload(selection.name, output)
                 pending.append(self._row(selection.name, selection.dataset, output, artifact))
                 count += 1
-            current = [Sample(id=o.parent_id, x=o.x) for o in outputs]
 
         if self.ledger_writer is not None and pending:
             self.ledger_writer.add_rows(selection.name, pending)
@@ -178,6 +178,7 @@ class SamplingJob:
             "selection": selection_name,
             "dataloader": dataset,
             "parent_id": output.parent_id,
+            "id": output.id,
             "algorithm": output.algorithm,
             "family": output.family,
             "arity": output.arity,

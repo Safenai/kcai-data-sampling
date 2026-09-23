@@ -25,6 +25,19 @@ How - the regimes:
 - seed: fixes every random draw the algorithm makes
 - model: present or absent; its role defines the family
 
+## Independent, by default
+
+A list of transformations means each one is applied on its own, to the same
+source sample: 10 samples × two transformations = 20 outputs. A sequence (run
+one transformation's output through the next) is never the default; it is built
+by the consumers of this engine, in code or across jobs.
+
+- independent: applied to the same source sample, without feeding another
+  transformation's output; that is what a list of transformations means
+- augmented sample id: the derived, deterministic handle of one generated
+  sample (a hash of what produced it: parent, algorithm, resolved parameters,
+  seed); the table carries it, and lineage joins on it
+
 ## What separates the three families is the role of the model in computing the output:
 
 | Family | Role of the model | The output is computed… | Examples of algorithms |

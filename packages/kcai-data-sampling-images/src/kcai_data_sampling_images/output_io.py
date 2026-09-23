@@ -46,14 +46,12 @@ class ImagesOutputWriter:
             output: The output row; its ``x`` is the ``(H, W, 4)`` uint8 array.
 
         Returns:
-            The artifact file name, or ``None`` in trace-only mode.
+            The artifact file name (``{selection}__{id}__{c6}.png``), or
+            ``None`` in trace-only mode.
         """
         artifact = artifact_name(
             selection_name=selection_name,
-            parent=output.parent_id,
-            algorithm=output.algorithm,
-            params=output.params,
-            seed=output.seed,
+            output_id=output.id,
             x=output.x,
         )
         if self.write_images:

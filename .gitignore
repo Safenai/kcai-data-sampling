@@ -9,6 +9,7 @@ uv.lock
 ideas
 .agents
 
+
 # Test / tooling artifacts
 .pytest_cache/
 .mypy_cache/
@@ -23,3 +24,4 @@ pytest_report.html
 # Run outputs and selections: regenerated on every run, never committed
 outputs/
 selections/
+deck/

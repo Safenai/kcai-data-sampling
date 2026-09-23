@@ -20,8 +20,10 @@ class SamplingInterfaceConfig(BaseModel):
             (n-ary stages floor it). Defaults to the loader's
             ``load_batch_size`` when unset.
         outputs: Where the generated samples land (ledger + payload store).
-        transformations: Ordered list of transformations; each entry is
-            validated against its algorithm's registered config schema.
+        transformations: List of transformations, each applied independently
+            to the same selection; order fixes only the output order. Each
+            entry is validated against its algorithm's registered config
+            schema.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -36,5 +38,7 @@ class SamplingInterfaceConfig(BaseModel):
     outputs: SamplingOutputsConfig = Field(description="Ledger + payload store configuration.")
     transformations: list[dict] = Field(
         default_factory=list,
-        description="Ordered transformations; each is a {name, type, params...} dict.",
+        description="Transformations, each applied independently to the same "
+        "selection; order fixes only the output order. Each is a "
+        "{name, type, params...} dict.",
     )

@@ -76,8 +76,9 @@ class JobConfig(BaseModel):
         errors: Global error-handling policy.
         dataloaders: The data loaders and their selections.
         models: Named tool / target model references.
-        transformations: The single interface: ordered transformations,
-            outputs, and the batch/error/storage overrides.
+        operations: The single transform stage: the list of transformations
+            (each applied independently to the same selection), outputs, and
+            the batch/error/storage overrides.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -87,11 +88,11 @@ class JobConfig(BaseModel):
     errors: ErrorsConfig | None = None
     dataloaders: DataLoadersConfig = Field(description="Data loaders.")
     models: ModelsConfig | None = None
-    transformations: SamplingInterfaceConfig = Field(description="The single transformations interface.")
+    operations: SamplingInterfaceConfig = Field(description="The single transformations interface.")
 
-    @field_validator("transformations")
+    @field_validator("operations")
     @classmethod
-    def _resolve_transformations(cls, v: SamplingInterfaceConfig) -> SamplingInterfaceConfig:
+    def _resolve_operations(cls, v: SamplingInterfaceConfig) -> SamplingInterfaceConfig:
         """Resolve each raw transformation entry against its registered schema.
 
         The YAML entries are plain dicts; this validator looks each ``type`` up

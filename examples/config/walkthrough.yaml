@@ -6,7 +6,7 @@ dataloaders:
       load_batch_size: 10
       decode: img_bytes
 
-transformations:
+operations:
   outputs:
     path: examples/outputs/{selection}/ledger.parquet
     write_images: true

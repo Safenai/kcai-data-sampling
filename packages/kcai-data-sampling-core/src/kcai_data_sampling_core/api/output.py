@@ -1,15 +1,35 @@
 """What one transformation output is, in memory.
 
-The row carries declarations and what replays the run — never a judgement
-(a regime is read afterwards, from the input/output pair), never a measurement
-(delta is recomputed downstream), never a path (storage/IO adds it), and no id
-(an identity is the fields it would hash).
+The row carries declarations, what replays the run, and a derived ``id`` —
+never a judgement (a regime is read afterwards, from the input/output pair),
+never a measurement (delta is recomputed downstream), never a path
+(storage/IO adds it), never an *arbitrary* key: the id is "the fields it
+would hash", materialized for consumers and lineage.
 """
 
+import hashlib
+import json
 from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
+
+
+def output_identity(fields: dict[str, Any]) -> str:
+    """Derive the deterministic id of one output from its row fields.
+
+    Args:
+        fields: The row fields (everything but the bitmap and the id itself).
+
+    Returns:
+        A 12-hex sha1 over the fields, stable across runs and environments
+        (``sort_keys``, ``default=str``): the id is re-derivable by any
+        consumer, and two rows with the same id share the same recipe.
+    """
+    identity = {k: v for k, v in fields.items() if k != "id"}
+    return hashlib.sha1(
+        json.dumps(identity, sort_keys=True, default=str).encode("utf-8")
+    ).hexdigest()[:12]
 
 
 @dataclass
@@ -24,6 +44,7 @@ class Output:
 
     Attributes:
         x: The generated sample itself, a numpy array.
+        id: The derived identity: a 12-hex sha1 of this output's row fields.
         parent_id: Lineage, a reference into the run's input selection.
         algorithm: The transformation's identity string.
         family: ``"procedural"``, ``"generative"`` or ``"adversarial"``.
@@ -50,12 +71,22 @@ class Output:
     tool_model: str | None
     target_model: str | None
 
+    @property
+    def id(self) -> str:
+        """The derived identity: a 12-hex sha1 of this output's row fields.
+
+        Not a stored field: it is recomputed from ``row()``, so it cannot
+        drift from the row it identifies.
+        """
+        return output_identity({k: v for k, v in vars(self).items() if k != "x"})
+
     def row(self) -> dict[str, Any]:
-        """Return every field but the bitmap, as a row-ready dict.
+        """Return every field but the bitmap, plus the derived ``id``.
 
         Returns:
             A dictionary of the declarations and replay fields (everything
-            except ``x``), with ``params`` kept as a ``dict`` (serialization
-            to JSON is the writer's business).
+            except ``x``), with the derived ``id`` first and ``params`` kept
+            as a ``dict`` (serialization to JSON is the writer's business).
         """
-        return {k: v for k, v in vars(self).items() if k != "x"}
+        fields = {k: v for k, v in vars(self).items() if k != "x"}
+        return {**fields, "id": output_identity(fields)}

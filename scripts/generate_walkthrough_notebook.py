@@ -192,9 +192,13 @@ Nothing so far touched the disk: outputs are bitmaps in memory with a reference 
 Two ways to drive the same thing:
 """
 
-MD6A = """**The CLI-equivalent** `run(CFG)`, straight from the YAML — the job streams the folder chunk by chunk and chains the transformations (the crop runs on the flipped pixels)"""
+MD6A = """**The CLI-equivalent** `run(CFG)`, straight from the YAML — the job streams the folder chunk by chunk and applies each transformation independently (the crop and the flip both start from the original pixels)"""
 
 CODE6A = """from kcai_data_sampling_job.cli import run
+
+# Reload the config: this cell must work even if only it was re-run after a YAML edit.
+with open("examples/config/walkthrough.yaml") as f:
+    CFG = yaml.safe_load(f)
 
 summary = run(CFG)
 print("job summary:", summary)
@@ -207,11 +211,11 @@ for p in sorted(out_root.iterdir()):
     print("   ", p.name, f"({len(list(p.iterdir()))} files)" if p.is_dir() else "")
 
 ledger = pd.read_parquet(out_root / "ledger.parquet")
-print(f"\\n{len(ledger)} rows in the ledger; the chain, on the first frame:")
+print(f"\\n{len(ledger)} rows in the ledger; the outputs, on the first frame:")
 display(ledger[ledger.parent_id == samples[0].id])
 """
 
-MD6B = """The writers by hand — the **core-level API**, no chain, the crop runs on the original pixels."""
+MD6B = """The writers by hand — the **core-level API**."""
 
 CODE6B = """from kcai_data_sampling_images.output_io import ImagesOutputWriter
 from kcai_data_sampling_job.outputwriter.parquet import ParquetOutputWriter

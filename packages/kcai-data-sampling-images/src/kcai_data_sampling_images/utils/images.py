@@ -8,9 +8,7 @@ so identical generated images deduplicate.
 
 import hashlib
 import io
-import json
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 from PIL import Image
@@ -70,32 +68,24 @@ def quantize(x: np.ndarray) -> np.ndarray:
     return np.clip(x, 0.0, 1.0) * 255.0 + 0.5 if x.dtype.kind == "f" else x.astype(np.uint8)
 
 
-def artifact_name(selection_name: str, parent: str, algorithm: str, params: dict[str, Any], seed: int | None, x: np.ndarray) -> str:
+def artifact_name(selection_name: str, output_id: str, x: np.ndarray) -> str:
     """Build the content-addressed payload file name for a row.
 
-    ``h6`` is a hash of the {algorithm, params, seed} and ``c6`` a hash of the
-    decoded payload bytes, so an identical recipe plus identical pixels name
-    the same file (invariant artifact paths).
+    ``c6`` is a hash of the decoded payload bytes, so identical pixels plus
+    the same output id name the same file (invariant artifact paths). The id
+    already covers the recipe (parent, algorithm, settings, seed); ``c6`` only
+    guards content collisions.
 
     Args:
         selection_name: Name of the selection the row belongs to.
-        parent: Parent identifier of the row.
-        algorithm: Transformation name.
-        params: Transformation parameters used.
-        seed: Seed used (may be ``None`` for deterministic algorithms).
+        output_id: The output's derived ``id``.
         x: The output ``(H, W, C)`` uint8 pixel array.
 
     Returns:
         The ``.png`` artifact file stem to store under the payload directory.
     """
-    recipe = json.dumps(
-        {"algorithm": algorithm, "params": params, "seed": seed},
-        sort_keys=True,
-        default=str,
-    ).encode("utf-8")
-    h6 = hashlib.sha1(recipe).hexdigest()[:6]
     c6 = hashlib.sha1(np.ascontiguousarray(x).tobytes()).hexdigest()[:6]
-    return f"{selection_name}__{parent}__{algorithm}__{h6}__{c6}.png"
+    return f"{selection_name}__{output_id}__{c6}.png"
 
 
 def png_bytes(x: np.ndarray) -> bytes:

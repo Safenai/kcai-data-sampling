@@ -1,8 +1,9 @@
 """Command-line interface for running jobs from YAML configuration files.
 
 Port of dqm-ml's ``cli.py`` to the single-transformations-interface shape:
-one interface with an ordered list of transformations, an outputs
-section (ledger + payload store), and error/batch overrides.
+one interface with a list of transformations each applied independently to the
+same selection, an outputs section (ledger + payload store), and
+error/batch overrides.
 """
 
 import argparse
@@ -113,7 +114,7 @@ def _build_images_error_dict(validated: JobConfig) -> dict[str, str] | None:
         A dict with the two image error keys, or ``None`` for the loader
         defaults.
     """
-    merged = merge_errors(validated.errors, validated.transformations.errors)
+    merged = merge_errors(validated.errors, validated.operations.errors)
     if merged.images is None:
         return None
     images = merged.images
@@ -137,7 +138,7 @@ def _build_writers(
     Returns:
         A ``(payload_writer, ledger_writer)`` tuple; each may be ``None``.
     """
-    outputs = validated.transformations.outputs
+    outputs = validated.operations.outputs
 
     ledger_writer = None
     if "parquet" in outputs_registry:
@@ -164,7 +165,7 @@ def _build_transformations(
     validated: JobConfig,
     transformations_registry: dict[str, Any],
 ) -> list[Any]:
-    """Instantiate the ordered transformations for the interface.
+    """Instantiate the transformations for the interface.
 
     Each validated entry is its algorithm's own config instance; the extra
     config keys (``name``, ``type``, ``seed``, ``storage``) are split off and
@@ -175,10 +176,10 @@ def _build_transformations(
         transformations_registry: The registered transformations.
 
     Returns:
-        An ordered list of transformation instances.
+        A list of transformation instances, one per configured entry.
     """
     instances: list[Any] = []
-    for entry in validated.transformations.transformations:
+    for entry in validated.operations.transformations:
         algorithm = transformations_registry[entry.type]
         dumped = entry.model_dump()
         params = {k: v for k, v in dumped.items() if k not in ("name", "type", "seed", "storage")}
@@ -233,9 +234,9 @@ def run(config: dict[str, Any]) -> dict[str, int]:
         transformations=transformations,
         payload_writer=payload_writer,
         ledger_writer=ledger_writer,
-        errors=merge_errors(validated.errors, validated.transformations.errors),
+        errors=merge_errors(validated.errors, validated.operations.errors),
         progress_bar=compute["progress_bar"],
-        transform_batch_size=validated.transformations.transform_batch_size,
+        transform_batch_size=validated.operations.transform_batch_size,
     )
 
     return job.run()

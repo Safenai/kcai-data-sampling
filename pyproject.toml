@@ -16,6 +16,7 @@ dependencies = [
     "kcai-data-sampling-images>=0.0.1",
     "kcai-data-sampling-job>=0.0.1",
     "pandas>=3.0.6",
+    "python-pptx",
 ]
 
 [build-system]
