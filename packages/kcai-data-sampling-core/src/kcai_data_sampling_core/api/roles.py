@@ -16,7 +16,7 @@ class TargetModel(Protocol):
     """The model an adversarial transformation is computed *against*.
 
     Attributes:
-        name: Human-readable name, recorded on every output row.
+        name: Readable name, recorded on every output row.
     """
 
     name: str
@@ -38,7 +38,7 @@ class ToolModel(Protocol):
     """The model a generative transformation produces content with.
 
     Attributes:
-        name: Human-readable name, recorded on every output row.
+        name: Readable name, recorded on every output row.
     """
 
     name: str

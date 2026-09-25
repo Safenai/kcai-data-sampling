@@ -1,29 +1,32 @@
-"""Shared protocol definitions for data loaders and selections.
+"""Generic protocols for data loaders and selections.
 
-The job iterates every selection uniformly: each yields `list[Sample]`
-chunks. ``DataSelection`` here is the *source* protocol (disk/table backed);
-the transformation engine consumes the in-memory core
-``kcai_data_sampling_core.api.selection.DataSelection`` built from each chunk.
+A loader scans a source (disk, table) and discovers its data selections; a
+selection iterates over in-memory :class:`Batch` chunks (batch = row), ready
+for the transformation engine. The contracts are datatype-agnostic — nothing
+here assumes images; datatype packages fix the sample's axes and value range
+on their batch subclass.
 """
 
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Iterator, Protocol, runtime_checkable
+
+from kcai_data_sampling_core.api.selection import Batch
 
 
 @runtime_checkable
 class DataSelection(Protocol):
     """A specific subset of data discovered by a :class:`DataLoader`.
 
-    A selection is a concrete set of samples (a folder, a filtered view of a
-    table, a single file) and iterates over in-memory sample batches.
+    A selection is a concrete set of samples (a filtered view of a table) and
+    iterates over in-memory batches.
 
     Attributes:
         name: Unique name of the selection within the job.
-        sample_axes: Labels of the axes of each sample's ``x`` array.
-        value_range: ``(low, high)`` domain of values of ``x``, or ``None``.
+        sample_axes: Labels of the axes of each row's sample array, or ``None``.
+        value_range: ``(low, high)`` domain of values of each row, or ``None``.
     """
 
     name: str
-    sample_axes: tuple[str, ...]
+    sample_axes: tuple[str, ...] | None
     value_range: tuple[float, float] | None
 
     def bootstrap(self, columns_list: list[str] | None) -> None:
@@ -40,8 +43,9 @@ class DataSelection(Protocol):
             The batch count, used for progress-bar estimation.
         """
 
-    def __iter__(self) -> Any:
-        """Iterate over the selection, yielding ``list[Sample]`` chunks."""
+    def __iter__(self) -> Iterator[Batch]:
+        """Iterate over the selection, yielding ``Batch`` chunks."""
+        ...
 
 
 @runtime_checkable

@@ -3,7 +3,7 @@
 Accumulates the rows of one selection and writes a single parquet file at
 ``flush()``, so the written ledger never depends on ``flush_batch_size``
 (batch invariance). Rows carry no pixels: each references its artifact
-file in ``images_dir``.
+file in ``samples_dir``.
 """
 
 import logging
@@ -12,16 +12,19 @@ from typing import Any
 
 import pyarrow as pa
 import pyarrow.parquet as pq
+from typing_extensions import override
+
+from kcai_data_sampling_core.api.output_writer import OutputWriter
 
 logger = logging.getLogger(__name__)
 
 
-class ParquetOutputWriter:
+class ParquetOutputWriter(OutputWriter):
     """Ledger writer for the generated-sample rows.
 
     The plugin for the ``parquet`` registered type
-    (``kcai_data_sampling.outputwriter`` entry point). ``write_payload`` is a
-    no-op: this writer owns the ledger, not the pixels.
+    (``kcai_data_sampling.outputwriter`` entry point). ``add_payload`` is
+    inherited as a no-op: this writer owns the ledger, not the pixels.
 
     Attributes:
         name: Unique writer name.
@@ -43,20 +46,12 @@ class ParquetOutputWriter:
         config = config or {}
         if "path_pattern" not in config:
             raise ValueError("parquet output writer requires a 'path_pattern'")
-        self.name = name
+        super().__init__(name, config)
         self.path_pattern = config["path_pattern"]
         self.file_path: Path | None = None
         self._rows: list[dict[str, Any]] = []
 
-    def write_payload(self, selection_name: str, output: Any) -> None:
-        """No payload files: the ledger is metadata-only.
-
-        Args:
-            selection_name: Ignored.
-            output: Ignored.
-        """
-        del selection_name, output
-
+    @override
     def add_rows(self, selection_name: str, rows: list[dict]) -> None:
         """Buffer ledger rows for one selection.
 
@@ -70,6 +65,7 @@ class ParquetOutputWriter:
             self.file_path.parent.mkdir(parents=True, exist_ok=True)
         self._rows.extend(rows)
 
+    @override
     def flush(self) -> None:
         """Write all buffered rows to the ledger, once, then reset.
 

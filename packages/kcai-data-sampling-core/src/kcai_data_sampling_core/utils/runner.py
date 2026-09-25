@@ -1,59 +1,46 @@
-"""The runner: a selection in, outputs out. Nothing touches the disk.
+"""The runner: a batch in, outputs out. Nothing touches the disk.
 
-Genericity rule: batches are execution details only — any split of the
-selection gives the same outputs in the same order (batch invariance), which is
-the license for the phase-9 parallel runner.
+Genericity rule: batches are execution details only — any split of a selection
+gives the same outputs in the same order (batch invariance), which is what
+lets a parallel runner arrive without changing the row contract.
 """
 
 from kcai_data_sampling_core.api.output import Output
-from kcai_data_sampling_core.api.selection import DataSelection, Sample
+from kcai_data_sampling_core.api.selection import Batch
 from kcai_data_sampling_core.api.transformation import Transformation
 
 
 class TransformationRunner:
-    """Runs one transformation over an in-memory selection (or a subset).
+    """Runs one transformation over an in-memory batch (or a subset).
 
     Attributes:
-        selection: The in-memory selection the runner transforms.
+        batch: The in-memory batch the runner transforms.
     """
 
-    def __init__(self, selection: DataSelection):
-        """Build the runner for a selection.
+    def __init__(self, batch: Batch):
+        """Build the runner for a batch.
 
         Args:
-            selection: The in-memory selection; its ``value_range`` is handed
-                to every transformation call.
+            batch: The in-memory batch; its ``value_range`` is handed to every
+                transformation call.
         """
-        self.selection = selection
+        self.batch = batch
 
     def run(
         self,
         transformation: Transformation,
-        samples: list[Sample] | None = None,
-        batch_size: int | None = None,
+        batch: Batch | None = None,
     ) -> list[Output]:
-        """Apply one transformation to the selection (or a subset of it).
-
-        ``batch_size`` is an execution detail: any split gives the same outputs
-        in the same order (unary partition invariance; n-ary parent sets are
-        formed once over the whole set, then split, so pairing never depends on
-        batching).
+        """Apply one transformation to the batch (or a subset of it).
 
         Args:
             transformation: The transformation to apply.
-            samples: The samples to transform; ``None`` uses the whole
-                selection.
-            batch_size: Target ``(B, *sample)`` batch handed to ``apply``;
-                ``None`` transforms the whole set in one batch.
+            batch: The batch to transform; ``None`` uses the runner's own
+                batch.
 
         Returns:
-            One ``Output`` per transformed sample, in selection order.
+            One ``Output`` per transformed row, in batch order.
         """
-        samples = self.selection.samples if samples is None else samples
-        units = transformation.select_parents(samples) if transformation.arity == "n-ary" else samples
-        size = len(units) if batch_size is None else batch_size
-        return [
-            out
-            for start in range(0, len(units), max(size, 1))
-            for out in transformation.transform(units[start : start + size], self.selection.value_range)
-        ]
+        batch = self.batch if batch is None else batch
+        units = transformation.select_parents(batch) if transformation.arity == "n-ary" else batch
+        return transformation.transform(units, batch.value_range)

@@ -27,6 +27,33 @@ NAMES = [
 OUT = Path(__file__).resolve().parents[1] / "examples" / "data" / "comma10k_sample"
 
 
+def write_sidecar() -> None:
+    """Write the ``samples.parquet`` sidecar for the fetched frames.
+
+    One row per image: ``id`` (file stem), ``path`` (relative to the sample
+    root, resolved by ``sample_path.prefix``), ``height`` and ``width``
+    (real image sizes, so no ``image_shape`` is needed).
+    """
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    from PIL import Image
+
+    rows = []
+    for name in sorted((OUT / "imgs").glob("*.png")):
+        w, h = Image.open(name).size
+        rows.append((name.stem, f"imgs/{name.name}", h, w))
+    table = pa.table(
+        {
+            "id": [r[0] for r in rows],
+            "path": [r[1] for r in rows],
+            "height": [r[2] for r in rows],
+            "width": [r[3] for r in rows],
+        }
+    )
+    pq.write_table(table, OUT / "samples.parquet")
+    print(f"sidecar {OUT / 'samples.parquet'} with {len(rows)} rows")
+
+
 def main() -> None:
     for remote, local in (("imgs2", "imgs"), ("masks2", "masks")):
         (OUT / local).mkdir(parents=True, exist_ok=True)
@@ -37,6 +64,7 @@ def main() -> None:
             with urllib.request.urlopen(f"{RAW}/{remote}/{name}", timeout=120) as r:
                 path.write_bytes(r.read())
             print(f"  {local}/{name[:12]}…")
+    write_sidecar()
     print(f"{len(NAMES)} frames and masks in {OUT}")
 
 

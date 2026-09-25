@@ -1,43 +1,23 @@
-"""Mirror image arrays horizontally.
+"""Mirror image arrays horizontally: the algorithm math.
 
-Horizontal flip: ``xs[:, :, ::-1, :]`` — the width axis flips, height stays.
+``horizontal_flip(xs)`` is the pure numpy map; the transformation class that
+wraps it into the unary contract lives in
+``kcai_data_sampling_images.api.transformations.horizontal_flip``.
 """
-
-from typing import override
 
 import numpy as np
 
-from kcai_data_sampling_core.api.unary import UnaryTransformation
-from kcai_data_sampling_images.configs import HorizontalFlipTransformationConfig
 
+def horizontal_flip(xs: np.ndarray) -> np.ndarray:
+    """Mirror a batch of image arrays on the width axis.
 
-class HorizontalFlip(UnaryTransformation):
-    """Mirror image arrays horizontally: ``xs[:, :, ::-1, :]``.
+    ``xs[:, :, ::-1, :]`` — the width axis flips, height stays. The map is its
+    own inverse.
 
-    The width axis flips; height stays. The transformation is its own inverse.
+    Args:
+        xs: Batch of image arrays shaped ``(B, H, W, C)``.
+
+    Returns:
+        The flipped batch, contiguous uint8.
     """
-
-    algorithm = "horizontal_flip"
-
-    #: The registered config schema this algorithm validates against.
-    Config = HorizontalFlipTransformationConfig
-
-    reversible = True
-
-    @override
-    def apply(
-        self,
-        xs: np.ndarray,  # (b, h, w, c) uint8
-        rngs: list[np.random.Generator] | None = None,
-    ) -> np.ndarray:
-        """Apply the horizontal flip.
-
-        Args:
-            xs: Batch of image arrays shaped ``(B, H, W, C)``.
-            rngs: Unused for this deterministic operation.
-
-        Returns:
-            The flipped batch, contiguous uint8.
-        """
-        del rngs
-        return np.ascontiguousarray(xs[:, :, ::-1, :])
+    return np.ascontiguousarray(xs[:, :, ::-1, :])

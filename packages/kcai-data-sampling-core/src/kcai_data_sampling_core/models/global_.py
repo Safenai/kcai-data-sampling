@@ -1,7 +1,7 @@
 """Global configuration models: storage, compute, and error handling.
 
 Composed from dqm-ml's ``global_.py`` with S3 support deliberately cut:
-storage is local only this phase, but the ``type`` discriminator keeps the same
+storage is local only, but the ``type`` discriminator keeps the same
 shape so S3 can be re-added later behind the same interface.
 """
 
@@ -13,7 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class StorageConfig(BaseModel):
     """Local storage configuration.
 
-    Local only this phase. The ``type`` field
+    Local only. The ``type`` field
     keeps the discriminator shape so an S3 backend can be re-added behind the
     same interface.
     """
@@ -32,7 +32,7 @@ class ComputeConfig(BaseModel):
         max_memory: Maximum memory per worker (e.g. ``"4Gi"``), used as a
             memory-flush threshold.
         device: Compute device: ``"auto"`` picks cuda if available (GPU paths
-            arrive with the phase-9 parallel runner).
+            arrive with a parallel runner).
         progress_bar: Show tqdm progress bars.
         threads: Number of worker threads for IO.
     """

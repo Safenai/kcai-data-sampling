@@ -15,10 +15,12 @@ this package touches the disk.
 """
 
 from kcai_data_sampling_core.api import (
-    DataSelection,
     FAMILY_BY_ROLE,
+    Batch,
+    DataLoader,
+    DataSelection,
     Output,
-    Sample,
+    OutputWriter,
     TargetModel,
     ToolModel,
     Transformation,
@@ -29,10 +31,12 @@ from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry
 
 __all__ = [
     "FAMILY_BY_ROLE",
+    "Batch",
+    "DataLoader",
     "DataSelection",
     "Output",
+    "OutputWriter",
     "PluginLoadedRegistry",
-    "Sample",
     "TargetModel",
     "ToolModel",
     "Transformation",

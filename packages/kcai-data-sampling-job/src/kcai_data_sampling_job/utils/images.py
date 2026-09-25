@@ -4,6 +4,9 @@ The RGBA-U8 pipeline: source files decode **once** to
 raw RGBA bytes, flow through the engine as ``(B, H, W, 4)`` uint8 arrays, and
 encode **once** to PNG at the outputs stage. Payload files are content-hashed
 so identical generated images deduplicate.
+
+Hosted in ``-job``: every read happens in the dataloaders and every write in
+the outputwriters of this package.
 """
 
 import hashlib
@@ -51,21 +54,6 @@ def encode_image(path: str | Path, array: np.ndarray) -> None:
     if array.ndim != 3 or array.shape[2] not in (3, 4):
         raise ValueError(f"expected (H, W, 3|4) array, got {array.shape}")
     Image.fromarray(np.ascontiguousarray(array)).save(path, format="PNG")
-
-
-def quantize(x: np.ndarray) -> np.ndarray:
-    """Quantize a float ``[0, 1]`` HWC array to uint8.
-
-    Kept from the original codec for float paths (the RGBA-U8 pipeline skips
-    quantization; end-to-end math stays in the 0..255 space).
-
-    Args:
-        x: Float array in ``[0, 1]``.
-
-    Returns:
-        A uint8 array formed by ``(x * 255 + 0.5).astype(np.uint8)``.
-    """
-    return np.clip(x, 0.0, 1.0) * 255.0 + 0.5 if x.dtype.kind == "f" else x.astype(np.uint8)
 
 
 def artifact_name(selection_name: str, output_id: str, x: np.ndarray) -> str:

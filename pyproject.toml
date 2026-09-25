@@ -1,9 +1,8 @@
 # Workspace meta-package that ties together the kcai data-sampling packages
-# (core, images, fgsm, images-lama, job) and the umbrella CLI. No code lives at
-# the root: it only declares the UV workspace and how the members resolve each
-# other. Shared dev-tool sections (ruff / mypy / pytest) are deliberately deferred
-# (lint and tests are out of scope for this phase) but this file is written once
-# so the structure does not need rework later.
+# (core, images, job) and the umbrella CLI. No code lives at the root: it only
+# declares the UV workspace and how the members resolve each other. Shared
+# dev-tool sections (ruff / mypy) stay deferred; the pytest section is in
+# scope and lives below.
 [project]
 name = "kcai-workspace"
 dynamic = ["version"]
@@ -35,11 +34,78 @@ members = ["packages/*"]
 [tool.uv.sources]
 kcai-data-sampling-core = { workspace = true }
 kcai-data-sampling-images = { workspace = true }
+kcai-data-sampling-images-lama = { workspace = true }
 kcai-data-sampling-job = { workspace = true }
 kcai-data-sampling = { workspace = true }
+# torch resolves from the CPU index only (mirrors dqm-ml-workspace); the root
+# never pulls it — only the opt-in -lama member depends on torch.
+torch = { index = "pytorch" }
+
+# CPU-only torch wheels for the opt-in -lama member (dqm-ml-workspace
+# pattern). explicit: the index serves only packages routed to it by
+# `[tool.uv.sources]` (torch), so the pytorch mirror's stale setuptools copy
+# never shadows PyPI on a bare sync.
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [tool.uv]
-default-groups = []
+default-groups = ["nox"]
+
+# Dependency groups, installed by uv/nox when running the corresponding task
+# (mirrors dqm-ml-workspace; the association with a session lives in noxfile.py).
+[dependency-groups]
+
+# Session runner for the dev tasks defined in noxfile.py.
+nox = [
+    "nox-uv",
+]
+
+# Test suite: pytest plus reporting plugins. No pytest-randomly — the suite
+# runs in a fixed order.
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-html",
+    "pytest-timeout",
+    "pytest-sugar",
+]
+
+# opt-in surface: the same test deps as `test`, plus the -lama member. torch
+# resolves from the CPU index via `[tool.uv.sources]`; the `test-lama` nox
+# session runs the opt-in (torch-gated) tests for real. The default `test`
+# group stays torch-free (Q2 pin).
+test-lama = [
+    "kcai-data-sampling-images-lama",
+    { include-group = "test" },
+]
+
+# pytest config: strict, warnings-as-errors, a global per-test timeout, the
+# HTML report, and our own basetemp to avoid the
+# /tmp disk quota. Suppressions grow here as third-party warnings fire.
+[tool.pytest.ini_options]
+addopts = [
+    "--strict-config",
+    "--strict-markers",
+    "--html=pytest_report.html",
+    "-vvv",
+    "-s",
+    "--timeout=300",
+    "--basetemp=tmp",
+    "-m",
+    "not packaging",
+]
+xfail_strict = true
+filterwarnings = [
+    "error",
+    "ignore::SyntaxWarning",
+]
+markers = [
+    "e2e: Full job runs driven through the CLI as a user would (tests/e2e/)",
+    "slow: Marks potentially slow tests (deselect with '-m \"not slow\"')",
+    "packaging: Marks package-isolation tests (deselect with '-m \"not packaging\"')",
+]
 
 [tool.setuptools_scm]
 version_file = "src/kcai_workspace/_version_.py"

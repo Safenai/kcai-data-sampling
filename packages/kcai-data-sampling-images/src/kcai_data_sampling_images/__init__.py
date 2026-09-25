@@ -1,8 +1,11 @@
-"""No-model image transformations and image data IO.
+"""No-model image transformations.
 
-Ships the phase-1 image algorithm set (``horizontal_flip``, ``crop_resize``),
-the ``image_dir`` dataloader, and the ``images`` payload writer. Everything
-flows as ``(B, H, W, 4)`` uint8 RGBA arrays.
+Ships the image algorithm set (``horizontal_flip``, ``crop_resize``): the
+math functions under ``transformations/`` and the transformation classes under
+``api/transformations/``, plus the ``ImageBatch`` specialization under
+``api/``. I/O is deliberately absent: reads happen in the ``-job`` dataloaders
+and writes in the ``-job`` outputwriters; everything flows as ``(B, H, W, 4)``
+uint8 RGBA arrays.
 """
 
 from ._version_ import __version__

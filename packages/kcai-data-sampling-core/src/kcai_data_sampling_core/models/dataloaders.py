@@ -6,9 +6,8 @@ the number of rows pulled from a selection per step.
 """
 
 from enum import Enum
-from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from kcai_data_sampling_core.models.global_ import StorageConfig
 
@@ -43,29 +42,6 @@ class SamplePathConfig(BaseModel):
     prefix: str | None = Field(default=None, description="Base directory for resolving relative paths.")
 
 
-class SplitConfig(BaseModel):
-    """How to split data into named groups (e.g. train / test).
-
-    Attributes:
-        by: Column used to determine the split group.
-        values: Explicit list of split-group values to materialise;
-            auto-discovered if ``None``.
-        exclude: Split-group values to exclude (fnmatch patterns supported).
-    """
-
-    model_config = ConfigDict(extra="forbid")
-
-    by: str = Field(description="Column used to determine the split group.")
-    values: list[str] | None = Field(
-        default=None,
-        description="Explicit list of split-group values to materialise. Auto-discovered if None.",
-    )
-    exclude: list[str] | None = Field(
-        default=None,
-        description="Split-group values to exclude (fnmatch patterns supported).",
-    )
-
-
 class TransformType(str, Enum):
     """Target data type for column transformations."""
 
@@ -97,25 +73,22 @@ class TransformConfig(BaseModel):
 class DataLoaderConfig(BaseModel):
     """Configuration for a single dataloader.
 
-    ``type`` is registry-resolved: the loader plugin
-    classes are discovered from entry points, so a new loader package plugs in
-    without touching core.
+    ``type`` is registry-resolved: the loader plugin classes are discovered
+    from entry points, and each plugin carries its own config schema
+    (``loader_cls.Config``, a subclass of this generic model) with the
+    datatype-specific keys — so a new loader package plugs in without touching
+    core.
 
     Attributes:
         name: Unique name for this dataloader.
-        type: Registered dataloader type (``image_dir``, ``parquet``, ...).
+        type: Registered dataloader type (``parquet``, ...).
         path: Local path or glob pattern to the data files.
         id_column: Column (or file stem) used as row identifier.
         load_batch_size: Rows pulled from the selection per step.
-        decode: Image mode knob; only ``img_bytes`` is implemented this phase
-            (``rgba`` input is postponed).
-        image_shape: Optional ``[height, width, channels]`` for image tables
-            whose per-row shape is not carried in the data.
         filters: Row-level filters.
         sample_path: Per-column path prefixes.
-        split: Group the data into named selections.
         transform: Column type-casting transforms.
-        storage: Storage override (local only this phase).
+        storage: Storage override (local only).
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -125,17 +98,8 @@ class DataLoaderConfig(BaseModel):
     path: str = Field(description="Glob pattern or path to data files.")
     id_column: str | None = Field(default=None, description="Column used as row identifier.")
     load_batch_size: int = Field(default=10000, description="Number of rows per step.")
-    decode: Literal["img_bytes", "rgba"] | None = Field(
-        default=None,
-        description="Image payload form; only 'img_bytes' is implemented this phase.",
-    )
-    image_shape: list[int] | None = Field(
-        default=None,
-        description="Image shape [height, width, channels] when not carried in the data.",
-    )
     filters: list[FilterConfig] | None = None
     sample_path: list[SamplePathConfig] | None = None
-    split: SplitConfig | None = None
     transform: list[TransformConfig] | None = None
     storage: StorageConfig | None = None
 
@@ -143,9 +107,14 @@ class DataLoaderConfig(BaseModel):
 class DataLoadersConfig(BaseModel):
     """Collection of dataloaders for a job.
 
+    Each entry is validated against its loader plugin's own config schema
+    (``loader_cls.Config``), mirroring how transformation entries are resolved
+    against the algorithm's registered schema.
+
     Attributes:
         storage: Default storage config inherited by all loaders.
-        loaders: List of dataloader configurations.
+        loaders: List of raw dataloader configuration dicts, resolved through
+            the loader registry.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -154,4 +123,35 @@ class DataLoadersConfig(BaseModel):
         default=None,
         description="Default storage config inherited by all loaders.",
     )
-    loaders: list[DataLoaderConfig] = Field(description="List of dataloader configurations.")
+    loaders: list[dict] = Field(description="List of raw dataloader configuration dicts.")
+
+    @model_validator(mode="after")
+    def _resolve_loaders(self) -> "DataLoadersConfig":
+        """Resolve each raw loader entry against its registered schema.
+
+        Each entry's ``type`` is looked up in the dataloader registry; the
+        loader's own config schema (``loader_cls.Config``) validates the
+        entry, so datatype-specific keys and required parameters are refused
+        or kept at config load.
+
+        Returns:
+            This config with every loader validated against its specific
+            registered schema.
+
+        Raises:
+            ValueError: If a loader type is unknown or an entry does not pass
+                its loader's schema.
+        """
+        from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry
+
+        registry = PluginLoadedRegistry.get_dataloaders_registry()
+        resolved: list[DataLoaderConfig] = []
+        for entry in self.loaders:
+            entry = dict(entry)
+            loader_cls = registry.get(entry.get("type", ""))
+            if loader_cls is None:
+                raise ValueError(f"unknown dataloader type {entry.get('type')!r}")
+            config_cls = getattr(loader_cls, "Config", DataLoaderConfig)
+            resolved.append(config_cls.model_validate(entry))
+        self.loaders = resolved
+        return self

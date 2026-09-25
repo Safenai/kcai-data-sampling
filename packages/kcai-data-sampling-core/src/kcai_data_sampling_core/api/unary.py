@@ -15,7 +15,7 @@ resamples back; one that would enlarge it is out of scope.
 import numpy as np
 
 from kcai_data_sampling_core.api.output import Output
-from kcai_data_sampling_core.api.selection import Sample
+from kcai_data_sampling_core.api.selection import Batch
 from kcai_data_sampling_core.api.transformation import Transformation
 
 
@@ -44,27 +44,27 @@ class UnaryTransformation(Transformation):
         """
         raise NotImplementedError
 
-    def transform(self, batch: list[Sample], value_range: tuple[float, float] | None = None) -> list[Output]:
-        """Transform one batch into one ``Output`` per sample.
+    def transform(self, batch: Batch, value_range: tuple[float, float] | None = None) -> list[Output]:
+        """Transform one batch into one ``Output`` per row.
 
         Args:
-            batch: The input samples of one batch.
+            batch: The decoded sample batch.
             value_range: The selection's ``(low, high)``, or ``None`` to skip
                 the clip and the range check.
 
         Returns:
-            One ``Output`` per sample, in batch order.
+            One ``Output`` per row, in batch order.
 
         Raises:
             ValueError: If ``apply`` changed the sample space, or the output
                 left the declared value range.
         """
-        xs = np.stack([s.x for s in batch])
-        out = self.apply(xs, self.rngs([s.id for s in batch]))
+        xs = batch.data
+        out = self.apply(xs, self.rngs(batch.ids))
         if out.shape != xs.shape:
             raise ValueError(
                 f"{self.algorithm} changed the sample space: {xs.shape[1:]} → {out.shape[1:]}. "
                 "A unary transformation preserves it, so that δ stays defined."
             )
         out = self.fit_to_range(out, value_range)
-        return [Output(x=x_prime, parent_id=s.id, **self.describe()) for x_prime, s in zip(out, batch)]
+        return [Output(x=x_prime, parent_id=row_id, **self.describe()) for x_prime, row_id in zip(out, batch.ids)]

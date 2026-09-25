@@ -118,7 +118,7 @@ The diagonal is only common habit, not a structural rule.
 | family | property of the algorithm | carried by the algorithm | declared, consistency checkable without running |
 | label effect | resolved from the pair (algorithm, label type) | both declare, the campaign resolves | declared, the interface checks that a τ exists, never that it is right |
 | regime | half measured, half declared | column of the output table | budget: measured. information: inherited from the declared mechanism |
-| validity, is y still statable? | a judgement on the result | column of the output table | an oracle, a human or a rule. Never derived, and never from the evaluated model |
+| validity, is y still statable? | a judgement on the result | column of the output table | an oracle, a user or a rule. Never derived, and never from the evaluated model |
 
 decision_flip : the evaluated model changing its mind, cannot serve as a validity indicator.
 It measures the reaction of the very model we are trying to probe: using it to decide whether a sample is valid makes the test circular.

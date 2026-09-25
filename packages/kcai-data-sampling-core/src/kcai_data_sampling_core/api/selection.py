@@ -1,62 +1,76 @@
-"""What goes into a transformation run: one sample, and the data selection.
+"""What goes into a transformation run: one generic decoded batch.
 
-``DataSelection`` is the authority on what a *sample* is, in memory only. It is
-not a batch: how samples are grouped for execution is chosen at run time and
-changes nothing (batch invariance: outputs are independent of the batch
-layout).
+A **batch is a row**: one ``load_batch_size`` chunk of a selection becomes a
+:class:`Batch` — the chunk's source columns stay arrow-native (a pyarrow table,
+the sample column dropped) and the sample column decodes **once** into a numpy
+``(B, *sample)`` stack. Row ``i`` on every axis is the same sample: ``ids[i]``,
+``columns`` slice ``i``, ``data[i]``. There is no ``Sample(x, y)`` and there is
+no ``y`` — pyarrow wherever possible, numpy only where the sample math requires
+it. Nothing here assumes images: the sample's space is declared by
+``sample_axes`` and ``value_range``, both optional because a datatype package
+fixes them on its own subclass (``-images`` defines
+:class:`~kcai_data_sampling_images.api.selection.ImageBatch`).
 """
 
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass
 
 import numpy as np
+import pyarrow as pa
 
 
 @dataclass
-class Sample:
-    """One input sample.
+class Batch:
+    """One decoded chunk of a selection.
+
+    The batch is the in-memory authority on what a sample is, and nothing
+    more: how batches relate to each other (streaming order) is a loader
+    concern, and how many batches coalesce for execution changes nothing in
+    the outputs (batch invariance).
 
     Attributes:
-        id: Names the sample within its data selection.
-        x: The sample itself, a numpy array of shape given by the selection's
-            ``sample_axes`` (for images: ``(H, W, C)`` uint8).
-        y: The annotation as the dataset gives it; the interface never reads
-            it, and it passes through unchanged (label transport is postponed).
-        source: The reader's provenance note (what it assembled the sample
-            from), opaque to the interface, kept so that storage can write a
-            selection that can be read again.
-    """
-
-    id: str
-    x: np.ndarray
-    y: dict[str, Any] = field(default_factory=dict)
-    source: dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass
-class DataSelection:
-    """What a run covers, and the authority on what a sample is.
-
-    In memory only: ``dataset`` names the reader that assembled the samples.
-    ``sample_axes`` and ``value_range`` are the space a sample lives in — its
-    shape and its domain of values — which a unary transformation must
-    preserve. A ``None`` value range leaves the range unchecked.
-
-    Attributes:
-        name: Unique name of this selection.
-        dataset: Names the reader that assembled the samples.
-        samples: The in-memory samples (a chunk of the source selection).
-        sample_axes: Labels for the axis dimensions of ``x``.
-        value_range: ``(low, high)`` domain of values, or ``None`` to skip
-            range checks.
+        name: Unique name of the selection this batch belongs to.
+        dataset: Names the reader (loader) that assembled the selection.
+        ids: One row identifier per sample, in row order.
+        columns: The chunk's source columns as a pyarrow table — the sample
+            column is dropped — kept arrow-native for ledger pass-through.
+        data: The decoded sample stack ``(B, *sample)``, one row per source
+            row, in row order.
+        sample_axes: Labels of the sample dimensions, or ``None`` when the
+            datatype declares none.
+        value_range: ``(low, high)`` domain of sample values, or ``None``.
     """
 
     name: str
     dataset: str
-    samples: list[Sample] = field(default_factory=list)
-    sample_axes: tuple[str, ...] = ("channel", "height", "width")
-    value_range: tuple[float, float] | None = (0.0, 1.0)
+    ids: list[str]
+    columns: pa.Table
+    data: np.ndarray
+    sample_axes: tuple[str, ...] | None = None
+    value_range: tuple[float, float] | None = None
 
     def __len__(self) -> int:
-        """Return the number of samples in the selection."""
-        return len(self.samples)
+        """Return the number of rows (samples) in this batch."""
+        return len(self.data)
+
+    def row(self, index: int) -> "Batch":
+        """Return a single-row batch: the sample at ``index``.
+
+        Slicing keeps the pyarrow columns and the numpy stack aligned with the
+        ids, so a row is usable anywhere the whole batch is (the runner, a
+        unary ``transform``), at ``(B=1, *sample)``.
+
+        Args:
+            index: Row index into every axis of the batch.
+
+        Returns:
+            The one-row batch.
+        """
+        return Batch(
+            name=self.name,
+            dataset=self.dataset,
+            ids=[self.ids[index]],
+            columns=self.columns.slice(index, 1),
+            data=self.data[index : index + 1],
+            sample_axes=self.sample_axes,
+            value_range=self.value_range,
+        )

@@ -1,7 +1,7 @@
 """Display helpers for the walkthrough notebook, presentation only.
 
 Drawing an annotation is the notebook's job here: the interface never reads
-``Sample.y``, and the ``image_dir`` loader reads frames only (phase 1).
+the interface batch's pixel data, and the parquet loader reads frames only.
 """
 
 import base64

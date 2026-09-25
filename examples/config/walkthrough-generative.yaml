@@ -1,0 +1,41 @@
+# Generative: inpainting with LaMa (big-lama, CPU). Needs the opt-in
+# `kcai-data-sampling-images-lama` install (torch + the weights, fetched into
+# `.cache/` on first use).
+#
+# A tool model PRODUCES content: the region below is erased, and LaMa fills it
+# with something that was not in the image. The map is deterministic (no seed)
+# and not reversible (what was in the region is gone).
+dataloaders:
+  loaders:
+    - name: comma10k
+      type: parquet
+      path: examples/data/comma10k_sample/samples.parquet
+      id_column: id
+      load_batch_size: 10
+      decode: img_bytes
+      sample_path:
+        - column: path
+          prefix: examples/data/comma10k_sample
+
+# Named model references; a transformation names one via tool_model.
+models:
+  lama:
+    type: lama_inpaint          # registered plugin (kcai_data_sampling.models)
+    weights: big-lama.pt        # cached checkpoint; the ledger rows carry its stem
+    params: { margin: 256 }     # pixels of context cropped around the mask union
+
+operations:
+  outputs:
+    path: examples/outputs/{selection}/ledger.parquet
+    write_samples: true
+    samples_dir: examples/outputs/{selection}/payloads
+    flush_batch_size: 128
+    include: [height, width]
+  transformations:
+    - name: inpaint
+      type: inpaint
+      tool_model: lama
+      top: 700                  # window top in pixels (>= 0)
+      left: 500                 # window left in pixels (>= 0)
+      height: 300               # window height in pixels (> 0)
+      width: 400                # window width in pixels (> 0)

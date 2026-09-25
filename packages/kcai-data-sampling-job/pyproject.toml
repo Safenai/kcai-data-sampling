@@ -17,10 +17,11 @@ classifiers = [
 ]
 
 [project.entry-points."kcai_data_sampling.dataloaders"]
-parquet = "kcai_data_sampling_job.dataloaders.parquet:ParquetDataLoader"
+parquet = "kcai_data_sampling_job.dataloaders.api.parquet:ParquetDataLoader"
 
 [project.entry-points."kcai_data_sampling.outputwriter"]
-parquet = "kcai_data_sampling_job.outputwriter.parquet:ParquetOutputWriter"
+images = "kcai_data_sampling_job.outputwriter.api.images:ImagesOutputWriter"
+parquet = "kcai_data_sampling_job.outputwriter.api.parquet:ParquetOutputWriter"
 
 [build-system]
 requires = ["setuptools>=80", "setuptools-scm[simple]>=8"]

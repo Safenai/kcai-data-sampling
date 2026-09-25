@@ -17,11 +17,14 @@ ideas
 .coverage
 htmlcov/
 pytest_report.html
+tests/outputs/
 
 # Model weights download on first use; never committed
 *.pt
+.cache/
 
 # Run outputs and selections: regenerated on every run, never committed
 outputs/
 selections/
 deck/
+tmp/

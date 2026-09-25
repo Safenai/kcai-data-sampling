@@ -1,11 +1,23 @@
-"""Data loaders module: protocol plus the parquet table loader.
+"""Data loaders package: the parquet image loader and its plugin config.
 
-``image_dir`` (folder of image files) is shipped by ``kcai-data-sampling-images``;
-this package adds the generic ``parquet`` table loader. Both are registered
-under the ``kcai_data_sampling.dataloaders`` entry-point group.
+``image_dir`` has been dropped (parquet is the only input); this package
+ships the image ``parquet`` table loader under ``api/`` (the subclasses folder
+for this package), registered under the ``kcai_data_sampling.dataloaders``
+entry-point group. The generic ``DataLoader``/``DataSelection`` protocols live
+in core (``kcai_data_sampling_core.api.dataloaders``).
 """
 
-from kcai_data_sampling_job.dataloaders.parquet import ParquetDataLoader
-from kcai_data_sampling_job.dataloaders.proto import DataLoader, DataSelection
+from kcai_data_sampling_core.api.dataloaders import DataLoader, DataSelection
+from kcai_data_sampling_job.dataloaders.api.parquet import (
+    ParquetDataLoader,
+    ParquetDataSelection,
+    ParquetImageLoaderConfig,
+)
 
-__all__ = ["DataLoader", "DataSelection", "ParquetDataLoader"]
+__all__ = [
+    "DataLoader",
+    "DataSelection",
+    "ParquetDataLoader",
+    "ParquetDataSelection",
+    "ParquetImageLoaderConfig",
+]

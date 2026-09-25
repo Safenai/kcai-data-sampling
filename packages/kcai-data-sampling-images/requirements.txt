@@ -1,3 +1,2 @@
 numpy
-Pillow
 kcai-data-sampling-core

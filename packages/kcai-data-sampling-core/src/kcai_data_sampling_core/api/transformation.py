@@ -3,19 +3,22 @@
     T : x ↦ x′
 
 A transformation is one fully specified operation: algorithm + resolved
-parameters + seed + model. The family is derived from the role of the model in
-producing the output; everything else is declared by the algorithm.
+parameters + seed + model. The family describes what the map does — declared
+by the algorithm, defaulting to the role of the model in producing the output
+when it is not declared; everything else is declared by the algorithm.
 """
 
 import hashlib
+import json
 from typing import Any
 
 import numpy as np
 
 from kcai_data_sampling_core.api.roles import check_model
 
-#: Family = role of the model in computing the output. Never declared by an
-#: algorithm: it is derived from ``model_role``.
+#: Default family = role of the model in producing the output. Used only when
+#: an algorithm does not declare ``family`` itself (role says where the model
+#: plugs in; family says what the map does).
 FAMILY_BY_ROLE: dict[str | None, str] = {
     None: "procedural",
     "tool": "generative",
@@ -27,21 +30,26 @@ class Transformation:
     """Shared identity and declarations for every transformation.
 
     Lifecycle methods live in the arity subclasses, :class:`UnaryTransformation`
-    and (from phase 7) :class:`NAryTransformation`. Construction validates the
-    resolved parameters against the algorithm's ``parameters`` declaration, and
-    enforces that exactly the slot named by ``model_role`` is filled.
+    and, later, :class:`NAryTransformation`. Construction resolves the
+    parameters **through the algorithm's registered pydantic ``Config``** — the
+    single declaration of parameters and defaults, so a bad config fails fast
+    at load — and enforces that exactly the slot named by ``model_role`` is
+    filled.
 
     Attributes:
         algorithm: Set by every algorithm; the registry-resolved ``type``.
+        family: The map's kind, ``None`` to derive it from the role of the
+            model: ``"procedural"`` (no model), ``"generative"`` (tool) or
+            ``"adversarial"`` (target).
+        Config: The registered pydantic schema the algorithm's params are
+            validated against; declared by every algorithm package.
         model_role: The model's role, ``None | "tool" | "target"``, which fixes
-            the family and the slot to fill.
+            the slot to fill.
         model_methods: The methods the model must expose (see ``api.roles``),
             checked at construction.
-        parameters: The algorithm's parameters: ``None`` for a required one,
-            otherwise its default. ``params`` is then always complete.
         stochastic: Does the algorithm draw randomness? Only then does a seed
             draw.
-        arity: ``"unary"`` (``"n-ary"`` from phase 7), fixed by the base class.
+        arity: ``"unary"`` (``"n-ary"`` later), fixed by the base class.
         clips: May the output leave the selection's value range? A declaration:
             the base clips to the range only when this is set; an undeclared
             overflow is refused.
@@ -57,16 +65,19 @@ class Transformation:
     #: Set by every algorithm.
     algorithm: str = "?"
 
+    #: The map's kind, or ``None`` to derive it from the model's role.
+    family: str | None = None
+
+    #: The registered pydantic schema of this algorithm's parameters;
+    #: validated at construction (``model_validate`` → dump). An algorithm
+    #: without one declares no parameters.
+    Config: Any = None
+
     #: The model, if any: its role, None | "tool" | "target", which fixes the
-    #: family and the slot to fill; and the methods that model must expose
-    #: (see ``api.roles``), checked at construction.
+    #: slot to fill; and the methods that model must expose (see ``api.roles``),
+    #: checked at construction.
     model_role: str | None = None
     model_methods: tuple[str, ...] = ()
-
-    #: The algorithm's parameters: ``None`` for a required one, otherwise its
-    #: default. Checked at construction; ``params`` is then always complete,
-    #: so the row carries every parameter resolved.
-    parameters: dict[str, Any] = {}
 
     #: Does the algorithm draw randomness? Only then does a seed exist.
     stochastic: bool = False
@@ -95,9 +106,10 @@ class Transformation:
                 algorithm parameter.
 
         Raises:
-            ValueError: If a parameter is unknown or a required one is missing,
-                if a seed is meaningless for a deterministic algorithm, or if
-                the slot named by ``model_role`` is not filled exactly.
+            ValueError: If a parameter fails the registered ``Config`` schema
+                (unknown or missing), if the slot named by ``model_role``
+                is not filled exactly, or if a ``stochastic`` algorithm is
+                given no seed.
         """
         config = dict(config or {})
         seed = config.pop("seed", None)
@@ -105,9 +117,15 @@ class Transformation:
         self.target_model: Any = config.pop("target_model", None)
         self.params: dict[str, Any] = self.resolve(config)
 
-        # Relaxed seed rule: a seed is always accepted and recorded, but a
-        # deterministic algorithm has no random draw, so it is stored as None.
-        self.seed: int | None = 0 if seed is None else int(seed) if self.stochastic else None
+        # Seed rule: a seed is accepted for any algorithm, but a
+        # deterministic one has no draw, so it is stored as None; a stochastic
+        # one requires a seed outright (only then does a draw exist).
+        if self.stochastic and seed is None:
+            raise ValueError(
+                f"{self.algorithm}: a stochastic algorithm requires a seed; set "
+                "'seed' in the transformation config (deterministic algorithms record None)"
+            )
+        self.seed: int | None = int(seed) if self.stochastic else None
 
         # Exactly the slot named by the role must be filled.
         needs = {"tool": self.tool_model, "target": self.target_model}
@@ -115,10 +133,20 @@ class Transformation:
             if (model is not None) != (self.model_role == role):
                 raise ValueError(
                     f"{self.algorithm}: model_role={self.model_role!r} but {role}_model="
-                    f"{getattr(model, 'name', model)!r}, the family is the role of the model"
+                    f"{getattr(model, 'name', model)!r}; exactly the slot named by "
+                    f"model_role must be filled"
                 )
         if self.model_role is not None:
             check_model(self.algorithm, self.model_role, needs[self.model_role], self.model_methods)
+
+    def _family(self) -> str:
+        """The effective family: the declared one, or the role-derived default.
+
+        Returns:
+            ``self.family`` when the algorithm declares one, else
+            ``FAMILY_BY_ROLE[model_role]``.
+        """
+        return self.family or FAMILY_BY_ROLE[self.model_role]
 
     def fit_to_range(self, out: np.ndarray, value_range: tuple[float, float] | None) -> np.ndarray:
         """Clip if the algorithm declared it; then check.
@@ -149,7 +177,13 @@ class Transformation:
         return out
 
     def resolve(self, given: dict[str, Any]) -> dict[str, Any]:
-        """Complete the parameters: fill defaults, refuse unknowns.
+        """Complete the parameters, validating them through the registered ``Config``.
+
+        The algorithm's registered pydantic schema (``self.Config``) is the
+        only declaration of parameters and defaults: required parameters,
+        ranges and unknown fields are refused here, defaults are filled by the
+        schema, and the resolved parameters come out of ``model_dump`` — there
+        is no second hand-maintained parameter table.
 
         Args:
             given: The raw parameters from the config.
@@ -159,30 +193,24 @@ class Transformation:
 
         Raises:
             ValueError: If an unknown parameter is given or a required one is
-                missing.
+                missing (validated against ``self.Config``).
         """
-        unknown = sorted(set(given) - set(self.parameters))
-        if unknown:
-            raise ValueError(
-                f"{self.algorithm} does not take {', '.join(map(repr, unknown))}; "
-                f"it takes {', '.join(self.parameters) or 'no parameter'}"
-            )
-        missing = [k for k, d in self.parameters.items() if d is None and k not in given]
-        if missing:
-            optional = ", ".join(f"{k} ({d!r})" for k, d in self.parameters.items() if d is not None)
-            raise ValueError(f"{self.algorithm} needs {', '.join(missing)}" + (f"; optional: {optional}" if optional else ""))
-        return {k: given.get(k, d) for k, d in self.parameters.items()}
-
-    @property
-    def family(self) -> str:
-        """The derived family: the role of the model in producing the output."""
-        return FAMILY_BY_ROLE[self.model_role]
+        config_type = getattr(type(self), "Config", None)
+        if config_type is None:
+            return dict(given)
+        # The config schema also carries the job-entry keys (name, type, seed,
+        # storage, columns); only the algorithm's own parameters reach the row.
+        job_keys = ("name", "type", "seed", "storage", "columns")
+        validated = config_type.model_validate(given)
+        return {k: v for k, v in validated.model_dump().items() if k not in job_keys}
 
     def rngs(self, keys: list[str]) -> list[np.random.Generator] | None:
-        """Yield one generator per output, seeded by the seed and the parent id(s).
+        """Yield one generator per output, seeded by seed, params and parent id(s).
 
         Seeding from the output's parent ids makes a draw independent of both
-        the batch and the order of the run.
+        the batch and the order of the run. The resolved ``params`` are hashed
+        in too, so the swept variants of one parent (one instance per value,
+        same seed) each draw their own randomness.
 
         Args:
             keys: One key per output (the parent id, or the joined parent ids
@@ -194,7 +222,16 @@ class Transformation:
         """
         if not self.stochastic:
             return None
-        return [np.random.default_rng([self.seed, int.from_bytes(hashlib.sha1(k.encode()).digest()[:8], "big")]) for k in keys]
+        params_key = json.dumps(self.params, sort_keys=True, default=str)
+        return [
+            np.random.default_rng(
+                [
+                    self.seed,
+                    int.from_bytes(hashlib.sha1(f"{k}::{params_key}".encode()).digest()[:8], "big"),
+                ]
+            )
+            for k in keys
+        ]
 
     def describe(self) -> dict[str, Any]:
         """Return the declaration-level fields every output row carries.
@@ -206,7 +243,7 @@ class Transformation:
         """
         return {
             "algorithm": self.algorithm,
-            "family": self.family,
+            "family": self._family(),
             "arity": self.arity,
             "reversible": self.reversible,
             "params": dict(self.params),
