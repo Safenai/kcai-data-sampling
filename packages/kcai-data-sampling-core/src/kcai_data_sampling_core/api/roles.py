@@ -24,8 +24,13 @@ class TargetModel(Protocol):
     def grad(self, xs: np.ndarray) -> np.ndarray:
         """Differentiate the loss with respect to the input.
 
+        The input is the normalized float batch in ``[0, 1]`` — an integer
+        batch mapped by dividing through by its dtype maximum. The returned
+        gradient is in the same normalized units; only its sign participates
+        in the perturbation step.
+
         Args:
-            xs: Input batch ``(B, *sample)`` floating point in the selection's value range.
+            xs: Input batch ``(B, *sample)`` normalized to ``[0, 1]``.
 
         Returns:
             The gradient ``∂loss / ∂x`` for the batch, same shape, finite.

@@ -33,6 +33,7 @@ members = ["packages/*"]
 # Local packages take precedence over any published versions.
 [tool.uv.sources]
 kcai-data-sampling-core = { workspace = true }
+kcai-data-sampling-fgsm = { workspace = true }
 kcai-data-sampling-images = { workspace = true }
 kcai-data-sampling-images-lama = { workspace = true }
 kcai-data-sampling-job = { workspace = true }
@@ -78,6 +79,22 @@ test = [
 # group stays torch-free (Q2 pin).
 test-lama = [
     "kcai-data-sampling-images-lama",
+    { include-group = "test" },
+]
+
+# opt-in adversarial surface: the -fgsm member (numpy-only, no torch), pulled
+# by `UV_INDEX= uv sync --group fgsm`. A later surface extends the group into
+# the fgsm test suite; the default env gains nothing from it (Q2 pin).
+fgsm = [
+    "kcai-data-sampling-fgsm",
+]
+
+# opt-in adversarial test surface: the same test deps as `test`, plus the -fgsm
+# member (numpy-only, no torch — no index, no download). The `test-fgsm` nox
+# session runs the opt-in (importorskip-gated) adversarial tests for real. The
+# default `test` group stays fgsm-free (Q1 pin).
+test-fgsm = [
+    "kcai-data-sampling-fgsm",
     { include-group = "test" },
 ]
 

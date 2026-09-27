@@ -18,22 +18,24 @@ import pytest
 #: The workspace root — where the UV workspace, ``uv.toml`` and packages live.
 WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 
-#: The five packages, workspace-name → distribution name.
+#: The six packages, workspace-name → distribution name.
 PACKAGES = {
     "core": "kcai-data-sampling-core",
     "images": "kcai-data-sampling-images",
     "job": "kcai-data-sampling-job",
     "umbrella": "kcai-data-sampling",
     "lama": "kcai-data-sampling-images-lama",
+    "fgsm": "kcai-data-sampling-fgsm",
 }
 
-#: The five packages, workspace-name → importable module root.
+#: The six packages, workspace-name → importable module root.
 MODULES = {
     "core": "kcai_data_sampling_core",
     "images": "kcai_data_sampling_images",
     "job": "kcai_data_sampling_job",
     "umbrella": "kcai_data_sampling",
     "lama": "kcai_data_sampling_images_lama",
+    "fgsm": "kcai_data_sampling_fgsm",
 }
 
 SCENARIOS = {
@@ -45,6 +47,10 @@ SCENARIOS = {
     # CPU torch. torch is pulled from the PyTorch CPU wheel index, pinned
     # to the same `+cpu` build the workspace's test-lama env resolves.
     "all+lama": ("core", "images", "job", "umbrella", "lama"),
+    # The adversarial recipe: every kcai package plus the numpy-only -fgsm
+    # member. No extra index, no torch: the structural proof that the bare
+    # five stay fgsm-free (``all`` never includes ``-fgsm``).
+    "all+fgsm": ("core", "images", "job", "umbrella", "fgsm"),
 }
 
 SMOKE_SCRIPTS = {
@@ -53,6 +59,7 @@ SMOKE_SCRIPTS = {
     "core+job": "smoke_job.py",
     "all": "smoke_all.py",
     "all+lama": "smoke_lama.py",
+    "all+fgsm": "smoke_fgsm.py",
 }
 
 #: The PyTorch CPU wheel index and the torch build the -lama recipe pins.
@@ -76,7 +83,7 @@ def _subprocess_env() -> dict[str, str]:
 
 
 def build_wheels(out: Path) -> Path:
-    """Build the four wheels into a fresh out-dir (one-shot per session).
+    """Build every package wheel into a fresh out-dir (one-shot per session).
 
     Args:
         out: The (empty or absent) output directory for the wheels.
@@ -104,7 +111,7 @@ def build_wheels(out: Path) -> Path:
 
 @pytest.fixture(scope="session")
 def built_wheels_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Session fixture: build all four wheels exactly once.
+    """Session fixture: build every package wheel exactly once.
 
     Args:
         tmp_path_factory: Pytest session temp factory.

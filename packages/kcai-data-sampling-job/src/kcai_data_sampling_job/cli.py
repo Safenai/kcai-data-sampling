@@ -7,6 +7,7 @@ error/batch overrides.
 """
 
 import argparse
+import inspect
 import logging
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,7 @@ from kcai_data_sampling_core.models.config import JobConfig
 from kcai_data_sampling_core.utils.registry import (
     PluginLoadedRegistry,
     get_transformations_registry,
+    load_model_source,
 )
 from kcai_data_sampling_job.job import SamplingJob
 from kcai_data_sampling_job.utils.shared import merge_errors
@@ -175,6 +177,11 @@ def _build_models(validated: JobConfig) -> dict[str, Any]:
     config load (``ModelRefConfig`` refuses a conflict with the adapter's
     declared count) and by the adapter at run time against the actual batch.
 
+    A ``type: python`` reference names the user's own source instead (its
+    file/module and export were already resolved at config load): the exported
+    class or factory function is constructed with the same conventions, and an
+    exported instance is used as-is.
+
     Args:
         validated: The validated job configuration.
 
@@ -191,13 +198,20 @@ def _build_models(validated: JobConfig) -> dict[str, Any]:
     registry = PluginLoadedRegistry.get_models_registry()
     built: dict[str, Any] = {}
     for name, ref in validated.models.models.items():
+        kwargs = {} if ref.weights is None else {"weights": ref.weights}
+        if ref.type == "python":
+            export = load_model_source(name, ref.path, ref.module, ref.export)
+            if inspect.isclass(export) or inspect.isfunction(export):
+                built[name] = export(**kwargs, **ref.params)
+            else:
+                built[name] = export
+            continue
         adapter = registry.get(ref.type)
         if adapter is None:
             raise ValueError(
                 f"model {name!r}: unknown type {ref.type!r} "
                 f"(registered models: {', '.join(sorted(registry)) or 'none'})"
             )
-        kwargs = {} if ref.weights is None else {"weights": ref.weights}
         built[name] = adapter(**kwargs, **ref.params)
     return built
 

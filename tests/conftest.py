@@ -16,6 +16,8 @@ from tests.fixtures.data import (  # noqa: F401
 )
 from tests.fixtures.registries import (  # noqa: F401
     cached_big_lama,
+    registry_snapshot,
+    stub_target,
     stub_tool,
 )
 from tests.e2e.fixtures.configs import (  # noqa: F401

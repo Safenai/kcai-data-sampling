@@ -12,30 +12,55 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 
 class ModelRefConfig(BaseModel):
-    """A named reference to a registered model plugin.
+    """A named reference to a model: a registered plugin, or the user's own code.
 
-    The ``type`` is resolved against the loaded models registry at
-    validation, so an unknown plugin name fails at config load — before the
-    job ever touches weights. ``channels`` is the optional image-channel
-    override for adapters that pin a channel count (like the inpainting tool,
-    which declares RGB): an override that disagrees with the adapter's
-    declared value is refused here, and the adapter's declared value stays the
-    contract the instance enforces at run time.
+    The ``type`` is resolved against the loaded models registry at validation,
+    so an unknown plugin name fails at config load — before the job ever
+    touches weights. The reserved ``type: python`` is the bring-your-own-code
+    route: it points the reference at the user's own file or module instead of
+    a registered plugin (see the ``path``/``module``/``export`` fields), and
+    *executes the referenced code by design* — the file builds its adapter.
+
+    ``channels`` is the optional image-channel override for adapters that pin
+    a channel count (like the inpainting tool, which declares RGB): an
+    override that disagrees with the adapter's declared value is refused here,
+    and the adapter's declared value stays the contract the instance enforces
+    at run time.
 
     Attributes:
-        type: Registered ``kcai_data_sampling.models`` plugin (a ``ToolModel``
-            or ``TargetModel`` adapter).
+        type: A registered ``kcai_data_sampling.models`` plugin (a ``ToolModel``
+            or ``TargetModel`` adapter), or the reserved value ``python``.
+        path: ``type: python`` only — a local ``.py`` file with the adapter,
+            resolved absolute first, else relative to the working directory.
+        module: ``type: python`` only — an importable dotted module with the
+            adapter (an alternative to ``path``, and the spelling for a
+            package that needs relative imports).
+        export: ``type: python`` only — dotted attribute path to the adapter
+            class, factory callable, or instance; defaults to the ``models:``
+            key name, then the sole model-shaped symbol in the source.
         weights: Optional weights/checkpoint the plugin may cache.
-        params: Plugin-specific knobs.
+        params: Model-specific knobs.
         channels: Optional RGB/RGBA channel override (3 or 4). Defaults to the
             adapter's declared count when unset.
     """
 
     model_config = ConfigDict(extra="forbid")
 
-    type: str = Field(description="Registered model plugin name.")
+    type: str = Field(description="Registered model plugin name, or the reserved value ``python``.")
+    path: str | None = Field(
+        default=None,
+        description="type: python only — local .py file, absolute first, else CWD-relative.",
+    )
+    module: str | None = Field(
+        default=None,
+        description="type: python only — importable dotted module with the adapter.",
+    )
+    export: str | None = Field(
+        default=None,
+        description="type: python only — dotted attribute path to export; defaults to the models: key name, then the sole model-shaped symbol.",
+    )
     weights: str | None = Field(default=None, description="Weights/checkpoint file name.")
-    params: dict[str, Any] = Field(default_factory=dict, description="Plugin-specific knobs.")
+    params: dict[str, Any] = Field(default_factory=dict, description="Model-specific knobs.")
     channels: Literal[3, 4] | None = Field(
         default=None,
         description="RGB/RGBA channel override; must agree with the adapter's declared count.",
@@ -46,6 +71,10 @@ class ModelRefConfig(BaseModel):
     def _known(cls, v: str) -> str:
         """Refuse model types the registry does not know.
 
+        ``python`` is the reserved bring-your-own-code kind and is the only
+        value that skips the registry check (its own field rules run in
+        ``_python_kind``).
+
         Args:
             v: The ``type`` string from the config.
 
@@ -53,8 +82,10 @@ class ModelRefConfig(BaseModel):
             The validated type string.
 
         Raises:
-            ValueError: If the type is not registered.
+            ValueError: If the type is neither ``python`` nor registered.
         """
+        if v == "python":
+            return v
         from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry
 
         registry = PluginLoadedRegistry.get_models_registry()
@@ -62,6 +93,38 @@ class ModelRefConfig(BaseModel):
             known = ", ".join(sorted(registry)) or "none"
             raise ValueError(f"unknown model type {v!r} (registered models: {known})")
         return v
+
+    @model_validator(mode="after")
+    def _python_kind(self) -> Self:
+        """Enforce the reserved ``python`` kind's field rules.
+
+        A ``type: python`` reference needs exactly one of ``path``/``module``
+        and may carry ``export`` besides the ordinary ``weights``/``params``/
+        ``channels``. Every other type is a registered plugin, for which the
+        source fields are meaningless and refused up front.
+
+        Returns:
+            The validated model reference.
+
+        Raises:
+            ValueError: If a ``python`` reference misses or duplicates
+                ``path``/``module``, or a plugin reference carries a source
+                field.
+        """
+        if self.type != "python":
+            for field in ("path", "module", "export"):
+                if getattr(self, field) is not None:
+                    raise ValueError(
+                        f"model type {self.type!r} is a registered plugin; "
+                        f"'{field}' is only valid for type: python"
+                    )
+            return self
+        if (self.path is None) == (self.module is None):
+            raise ValueError(
+                "type: python requires exactly one of 'path' (a .py file) "
+                "or 'module' (an importable dotted path)"
+            )
+        return self
 
     @model_validator(mode="after")
     def _channels(self) -> Self:
@@ -126,3 +189,32 @@ class ModelsConfig(BaseModel):
         if isinstance(data, dict) and "models" not in data:
             return {"models": data}
         return data
+
+    @model_validator(mode="after")
+    def _resolve_python_references(self) -> Self:
+        """Refuse, at load, a ``type: python`` reference whose source cannot resolve.
+
+        A ``type: python`` entry names the user's own code: the file/module is
+        loaded and its export resolved here, so a missing file, an empty
+        ``export``, or an unresolvable default fail the config load instead of
+        surfacing mid-run. Loading executes the referenced code by design (the
+        bring-your-own-code feature); the adapter's real role conformance is
+        still enforced at construction, against the role the transformation
+        declares.
+
+        Returns:
+            The validated models section.
+
+        Raises:
+            ValueError: If a ``type: python`` reference's source cannot be
+                loaded or its export resolved.
+        """
+        if not self.models:
+            return self
+        from kcai_data_sampling_core.utils.registry import load_model_source
+
+        for key, ref in self.models.items():
+            if ref.type != "python":
+                continue
+            load_model_source(key, ref.path, ref.module, ref.export)
+        return self

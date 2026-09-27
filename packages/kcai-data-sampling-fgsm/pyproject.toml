@@ -1,0 +1,38 @@
+[project]
+name = "kcai-data-sampling-fgsm"
+dynamic = ["dependencies", "version"]
+description = "Adversarial perturbation (FGSM) for kcai data-sampling"
+authors = [
+  {name = "Safenai", email = "support@safenai.io"},
+]
+license = "Apache-2.0"
+readme = "README.md"
+requires-python = ">=3.12"
+keywords = ["ml", "data", "augmentation", "robustness", "adversarial", "fgsm"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.entry-points."kcai_data_sampling.transformations"]
+fgsm = "kcai_data_sampling_fgsm.api.transformations.fgsm:Fgsm"
+
+[build-system]
+requires = ["setuptools>=80", "setuptools-scm[simple]>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+version_file = "src/kcai_data_sampling_fgsm/_version_.py"
+root = "../.."
+fallback_version = "0.0.1"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+kcai_data_sampling_fgsm = ["py.typed"]

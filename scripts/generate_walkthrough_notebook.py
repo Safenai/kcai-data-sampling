@@ -387,6 +387,49 @@ display(gen_ledger[gen_ledger.parent_id == batch.ids[0]])
 """
 
 
+MD9 = """## 9 · Adversarial: FGSM against your own model
+
+A **target** model defines the loss, and the transformation steps up its
+gradient: one ``epsilon``-sized L∞-bounded step in the direction that **raises**
+the loss, in normalized ``[0, 1]`` pixel units (``epsilon * sign(grad)``,
+rounded back to the batch dtype). The map is deterministic (no seed) and not
+reversible (the pixels moved, they did not flip).
+
+The target model is the **user's**: the YAML's ``models:`` entry names the
+adapter **file** (`path:`), and the transformation references the model by
+**name** — never a Python object. Running this section needs the opt-in
+``kcai-data-sampling-fgsm`` install in the kernel, plus ``torch`` /
+``ultralytics`` **and your own weights** for ``grad`` itself (fetched
+independently via ``ultralytics``, never by the package); without them every
+frame's ``grad`` call fails, and the YAML itself still validates.
+"""
+
+CODE9 = """# --- Adversarial, by the CLI: FGSM against the user's target model ---
+from kcai_data_sampling_job.cli import run
+
+# Reload the config: this cell must work even if only it was re-run after a YAML edit.
+with open("examples/config/walkthrough-adversarial.yaml") as f:
+    ADV = yaml.safe_load(f)
+
+summary = run(ADV)
+print("adversarial summary:", summary)         # {'comma10k': 10} = 10 frames
+
+adv_root = Path("examples/outputs") / ADV["dataloaders"]["loaders"][0]["name"]
+adv_ledger = pd.read_parquet(adv_root / "ledger.parquet")
+row = adv_ledger[(adv_ledger.algorithm == "fgsm") & (adv_ledger.parent_id == batch.ids[0])].iloc[0]
+
+original = batch.data[0]
+perturbed = np.asarray(Image.open(adv_root / "payloads" / row.artifact).convert("RGBA"))
+d = perturbed.astype(np.float64) - original.astype(np.float64)
+show([("original", original), (f"fgsm (ε = {json.loads(row.params)['epsilon']:.3g})", perturbed)], width=480)
+
+print("the ledger row that names the attack:", row.algorithm, row.target_model, row.family,
+      row.arity, "reversible =" + str(row.reversible).lower(), "seed =", row.seed)
+print("max |Δ| over the frame:", float(np.abs(d).max()))
+display(adv_ledger[adv_ledger.parent_id == batch.ids[0]])
+"""
+
+
 def code_cell(src: str) -> dict:
     return {
         "cell_type": "code",
@@ -437,6 +480,8 @@ def build_notebook() -> dict:
             code_cell(CODE7B),
             md_cell(MD8),
             code_cell(CODE8),
+            md_cell(MD9),
+            code_cell(CODE9),
         ],
         "metadata": {
             "kernelspec": {

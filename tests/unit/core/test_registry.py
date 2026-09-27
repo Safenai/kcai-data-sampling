@@ -24,18 +24,21 @@ from kcai_data_sampling_job.dataloaders.api.parquet import ParquetDataLoader
 _IMPORT_RE = re.compile(r"^\s*(?:import|from)\s+kcai_data_sampling_images", re.MULTILINE)
 
 
-def test_transformations_registry_resolves_to_images_package() -> None:
-    """The transformations group resolves the image algorithms from image packages.
+def test_transformations_registry_resolves_from_plugin_packages_not_core() -> None:
+    """The transformations group resolves algorithms from plugin packages, never core.
 
     Every registered algorithm class carries its ``api.transformations`` module
-    in a ``-images*`` package (core or its plugins), so the generic core never
-    has to know the specific image packages at import time. Env-agnostic: the
-    phase-1 trio is a required subset in any env, and the opt-in ``inpaint``
-    entry (``-images-lama``) is simply another member when installed.
+    in a ``kcai_data_sampling_*`` package — ``-images`` or any of the opt-in
+    sibling packages — so the generic core never has to know the specific
+    algorithm packages at import time. Env-agnostic: the base trio is a
+    required subset in any env, and opt-in entries like ``inpaint`` or an
+    adversarial transformation are simply further members when their package
+    is installed.
     """
     registry = get_transformations_registry()
     assert {"horizontal_flip", "crop_resize"} <= set(registry)
-    assert all(cls.__module__.startswith("kcai_data_sampling_images") for cls in registry.values())
+    assert all(cls.__module__.startswith("kcai_data_sampling_") for cls in registry.values())
+    assert all(not cls.__module__.startswith("kcai_data_sampling_core") for cls in registry.values())
 
 
 def test_dataloaders_registry_resolves_parquet_from_job() -> None:

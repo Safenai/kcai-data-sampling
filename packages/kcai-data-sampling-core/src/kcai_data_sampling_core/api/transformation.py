@@ -167,7 +167,10 @@ class Transformation:
             return out
         low, high = value_range
         if self.clips:
-            return np.clip(out, low, high)
+            clipped = np.clip(out, low, high)
+            if np.issubdtype(out.dtype, np.integer) and clipped.dtype != out.dtype:
+                clipped = clipped.astype(out.dtype)
+            return clipped
         lo, hi = float(out.min()), float(out.max())
         if lo < low or hi > high:
             raise ValueError(

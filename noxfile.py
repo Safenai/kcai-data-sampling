@@ -60,3 +60,20 @@ def test_lama(s: Session) -> None:
         "not packaging",
         *s.posargs,
     )
+
+
+@session(
+    uv_groups=["test-fgsm"],
+)
+def test_fgsm(s: Session) -> None:
+    """Run the same default suite in the -fgsm env (opt-in adversarial surface active)."""
+    s.env["KCAI_TEST_SEED"] = "42"
+    s.run(
+        "pytest",
+        "tests/unit",
+        "tests/e2e",
+        "tests/cli",
+        "-m",
+        "not packaging",
+        *s.posargs,
+    )

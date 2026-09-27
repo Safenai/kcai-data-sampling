@@ -27,7 +27,11 @@ from kcai_data_sampling_core.api import (
     UnaryTransformation,
 )
 from kcai_data_sampling_core.utils import TransformationRunner
-from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry
+from kcai_data_sampling_core.utils.registry import (
+    PluginLoadedRegistry,
+    load_model_source,
+    register_model,
+)
 
 __all__ = [
     "FAMILY_BY_ROLE",
@@ -42,4 +46,6 @@ __all__ = [
     "Transformation",
     "TransformationRunner",
     "UnaryTransformation",
+    "load_model_source",
+    "register_model",
 ]
