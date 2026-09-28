@@ -9,8 +9,9 @@ real-torch determinism, and the ``cli._build_models`` wiring from a bare
 
 The crop-and-pad-to-multiples-of-8 path is exercised by construction on the
 32x32 frames here (the default 256-pixel margin clamps the crop to the whole
-frame), but it is not individually assertable from outside the network call,
-so it is covered indirectly via the masked-fill and determinism tests.
+frame) and explicitly with a non-multiple-of-8 36x36 frame in
+``test_crop_and_pad_to_multiples_of_8``, so both the zero-pad and the
+nonzero-pad branches are covered.
 """
 
 import numpy as np
@@ -104,6 +105,29 @@ def test_two_runs_are_byte_identical(lama_tool, synthetic_batch) -> None:
     first = lama_tool.inpaint(synthetic_batch.data, masks)
     second = lama_tool.inpaint(synthetic_batch.data, masks)
     assert np.array_equal(first, second)
+
+
+def test_crop_and_pad_to_multiples_of_8(lama_tool) -> None:
+    """A 36x36 frame pads both axes to multiples of 8 before the network call.
+
+    The 32x32 synthetic frames are already 8-aligned, so the crop-pad branch
+    that rounds a non-multiple-of-8 window up never fires there. Here the
+    margin clamps the crop to the whole 36x36 frame, forcing a pad of 4 on
+    each axis: the image and mask tensors handed to the network must still
+    agree on shape (regression: the image pad was applied to the wrong axis,
+    so TorchScript saw a 40-wide image against a 36-wide mask).
+    """
+    shape = (2, 36, 36, 4)
+    frames = np.zeros(shape, dtype=np.uint8)
+    frames[0, ..., 0] = 120
+    frames[1, ..., 1] = 200
+    masks = np.zeros(shape[:3], dtype=bool)
+    top, left, height, width = REGION.values()
+    masks[:, top : top + height, left : left + width] = True
+    out = lama_tool.inpaint(frames, masks)
+    assert out.shape == shape
+    assert out.dtype == np.uint8
+    assert float(out.min()) >= 0.0 and float(out.max()) <= 255.0
 
 
 def test_built_from_bare_model_ref_carries_default_margin(cached_big_lama) -> None:

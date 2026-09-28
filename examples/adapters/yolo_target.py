@@ -83,14 +83,33 @@ class YoloTarget:
         batch.requires_grad_(True)
         torch.set_grad_enabled(True)
 
+        # The network strides by 32, so pad the frame to a multiple before
+        # routing (comma10k frames are 1208x1928, neither multiple); the extra
+        # padding is constant, so the gradient slices back to the true frame.
+        h, w = batch.shape[-2:]
+        pad_h, pad_w = -h % 32, -w % 32
+        if pad_h or pad_w:
+            batch = torch.nn.functional.pad(batch, (0, pad_w, 0, pad_h))
+
         # The backbone/neck without the detection head, which ultralytics freezes
         # under no_grad at inference: this keeps an autograd graph to the input.
-        features = model.model.model[:-1](batch)
-        features = features if isinstance(features, (list, tuple)) else [features]
-        loss = sum(feature.float().mean() for feature in features)
+        # Feed each layer the same way `_predict_once` routes it: a layer's `.f`
+        # can reach back to earlier saved outputs, so a plain Sequential slice
+        # would hand Concat one tensor instead of the routed list. `.save` names
+        # the layers worth keeping for that routing.
+        layers = model.model.model[:-1]
+        save = model.model.save
+        y: list = []
+        x = batch
+        for m in layers:
+            if m.f != -1:
+                x = y[m.f] if isinstance(m.f, int) else [x if j == -1 else y[j] for j in m.f]
+            x = m(x)
+            y.append(x if m.i in save else None)
+        loss = x.float().mean()
 
         dx: torch.Tensor = torch.autograd.grad(loss, batch)[0]  # (B, 3, H, W)
         result = np.zeros(xs.shape, dtype=np.float32)
-        result[..., :3] = dx.detach().cpu().numpy().transpose(0, 2, 3, 1)
+        result[..., :3] = dx.detach().cpu().numpy().transpose(0, 2, 3, 1)[..., :h, :w, :]
         result = result / max(float(result.max()), float(-result.min()), 1e-8)
         return result  # sign direction only matters for the step

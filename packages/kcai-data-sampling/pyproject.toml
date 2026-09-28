@@ -19,6 +19,17 @@ classifiers = [
 [project.scripts]
 kcai-data-sampling = "kcai_data_sampling.cli_tools:main"
 
+[project.optional-dependencies]
+
+notebook = [
+    "kcai-data-sampling-images-lama",
+    "kcai-data-sampling-fgsm",
+    "ipykernel>=7.3.0",
+    "pandas>=3.0.6",
+    "python-pptx",
+    "ultralytics",
+]
+
 [build-system]
 requires = ["setuptools>=80", "setuptools-scm[simple]>=8"]
 build-backend = "setuptools.build_meta"

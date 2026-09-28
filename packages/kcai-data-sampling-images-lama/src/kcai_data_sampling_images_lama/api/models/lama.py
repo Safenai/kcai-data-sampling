@@ -84,13 +84,19 @@ class LamaTool:
         h, w = masks.shape[-2:]
         top, bottom = max(rows.min() - self.margin, 0), min(rows.max() + 1 + self.margin, h)
         left, right = max(cols.min() - self.margin, 0), min(cols.max() + 1 + self.margin, w)
-        pad = ((0, 0), (0, (-(bottom - top)) % 8), (0, (-(right - left)) % 8))
+        pad_h, pad_w = (-(bottom - top)) % 8, (-(right - left)) % 8
 
         image = np.pad(
-            xs[:, top:bottom, left:right, : self.channels], ((0, 0), *pad), mode="symmetric"
+            xs[:, top:bottom, left:right, : self.channels],
+            ((0, 0), (0, pad_h), (0, pad_w), (0, 0)),
+            mode="symmetric",
         )
         image = image.astype("float32").transpose(0, 3, 1, 2) / 255.0
-        hole = np.pad(masks[:, top:bottom, left:right], pad, mode="symmetric").astype("float32")
+        hole = np.pad(
+            masks[:, top:bottom, left:right],
+            ((0, 0), (0, pad_h), (0, pad_w)),
+            mode="symmetric",
+        ).astype("float32")
         torch = self._torch
         with torch.inference_mode():
             out = self.net(torch.from_numpy(image), torch.from_numpy(hole)[:, None])
