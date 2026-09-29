@@ -5,10 +5,9 @@ Wraps the mirrored-width-axis math
 into the unary transformation contract.
 """
 
-from typing_extensions import override
-
 from kcai_data_sampling_core.api.unary import UnaryTransformation
 import numpy as np
+from typing_extensions import override
 
 from kcai_data_sampling_images.configs import HorizontalFlipTransformationConfig
 from kcai_data_sampling_images.transformations.horizontal_flip import horizontal_flip

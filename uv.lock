@@ -1164,7 +1164,7 @@ wheels = [
 
 [[package]]
 name = "ipykernel"
-version = "7.3.0"
+version = "6.31.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "appnope", marker = "sys_platform == 'darwin'" },
@@ -1174,16 +1174,16 @@ dependencies = [
     { name = "jupyter-client" },
     { name = "jupyter-core" },
     { name = "matplotlib-inline" },
-    { name = "nest-asyncio2" },
+    { name = "nest-asyncio" },
     { name = "packaging" },
     { name = "psutil" },
     { name = "pyzmq" },
     { name = "tornado" },
     { name = "traitlets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3d/c4/e4a38f579de4225a561305666f7541cdabb30075def2aa1ac17bd73c1fb5/ipykernel-7.3.0.tar.gz", hash = "sha256:9acaaaf97d16355166e4085afe9d225bfbdf2b7ef520f9df3be8f2b248275e09", size = 184899, upload-time = "2026-06-10T08:41:25.481Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a5/1d/d5ba6edbfe6fae4c3105bca3a9c889563cc752c7f2de45e333164c7f4846/ipykernel-6.31.0.tar.gz", hash = "sha256:2372ce8bc1ff4f34e58cafed3a0feb2194b91fc7cad0fc72e79e47b45ee9e8f6", size = 167493, upload-time = "2025-10-20T11:42:39.948Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3d/02/77b271f5dc58bfbc0b577c877b2365d1ffea2afe66a80c13f2312820348c/ipykernel-7.3.0-py3-none-any.whl", hash = "sha256:897eb64da762549ef610698fca5e9675195ec6ac8ec7f19d81ce1ca20c876057", size = 120583, upload-time = "2026-06-10T08:41:23.648Z" },
+    { url = "https://files.pythonhosted.org/packages/f6/d8/502954a4ec0efcf264f99b65b41c3c54e65a647d9f0d6f62cd02227d242c/ipykernel-6.31.0-py3-none-any.whl", hash = "sha256:abe5386f6ced727a70e0eb0cf1da801fa7c5fa6ff82147747d5a0406cd8c94af", size = 117003, upload-time = "2025-10-20T11:42:37.502Z" },
 ]
 
 [[package]]
@@ -1360,7 +1360,7 @@ notebook = [
 
 [package.metadata]
 requires-dist = [
-    { name = "ipykernel", marker = "extra == 'notebook'", specifier = ">=7.3.0" },
+    { name = "ipykernel", marker = "extra == 'notebook'" },
     { name = "kcai-data-sampling-core", editable = "packages/kcai-data-sampling-core" },
     { name = "kcai-data-sampling-fgsm", marker = "extra == 'notebook'", editable = "packages/kcai-data-sampling-fgsm" },
     { name = "kcai-data-sampling-images", editable = "packages/kcai-data-sampling-images" },
@@ -1459,7 +1459,6 @@ requires-dist = [
 name = "kcai-workspace"
 source = { editable = "." }
 dependencies = [
-    { name = "ipykernel" },
     { name = "kcai-data-sampling" },
     { name = "kcai-data-sampling-core" },
     { name = "kcai-data-sampling-images" },
@@ -1473,6 +1472,8 @@ complexity = [
     { name = "complexipy" },
 ]
 docs = [
+    { name = "kcai-data-sampling-fgsm" },
+    { name = "kcai-data-sampling-images-lama" },
     { name = "markdown-callouts" },
     { name = "mkdocs-api-autonav" },
     { name = "mkdocs-htmlproofer-plugin" },
@@ -1527,7 +1528,6 @@ type-check = [
 
 [package.metadata]
 requires-dist = [
-    { name = "ipykernel", specifier = ">=7.3.0" },
     { name = "kcai-data-sampling", editable = "packages/kcai-data-sampling" },
     { name = "kcai-data-sampling-core", editable = "packages/kcai-data-sampling-core" },
     { name = "kcai-data-sampling-images", editable = "packages/kcai-data-sampling-images" },
@@ -1539,10 +1539,12 @@ requires-dist = [
 [package.metadata.requires-dev]
 complexity = [{ name = "complexipy", specifier = ">=5.5.0" }]
 docs = [
+    { name = "kcai-data-sampling-fgsm", editable = "packages/kcai-data-sampling-fgsm" },
+    { name = "kcai-data-sampling-images-lama", editable = "packages/kcai-data-sampling-images-lama" },
     { name = "markdown-callouts" },
     { name = "mkdocs-api-autonav" },
     { name = "mkdocs-htmlproofer-plugin" },
-    { name = "mkdocs-jupyter", specifier = "<0.26" },
+    { name = "mkdocs-jupyter", specifier = ">=0.25,<0.26" },
     { name = "mkdocs-material" },
     { name = "mkdocs-mermaid2-plugin" },
     { name = "mkdocs-simple-hooks" },
@@ -2271,18 +2273,19 @@ wheels = [
 
 [[package]]
 name = "mkdocs-jupyter"
-version = "0.24.1"
+version = "0.25.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "ipykernel" },
     { name = "jupytext" },
     { name = "mkdocs" },
     { name = "mkdocs-material" },
     { name = "nbconvert" },
     { name = "pygments" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e1/ae/e4b8566e908c1960adaee6b0fb10973eafcc43515e50ad907c1059904bf2/mkdocs_jupyter-0.24.1.tar.gz", hash = "sha256:9677037fb7e931268f3df7599fc0828c261247df3d1575bced320ba8b7d1d46d", size = 4321249, upload-time = "2023-03-22T21:49:17.69Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6c/23/6ffb8d2fd2117aa860a04c6fe2510b21bc3c3c085907ffdd851caba53152/mkdocs_jupyter-0.25.1.tar.gz", hash = "sha256:0e9272ff4947e0ec683c92423a4bfb42a26477c103ab1a6ab8277e2dcc8f7afe", size = 1626747, upload-time = "2024-10-15T14:56:32.373Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/dc/7f/2cae680e082517f380e828080628fb748c0b10bf30fdb7325ee62f554d9d/mkdocs_jupyter-0.24.1-py3-none-any.whl", hash = "sha256:759833c7d1528ae2d6337342786be7bc1e2235b0b98e9326427d4cf8d4eebee0", size = 3894602, upload-time = "2023-03-22T21:49:26.594Z" },
+    { url = "https://files.pythonhosted.org/packages/08/37/5f1fd5c3f6954b3256f8126275e62af493b96fb6aef6c0dbc4ee326032ad/mkdocs_jupyter-0.25.1-py3-none-any.whl", hash = "sha256:3f679a857609885d322880e72533ef5255561bbfdb13cfee2a1e92ef4d4ad8d8", size = 1456197, upload-time = "2024-10-15T14:56:29.854Z" },
 ]
 
 [[package]]
@@ -2515,12 +2518,12 @@ wheels = [
 ]
 
 [[package]]
-name = "nest-asyncio2"
-version = "1.7.2"
+name = "nest-asyncio"
+version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/b4/73/731debf26e27e0a0323d7bda270dc2f634b398e38f040a09da1f4351d0aa/nest_asyncio2-1.7.2.tar.gz", hash = "sha256:1921d70b92cc4612c374928d081552efb59b83d91b2b789d935c665fa01729a8", size = 14743, upload-time = "2026-02-13T00:34:04.386Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/83/f8/51569ac65d696c8ecbee95938f89d4abf00f47d58d48f6fbabfe8f0baefe/nest_asyncio-1.6.0.tar.gz", hash = "sha256:6f172d5449aca15afd6c646851f4e31e02c598d553a667e38cafa997cfec55fe", size = 7418, upload-time = "2024-01-21T14:25:19.227Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c5/3c/3179b85b0e1c3659f0369940200cd6d0fa900e6cefcc7ea0bc6dd0e29ffb/nest_asyncio2-1.7.2-py3-none-any.whl", hash = "sha256:f5dfa702f3f81f6a03857e9a19e2ba578c0946a4ad417b4c50a24d7ba641fe01", size = 7843, upload-time = "2026-02-13T00:34:02.691Z" },
+    { url = "https://files.pythonhosted.org/packages/a0/c4/c2971a3ba4c6103a3d10c4b0f24f461ddc027f0f09763220cf35ca1401b3/nest_asyncio-1.6.0-py3-none-any.whl", hash = "sha256:87af6efd6b5e897c81050477ef65c62e2b2f35d51703cae01aff2905b1852e1c", size = 5195, upload-time = "2024-01-21T14:25:17.223Z" },
 ]
 
 [[package]]

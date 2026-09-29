@@ -7,7 +7,7 @@ transformation, families, label effects — is defined in
 
 ## Prerequisites
 
-- Python 3.12 (the workspace pins it in `.python-version`).
+- Python >= 3.11.
 - [`uv`](https://docs.astral.sh/uv/).
 
 ## Install

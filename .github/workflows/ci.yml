@@ -25,6 +25,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
 
+      - name: Install hunspell library
+        run: sudo apt-get update && sudo apt-get install -y libhunspell-dev
+
       - name: Run nox session
         run: uv run --frozen nox -s ${{ matrix.nox-session }}
 

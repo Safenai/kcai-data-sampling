@@ -27,7 +27,7 @@ kcai-data-sampling = "kcai_data_sampling.cli_tools:main"
 notebook = [
     "kcai-data-sampling-images-lama",
     "kcai-data-sampling-fgsm",
-    "ipykernel>=7.3.0",
+    "ipykernel",
     "pandas>=3.0.6",
     "python-pptx",
     "ultralytics",

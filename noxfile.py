@@ -202,6 +202,20 @@ doc_env = {"PYTHONPATH": "packages"}
     python=["3.12"],
     uv_groups=["docs"],
 )
+def docs_serve(s: Session) -> None:
+    """Serve mkdocs documentation locally for development preview."""
+    s.run(
+        "mkdocs",
+        "serve",
+        *s.posargs,
+        env=doc_env,
+    )
+
+
+@session(
+    python=["3.12"],
+    uv_groups=["docs"],
+)
 def docs_github_pages(s: Session) -> None:
     """Deploy mkdocs site to GitHub Pages via gh-deploy."""
     s.run("mkdocs", "gh-deploy", "--force", env=doc_env)

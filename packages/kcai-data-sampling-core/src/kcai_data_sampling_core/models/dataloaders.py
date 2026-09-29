@@ -5,7 +5,7 @@ three-batch-level design requires: ``batch_size`` is ``load_batch_size`` here,
 the number of rows pulled from a selection per step.
 """
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -43,7 +43,7 @@ class SamplePathConfig(BaseModel):
     prefix: str | None = Field(default=None, description="Base directory for resolving relative paths.")
 
 
-class TransformType(str, Enum):
+class TransformType(StrEnum):
     """Target data type for column transformations."""
 
     INT32 = "int32"

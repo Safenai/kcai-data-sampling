@@ -20,15 +20,6 @@ To get a job running in a few minutes — install, fetch the sample data, run th
 procedural example and read its output — see
 [docs/quickstart.md](docs/quickstart.md).
 
-## Generative inpainting (opt-in)
-
-The default `uv sync` stays torch-free; the `-lama` package is the only member
-that pulls it (CPU wheels). To run an inpainting job, install the package
-explicitly and carry the `big-lama.pt` weights (fetched into `.cache/` on first
-use):
-
-    uv sync --package kcai-data-sampling-images-lama
-
 ## Running the walkthrough notebook
 
 The walkthrough on real comma10k frames lives in
@@ -41,7 +32,6 @@ hand-maintained import (no matplotlib), next to it.
 Then open the notebook in your Jupyter environment (JupyterLab or VS Code) and
 pick the workspace interpreter `.venv/bin/python` as the kernel. Run it top to
 bottom — the setup cell re-chdirs to the repository root and reads
-`examples/config/walkthrough-procedural.yaml` (a generative example,
-`walkthrough-generative.yaml`, needs the opt-in `-lama` install), so it works
+`examples/config/walkthrough-procedural.yaml` so it works
 regardless of the launch directory. Generated files are left under
 `examples/outputs/`.

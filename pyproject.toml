@@ -9,7 +9,6 @@ dynamic = ["version"]
 description = "Workspace for kcai data-sampling: generate samples from input samples"
 requires-python = ">=3.11"
 dependencies = [
-    "ipykernel>=7.3.0",
     "kcai-data-sampling>=0.0.1",
     "kcai-data-sampling-core>=0.0.1",
     "kcai-data-sampling-images>=0.0.1",
@@ -131,12 +130,17 @@ docs = [
     "markdown-callouts",
     "mkdocs-api-autonav",
     "mkdocs-htmlproofer-plugin",
-    "mkdocs-jupyter<0.26",
+    # Floor 0.25: drops the internal `mkdocs.tests` import (removed from the
+    # mkdocs 1.6 wheel), which broke the pages build on 0.24.x. Ceiling 0.26:
+    # avoids the abs_src_path=None bug with api-autonav.
+    "mkdocs-jupyter>=0.25,<0.26",
     "mkdocs-material",
     "mkdocs-mermaid2-plugin",
     "mkdocs-simple-hooks",
     "mkdocstrings[python]",
     "pymdown-extensions",
+    "kcai-data-sampling-images-lama",
+    "kcai-data-sampling-fgsm"
 ]
 
 # ruff config (dqm-ml mirror): 120 columns, full ruleset from the upstream
