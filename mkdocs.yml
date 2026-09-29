@@ -102,7 +102,7 @@ plugins:
       modules: [
         "packages/kcai-data-sampling-core/src/kcai_data_sampling_core/",
         "packages/kcai-data-sampling-images/src/kcai_data_sampling_images/",
-        "packages/kcai-data-sampling-images-lama/src/kcai_data_sampling_images_lama/",
+        "packages/kcai-data-sampling-lama/src/kcai_data_sampling_lama/",
         "packages/kcai-data-sampling-fgsm/src/kcai_data_sampling_fgsm/",
         "packages/kcai-data-sampling-job/src/kcai_data_sampling_job/",
       ]
@@ -119,7 +119,7 @@ watch:
   # Watch directories to reload on changes to docstrings for mkdocstrings plugin.
   - "packages/kcai-data-sampling-core/src/kcai_data_sampling_core/"
   - "packages/kcai-data-sampling-images/src/kcai_data_sampling_images/"
-  - "packages/kcai-data-sampling-images-lama/src/kcai_data_sampling_images_lama/"
+  - "packages/kcai-data-sampling-lama/src/kcai_data_sampling_lama/"
   - "packages/kcai-data-sampling-fgsm/src/kcai_data_sampling_fgsm/"
   - "packages/kcai-data-sampling-job/src/kcai_data_sampling_job/"
   - "packages/kcai-data-sampling/src/kcai_data_sampling/"
@@ -139,7 +139,7 @@ nav:
   - Packages:
     - Core: packages/kcai-data-sampling-core.md
     - Images: packages/kcai-data-sampling-images.md
-    - Images (LaMa): packages/kcai-data-sampling-images-lama.md
+    - Images (LaMa): packages/kcai-data-sampling-lama.md
     - FGSM: packages/kcai-data-sampling-fgsm.md
     - Job: packages/kcai-data-sampling-job.md
     - CLI: packages/kcai-data-sampling.md

@@ -10,7 +10,7 @@ both exported from the ``-lama`` module roots.
 from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry, get_transformations_registry
 import pytest
 
-pytest.importorskip("kcai_data_sampling_images_lama.api.models.lama")
+pytest.importorskip("kcai_data_sampling_lama.api.models.lama")
 
 pytestmark = pytest.mark.lama
 
@@ -23,7 +23,7 @@ def test_models_registry_holds_exactly_the_lama_inpaint_plugin() -> None:
     """
     registry = PluginLoadedRegistry.get_models_registry()
     assert set(registry) == {"lama_inpaint"}
-    assert registry["lama_inpaint"].__module__.startswith("kcai_data_sampling_images_lama")
+    assert registry["lama_inpaint"].__module__.startswith("kcai_data_sampling_lama")
 
 
 def test_transformations_registry_gains_inpaint_from_the_lama_root() -> None:
@@ -34,4 +34,4 @@ def test_transformations_registry_gains_inpaint_from_the_lama_root() -> None:
     """
     registry = get_transformations_registry()
     assert {"horizontal_flip", "crop_resize"} <= set(registry)
-    assert registry["inpaint"].__module__.startswith("kcai_data_sampling_images_lama")
+    assert registry["inpaint"].__module__.startswith("kcai_data_sampling_lama")

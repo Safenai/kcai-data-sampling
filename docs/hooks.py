@@ -129,7 +129,7 @@ def copy_package_readmes():
     for pkg in [
         "kcai-data-sampling-core",
         "kcai-data-sampling-images",
-        "kcai-data-sampling-images-lama",
+        "kcai-data-sampling-lama",
         "kcai-data-sampling-fgsm",
         "kcai-data-sampling-job",
         "kcai-data-sampling",

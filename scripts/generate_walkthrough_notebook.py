@@ -350,7 +350,7 @@ show(panels, width=1400)                           # three output samples of the
 
 MD8 = """## 8 · Generative: inpainting with LaMa
 
-A **tool** model produces content, seeded by task knowledge: the region is erased, and LaMa fills it with something that was *not* in the image. The map is deterministic (no seed is drawn) and **not** reversible (what was in the region is gone). One region fill of the 1208×1928 frame takes ~10 s on CPU; running this section needs the opt-in `kcai-data-sampling-images-lama` install (torch) in the kernel.
+A **tool** model produces content, seeded by task knowledge: the region is erased, and LaMa fills it with something that was *not* in the image. The map is deterministic (no seed is drawn) and **not** reversible (what was in the region is gone). One region fill of the 1208×1928 frame takes ~10 s on CPU; running this section needs the opt-in `kcai-data-sampling-lama` install (torch) in the kernel.
 
 The adapter is a registered plugin (`lama_inpaint`, under `kcai_data_sampling.models`); the YAML names it and its `big-lama.pt` weights in `models:`, and the transformation references the **name** — never a Python object. The ledger rows therefore read `algorithm=inpaint`, `tool_model=big-lama`, `family=generative`, `arity=unary`, `reversible=false`, `seed=-`.
 """

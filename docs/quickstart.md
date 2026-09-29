@@ -80,7 +80,7 @@ of their dependencies:
   `.cache/` on first use):
 
   ```sh
-  uv sync --package kcai-data-sampling-images-lama
+  uv sync --package kcai-data-sampling-lama
   uv run kcai-data-sampling process -p examples/config/walkthrough-generative.yaml
   ```
 

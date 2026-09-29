@@ -8,7 +8,7 @@ The workspace is a uv monorepo of six member packages under `packages/`:
 
 - `kcai-data-sampling-core` — transformation interface, configuration models, registries and runner;
 - `kcai-data-sampling-images` — image input/output plugins and image transformations;
-- `kcai-data-sampling-images-lama` — generative inpainting (LaMa) transformation and tool-model plugin;
+- `kcai-data-sampling-lama` — generative inpainting (LaMa) transformation and tool-model plugin;
 - `kcai-data-sampling-fgsm` — adversarial perturbation (FGSM) transformation and target-model support;
 - `kcai-data-sampling-job` — pipeline orchestration, parquet dataloader and ledger writer;
 - `kcai-data-sampling` — umbrella CLI (`version`, `list`, `process`).

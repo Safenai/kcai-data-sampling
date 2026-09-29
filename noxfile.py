@@ -48,7 +48,7 @@ def test_coverage(s: Session) -> None:
         "pytest",
         "--cov=packages/kcai-data-sampling-core/src",
         "--cov=packages/kcai-data-sampling-images/src",
-        "--cov=packages/kcai-data-sampling-images-lama/src",
+        "--cov=packages/kcai-data-sampling-lama/src",
         "--cov=packages/kcai-data-sampling-fgsm/src",
         "--cov=packages/kcai-data-sampling-job/src",
         "--cov=packages/kcai-data-sampling/src",
@@ -189,7 +189,7 @@ def type_check(s: Session) -> None:
     s.run("mypy", "packages/kcai-data-sampling-job")
     s.run("mypy", "packages/kcai-data-sampling-core")
     s.run("mypy", "packages/kcai-data-sampling-images")
-    s.run("mypy", "packages/kcai-data-sampling-images-lama")
+    s.run("mypy", "packages/kcai-data-sampling-lama")
     s.run("mypy", "packages/kcai-data-sampling-fgsm")
     s.run("mypy", "packages/kcai-data-sampling")
 

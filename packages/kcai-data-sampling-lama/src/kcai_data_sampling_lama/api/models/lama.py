@@ -11,7 +11,7 @@ import warnings
 
 import numpy as np
 
-from kcai_data_sampling_images_lama.api.models.weights import fetch
+from kcai_data_sampling_lama.api.models.weights import fetch
 
 URL = "https://github.com/enesmsahin/simple-lama-inpainting/releases/download/v0.1.0/big-lama.pt"
 

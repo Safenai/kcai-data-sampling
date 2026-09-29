@@ -1,4 +1,4 @@
-# kcai-data-sampling-images-lama
+# kcai-data-sampling-lama
 
 Generative inpainting with [LaMa](https://github.com/advimman/lama) (Suvorov et
 al., WACV 2022) for data sampling. Adds the `inpaint` transformation
@@ -8,7 +8,7 @@ entry-point groups.
 
 `torch` lives only in this package: a default workspace install stays torch-free,
 and installing this package is an explicit opt-in (`UV_INDEX= uv sync --package
-kcai-data-sampling-images-lama`). The released *big-lama* TorchScript checkpoint
+kcai-data-sampling-lama`). The released *big-lama* TorchScript checkpoint
 (~200 MB) is downloaded into the weight cache on first use — `$KCAI_WEIGHTS_DIR`
 or the repository's `.cache/` — and is never committed.
 

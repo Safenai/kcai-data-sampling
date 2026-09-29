@@ -19,13 +19,13 @@ import numpy as np
 import pytest
 from tests.fixtures.data import REGION
 
-pytest.importorskip("kcai_data_sampling_images_lama.api.transformations.inpaint")
+pytest.importorskip("kcai_data_sampling_lama.api.transformations.inpaint")
 
 pytestmark = pytest.mark.lama
 
-from kcai_data_sampling_images_lama.api.models.lama import LamaTool  # noqa: E402
-from kcai_data_sampling_images_lama.api.transformations.inpaint import Inpaint  # noqa: E402
-from kcai_data_sampling_images_lama.transformations.inpaint import build_region_mask  # noqa: E402
+from kcai_data_sampling_lama.api.models.lama import LamaTool  # noqa: E402
+from kcai_data_sampling_lama.api.transformations.inpaint import Inpaint  # noqa: E402
+from kcai_data_sampling_lama.transformations.inpaint import build_region_mask  # noqa: E402
 
 
 @pytest.fixture(scope="module")

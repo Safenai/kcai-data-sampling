@@ -25,7 +25,7 @@ from tests.e2e.test_job_run import ARTIFACT_RE
 from tests.fixtures.data import REGION, make_frames
 from tests.utils.configs import build_config, build_loader
 
-pytest.importorskip("kcai_data_sampling_images_lama.api.transformations.inpaint")
+pytest.importorskip("kcai_data_sampling_lama.api.transformations.inpaint")
 
 pytestmark = pytest.mark.lama
 

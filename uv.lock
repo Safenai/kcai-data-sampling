@@ -26,8 +26,8 @@ members = [
     "kcai-data-sampling-core",
     "kcai-data-sampling-fgsm",
     "kcai-data-sampling-images",
-    "kcai-data-sampling-images-lama",
     "kcai-data-sampling-job",
+    "kcai-data-sampling-lama",
     "kcai-workspace",
 ]
 
@@ -1352,7 +1352,7 @@ dependencies = [
 notebook = [
     { name = "ipykernel" },
     { name = "kcai-data-sampling-fgsm" },
-    { name = "kcai-data-sampling-images-lama" },
+    { name = "kcai-data-sampling-lama" },
     { name = "pandas" },
     { name = "python-pptx" },
     { name = "ultralytics" },
@@ -1364,8 +1364,8 @@ requires-dist = [
     { name = "kcai-data-sampling-core", editable = "packages/kcai-data-sampling-core" },
     { name = "kcai-data-sampling-fgsm", marker = "extra == 'notebook'", editable = "packages/kcai-data-sampling-fgsm" },
     { name = "kcai-data-sampling-images", editable = "packages/kcai-data-sampling-images" },
-    { name = "kcai-data-sampling-images-lama", marker = "extra == 'notebook'", editable = "packages/kcai-data-sampling-images-lama" },
     { name = "kcai-data-sampling-job", editable = "packages/kcai-data-sampling-job" },
+    { name = "kcai-data-sampling-lama", marker = "extra == 'notebook'", editable = "packages/kcai-data-sampling-lama" },
     { name = "pandas", marker = "extra == 'notebook'", specifier = ">=3.0.6" },
     { name = "python-pptx", marker = "extra == 'notebook'" },
     { name = "pyyaml" },
@@ -1418,21 +1418,6 @@ requires-dist = [
 ]
 
 [[package]]
-name = "kcai-data-sampling-images-lama"
-source = { editable = "packages/kcai-data-sampling-images-lama" }
-dependencies = [
-    { name = "kcai-data-sampling-core" },
-    { name = "torch", version = "2.14.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform == 'darwin'" },
-    { name = "torch", version = "2.14.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform != 'darwin'" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "kcai-data-sampling-core", editable = "packages/kcai-data-sampling-core" },
-    { name = "torch", specifier = ">=2.0.0", index = "https://download.pytorch.org/whl/cpu" },
-]
-
-[[package]]
 name = "kcai-data-sampling-job"
 source = { editable = "packages/kcai-data-sampling-job" }
 dependencies = [
@@ -1456,6 +1441,21 @@ requires-dist = [
 ]
 
 [[package]]
+name = "kcai-data-sampling-lama"
+source = { editable = "packages/kcai-data-sampling-lama" }
+dependencies = [
+    { name = "kcai-data-sampling-core" },
+    { name = "torch", version = "2.14.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform == 'darwin'" },
+    { name = "torch", version = "2.14.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform != 'darwin'" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "kcai-data-sampling-core", editable = "packages/kcai-data-sampling-core" },
+    { name = "torch", specifier = ">=2.0.0", index = "https://download.pytorch.org/whl/cpu" },
+]
+
+[[package]]
 name = "kcai-workspace"
 source = { editable = "." }
 dependencies = [
@@ -1473,7 +1473,7 @@ complexity = [
 ]
 docs = [
     { name = "kcai-data-sampling-fgsm" },
-    { name = "kcai-data-sampling-images-lama" },
+    { name = "kcai-data-sampling-lama" },
     { name = "markdown-callouts" },
     { name = "mkdocs-api-autonav" },
     { name = "mkdocs-htmlproofer-plugin" },
@@ -1515,7 +1515,7 @@ test-fgsm = [
     { name = "pytest-timeout" },
 ]
 test-lama = [
-    { name = "kcai-data-sampling-images-lama" },
+    { name = "kcai-data-sampling-lama" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-html" },
@@ -1540,7 +1540,7 @@ requires-dist = [
 complexity = [{ name = "complexipy", specifier = ">=5.5.0" }]
 docs = [
     { name = "kcai-data-sampling-fgsm", editable = "packages/kcai-data-sampling-fgsm" },
-    { name = "kcai-data-sampling-images-lama", editable = "packages/kcai-data-sampling-images-lama" },
+    { name = "kcai-data-sampling-lama", editable = "packages/kcai-data-sampling-lama" },
     { name = "markdown-callouts" },
     { name = "mkdocs-api-autonav" },
     { name = "mkdocs-htmlproofer-plugin" },
@@ -1572,7 +1572,7 @@ test-fgsm = [
     { name = "pytest-timeout" },
 ]
 test-lama = [
-    { name = "kcai-data-sampling-images-lama", editable = "packages/kcai-data-sampling-images-lama" },
+    { name = "kcai-data-sampling-lama", editable = "packages/kcai-data-sampling-lama" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-html" },

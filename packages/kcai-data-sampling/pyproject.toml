@@ -25,8 +25,8 @@ kcai-data-sampling = "kcai_data_sampling.cli_tools:main"
 [project.optional-dependencies]
 
 notebook = [
-    "kcai-data-sampling-images-lama",
     "kcai-data-sampling-fgsm",
+    "kcai-data-sampling-lama",
     "ipykernel",
     "pandas>=3.0.6",
     "python-pptx",

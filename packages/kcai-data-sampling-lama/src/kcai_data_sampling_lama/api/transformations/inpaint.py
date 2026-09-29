@@ -1,7 +1,7 @@
 """The ``inpaint`` transformation class.
 
 Wraps the region-mask math
-(:func:`kcai_data_sampling_images_lama.transformations.inpaint.build_region_mask`)
+(:func:`kcai_data_sampling_lama.transformations.inpaint.build_region_mask`)
 into the unary transformation contract: each sample's window is erased and the
 tool model fills it with content that was not in the image.
 """
@@ -11,8 +11,8 @@ from kcai_data_sampling_core.api.unary import UnaryTransformation
 import numpy as np
 from typing_extensions import override
 
-from kcai_data_sampling_images_lama.configs import InpaintTransformationConfig
-from kcai_data_sampling_images_lama.transformations.inpaint import build_region_mask
+from kcai_data_sampling_lama.configs import InpaintTransformationConfig
+from kcai_data_sampling_lama.transformations.inpaint import build_region_mask
 
 
 class Inpaint(UnaryTransformation):
