@@ -5,6 +5,6 @@ Adapters implement the generic ``ToolModel`` protocol from
 one. The weight-cache helper lives here too.
 """
 
-from kcai_data_sampling_images_lama.api.models.lama import LamaTool
+from kcai_data_sampling_lama.api.models.lama import LamaTool
 
 __all__ = ["LamaTool"]

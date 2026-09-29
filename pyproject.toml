@@ -34,8 +34,8 @@ members = ["packages/*"]
 kcai-data-sampling-core = { workspace = true }
 kcai-data-sampling-fgsm = { workspace = true }
 kcai-data-sampling-images = { workspace = true }
-kcai-data-sampling-images-lama = { workspace = true }
 kcai-data-sampling-job = { workspace = true }
+kcai-data-sampling-lama = { workspace = true }
 kcai-data-sampling = { workspace = true }
 # torch resolves from the CPU index only (mirrors dqm-ml-workspace); the root
 # never pulls it — only the opt-in -lama member depends on torch.
@@ -77,7 +77,7 @@ test = [
 # session runs the opt-in (torch-gated) tests for real. The default `test`
 # group stays torch-free (Q2 pin).
 test-lama = [
-    "kcai-data-sampling-images-lama",
+    "kcai-data-sampling-lama",
     { include-group = "test" },
 ]
 
@@ -139,8 +139,8 @@ docs = [
     "mkdocs-simple-hooks",
     "mkdocstrings[python]",
     "pymdown-extensions",
-    "kcai-data-sampling-images-lama",
-    "kcai-data-sampling-fgsm"
+    "kcai-data-sampling-fgsm",
+    "kcai-data-sampling-lama",
 ]
 
 # ruff config (dqm-ml mirror): 120 columns, full ruleset from the upstream
@@ -240,7 +240,7 @@ markers = [
     "slow: Marks potentially slow tests (deselect with '-m \"not slow\"')",
     "packaging: Marks package-isolation tests (deselect with '-m \"not packaging\"')",
     "fgsm: Opt-in adversarial surface (kcai-data-sampling-fgsm, importorskip-gated)",
-    "lama: Opt-in generative surface (kcai-data-sampling-images-lama, importorskip-gated)",
+    "lama: Opt-in generative surface (kcai-data-sampling-lama, importorskip-gated)",
 ]
 
 [tool.setuptools_scm]

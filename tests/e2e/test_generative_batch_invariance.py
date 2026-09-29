@@ -19,7 +19,7 @@ import pytest
 from tests.fixtures.data import REGION
 from tests.utils.configs import build_config, build_loader
 
-pytest.importorskip("kcai_data_sampling_images_lama.api.transformations.inpaint")
+pytest.importorskip("kcai_data_sampling_lama.api.transformations.inpaint")
 
 pytestmark = pytest.mark.lama
 

@@ -21,11 +21,11 @@ import pytest
 from tests.fixtures.data import REGION
 from tests.utils.configs import build_config, build_loader
 
-pytest.importorskip("kcai_data_sampling_images_lama.api.models.lama")
+pytest.importorskip("kcai_data_sampling_lama.api.models.lama")
 
 pytestmark = pytest.mark.lama
 
-from kcai_data_sampling_images_lama.api.models.lama import LamaTool  # noqa: E402
+from kcai_data_sampling_lama.api.models.lama import LamaTool  # noqa: E402
 
 
 @pytest.fixture(scope="module")

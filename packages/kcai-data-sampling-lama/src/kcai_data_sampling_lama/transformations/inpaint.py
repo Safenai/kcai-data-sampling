@@ -2,7 +2,7 @@
 
 ``build_region_mask`` is the pure function that marks the rectangle a tool
 model should erase and refill; the transformation class that wraps it into the
-unary contract lives in ``kcai_data_sampling_images_lama.api.transformations.inpaint``.
+unary contract lives in ``kcai_data_sampling_lama.api.transformations.inpaint``.
 """
 
 import numpy as np

@@ -347,7 +347,7 @@ def cached_big_lama() -> Path:
     Returns:
         The cached checkpoint path.
     """
-    from kcai_data_sampling_images_lama.api.models.lama import URL
-    from kcai_data_sampling_images_lama.api.models.weights import fetch
+    from kcai_data_sampling_lama.api.models.lama import URL
+    from kcai_data_sampling_lama.api.models.weights import fetch
 
     return fetch("big-lama.pt", URL)

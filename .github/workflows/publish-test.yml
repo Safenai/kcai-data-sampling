@@ -79,7 +79,7 @@ jobs:
         run: |
           uv build packages/kcai-data-sampling-core
           uv build packages/kcai-data-sampling-images
-          uv build packages/kcai-data-sampling-images-lama
+          uv build packages/kcai-data-sampling-lama
           uv build packages/kcai-data-sampling-fgsm
           uv build packages/kcai-data-sampling-job
           uv build packages/kcai-data-sampling
@@ -90,8 +90,8 @@ jobs:
       - name: Publish kcai-data-sampling-images
         run: uv publish dist/kcai_data_sampling_images-* --publish-url https://test.pypi.org/legacy/
 
-      - name: Publish kcai-data-sampling-images-lama
-        run: uv publish dist/kcai_data_sampling_images_lama-* --publish-url https://test.pypi.org/legacy/
+      - name: Publish kcai-data-sampling-lama
+        run: uv publish dist/kcai_data_sampling_lama-* --publish-url https://test.pypi.org/legacy/
 
       - name: Publish kcai-data-sampling-fgsm
         run: uv publish dist/kcai_data_sampling_fgsm-* --publish-url https://test.pypi.org/legacy/

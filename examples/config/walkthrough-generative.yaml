@@ -1,5 +1,5 @@
 # Generative: inpainting with LaMa (big-lama, CPU). Needs the opt-in
-# `kcai-data-sampling-images-lama` install (torch + the weights, fetched into
+# `kcai-data-sampling-lama` install (torch + the weights, fetched into
 # `.cache/` on first use).
 #
 # A tool model PRODUCES content: the region below is erased, and LaMa fills it

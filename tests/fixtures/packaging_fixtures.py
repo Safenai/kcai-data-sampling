@@ -24,7 +24,7 @@ PACKAGES = {
     "images": "kcai-data-sampling-images",
     "job": "kcai-data-sampling-job",
     "umbrella": "kcai-data-sampling",
-    "lama": "kcai-data-sampling-images-lama",
+    "lama": "kcai-data-sampling-lama",
     "fgsm": "kcai-data-sampling-fgsm",
 }
 
@@ -34,7 +34,7 @@ MODULES = {
     "images": "kcai_data_sampling_images",
     "job": "kcai_data_sampling_job",
     "umbrella": "kcai_data_sampling",
-    "lama": "kcai_data_sampling_images_lama",
+    "lama": "kcai_data_sampling_lama",
     "fgsm": "kcai_data_sampling_fgsm",
 }
 

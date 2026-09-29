@@ -14,8 +14,8 @@ import numpy as np
 
 
 def main() -> int:
-    from kcai_data_sampling_images_lama.api.models.lama import URL, LamaTool
-    from kcai_data_sampling_images_lama.api.transformations.inpaint import Inpaint
+    from kcai_data_sampling_lama.api.models.lama import URL, LamaTool
+    from kcai_data_sampling_lama.api.transformations.inpaint import Inpaint
 
     # The opt-in surface never imports torch at import time.
     assert "torch" not in sys.modules
