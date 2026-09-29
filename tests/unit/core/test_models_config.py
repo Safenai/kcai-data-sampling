@@ -16,6 +16,7 @@ from kcai_data_sampling_core.models.models import ModelRefConfig, ModelsConfig
 import pydantic
 import pytest
 
+from tests.fixtures.data import IMG_COLUMN
 from tests.fixtures.registries import (
     StubTool,
     ToolRoleTransformation,
@@ -148,3 +149,43 @@ def test_job_config_missing_model_name_is_a_start_error_not_a_load_error(monkeyp
     )
     validated = JobConfig.model_validate(config)
     assert validated.operations.transformations[0].tool_model is None
+
+
+def test_job_config_columns_input_must_name_exactly_one_column(monkeypatch, tmp_path) -> None:
+    """``columns.input`` with two names is refused at load, naming what it got."""
+    set_transformations_registry(monkeypatch, {"test_tool": ToolRoleTransformation})
+    config = build_config(
+        loaders=[build_loader(parquet_path="missing.parquet")],
+        output_root=str(tmp_path),
+        transformations=[{"type": "test_tool", "name": "tool", "columns": {"input": [IMG_COLUMN, "other"]}}],
+    )
+    with pytest.raises(pydantic.ValidationError) as exc:
+        JobConfig.model_validate(config)
+    assert "columns.input must name exactly one column" in str(exc.value)
+
+
+def test_job_config_columns_input_must_name_a_sample_path_column(monkeypatch, tmp_path) -> None:
+    """``columns.input`` naming no loader's ``sample_path.column`` is refused."""
+    set_transformations_registry(monkeypatch, {"test_tool": ToolRoleTransformation})
+    config = build_config(
+        loaders=[build_loader(parquet_path="missing.parquet")],
+        output_root=str(tmp_path),
+        transformations=[{"type": "test_tool", "name": "tool", "columns": {"input": ["other"]}}],
+    )
+    with pytest.raises(pydantic.ValidationError) as exc:
+        JobConfig.model_validate(config)
+    message = str(exc.value)
+    assert "columns.input 'other' is not any loader's sample_path.column" in message
+    assert "loaders: ['img']" in message
+
+
+def test_job_config_columns_input_naming_the_sample_column_loads(monkeypatch, tmp_path) -> None:
+    """``columns.input: [img]`` matching the loader's column validates cleanly."""
+    set_transformations_registry(monkeypatch, {"test_tool": ToolRoleTransformation})
+    config = build_config(
+        loaders=[build_loader(parquet_path="missing.parquet")],
+        output_root=str(tmp_path),
+        transformations=[{"type": "test_tool", "name": "tool", "columns": {"input": [IMG_COLUMN]}}],
+    )
+    validated = JobConfig.model_validate(config)
+    assert validated.operations.transformations[0].columns.input == [IMG_COLUMN]

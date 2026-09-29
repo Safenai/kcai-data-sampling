@@ -116,11 +116,11 @@ def test_fgsm(s: Session) -> None:
 
 
 @session(
-    python=["3.10", "3.11", "3.12", "3.13"],
+    python=["3.11", "3.12", "3.13", "3.14"],
     uv_groups=["test"],
 )
 def compatibility(s: Session) -> None:
-    """Run unit and CLI tests across Python 3.10-3.13 to verify cross-version compatibility."""
+    """Run unit and CLI tests across Python 3.11-3.14 to verify cross-version compatibility."""
     s.env["KCAI_TEST_SEED"] = "42"
     s.run(
         "pytest",
@@ -196,6 +196,20 @@ def type_check(s: Session) -> None:
 
 # Environment variable needed for mkdocstrings-python to locate source files.
 doc_env = {"PYTHONPATH": "packages"}
+
+
+@session(
+    python=["3.12"],
+    uv_groups=["docs"],
+)
+def docs_serve(s: Session) -> None:
+    """Serve mkdocs documentation locally for development preview."""
+    s.run(
+        "mkdocs",
+        "serve",
+        *s.posargs,
+        env=doc_env,
+    )
 
 
 @session(

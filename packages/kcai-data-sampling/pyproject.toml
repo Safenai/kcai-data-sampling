@@ -7,13 +7,16 @@ authors = [
 ]
 license = "Apache-2.0"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 keywords = ["ml", "data", "augmentation", "robustness"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 
 [project.scripts]
@@ -24,7 +27,7 @@ kcai-data-sampling = "kcai_data_sampling.cli_tools:main"
 notebook = [
     "kcai-data-sampling-images-lama",
     "kcai-data-sampling-fgsm",
-    "ipykernel>=7.3.0",
+    "ipykernel",
     "pandas>=3.0.6",
     "python-pptx",
     "ultralytics",

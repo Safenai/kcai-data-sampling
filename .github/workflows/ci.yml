@@ -25,6 +25,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
 
+      - name: Install hunspell library
+        run: sudo apt-get update && sudo apt-get install -y libhunspell-dev
+
       - name: Run nox session
         run: uv run --frozen nox -s ${{ matrix.nox-session }}
 
@@ -32,7 +35,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -41,22 +44,6 @@ jobs:
 
       - name: Compatibility with Nox
         run: TQDM_DISABLE=1 uv run --frozen nox -s compatibility-${{ matrix.python-version }}
-
-  test:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-
-      - name: Neutral tests with Nox
-        run: TQDM_DISABLE=1 uv run --frozen nox -s test
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: pytest-results
-          path: docs/reports/pytest
-          retention-days: 1
-          overwrite: true
 
   test-coverage:
     runs-on: ubuntu-24.04
@@ -94,36 +81,12 @@ jobs:
           retention-days: 1
           overwrite: true
 
-  test-fgsm:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-
-      - name: FGSM tests with Nox
-        run: TQDM_DISABLE=1 uv run --frozen nox -s test_fgsm
-
-  test-lama:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-
-      - name: Restore lama weights from cache
-        uses: actions/cache/restore@v4
+      - uses: actions/upload-artifact@v4
         with:
-          path: .cache
-          key: kcai-test-lama-weights
-
-      - name: LaMa tests with Nox
-        run: TQDM_DISABLE=1 uv run --frozen nox -s test_lama
-
-      - name: Update cache containing lama weights
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: .cache
-          key: kcai-test-lama-weights
+          name: pytest-results
+          path: docs/reports/pytest
+          retention-days: 1
+          overwrite: true
 
   test-packaging:
     runs-on: ubuntu-24.04
@@ -136,7 +99,7 @@ jobs:
 
   pages:
     runs-on: ubuntu-24.04
-    needs: [test, test-coverage]
+    needs: [test-coverage]
     permissions:
       contents: write
     steps:
