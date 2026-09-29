@@ -6,7 +6,7 @@ walks the arithmetic progression, and ``random`` draws seeded uniform values —
 refused, loudly, without a seed.
 """
 
-from kcai_data_sampling_core.models.sweep import _coerce_to_field, SweepConfig
+from kcai_data_sampling_core.models.sweep import SweepConfig, _coerce_to_field
 import pytest
 
 

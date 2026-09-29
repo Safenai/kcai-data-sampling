@@ -7,7 +7,7 @@ the normalized float batch and its gradient is funneled through
 ``check_output`` (shape and finiteness) before the step.
 """
 
-from typing import override
+from typing_extensions import override
 
 from kcai_data_sampling_core.api.roles import check_output
 from kcai_data_sampling_core.api.unary import UnaryTransformation

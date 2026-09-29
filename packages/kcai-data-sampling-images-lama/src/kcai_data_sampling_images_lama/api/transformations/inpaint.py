@@ -6,7 +6,7 @@ into the unary transformation contract: each sample's window is erased and the
 tool model fills it with content that was not in the image.
 """
 
-from typing import override
+from typing_extensions import override
 
 from kcai_data_sampling_core.api.roles import check_output
 from kcai_data_sampling_core.api.unary import UnaryTransformation

@@ -5,7 +5,7 @@ Wraps the mirrored-width-axis math
 into the unary transformation contract.
 """
 
-from typing import override
+from typing_extensions import override
 
 from kcai_data_sampling_core.api.unary import UnaryTransformation
 import numpy as np
