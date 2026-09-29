@@ -15,21 +15,22 @@ import hashlib
 import json
 import re
 
+from kcai_data_sampling_core.utils.registry import register_model
+from kcai_data_sampling_job.cli import run
+from kcai_data_sampling_job.job import GENERATOR_COLUMNS
 import numpy as np
-import pytest
-import pyarrow.parquet as pq
 from PIL import Image
+import pyarrow.parquet as pq
+import pytest
 
 from tests.e2e.test_job_run import ARTIFACT_RE
 from tests.fixtures.data import make_frames
+from tests.fixtures.registries import StubTarget
+from tests.utils.configs import build_config, build_loader
 
 pytest.importorskip("kcai_data_sampling_fgsm.api.transformations.fgsm")
 
-from kcai_data_sampling_job.cli import run
-from kcai_data_sampling_job.job import GENERATOR_COLUMNS
-from kcai_data_sampling_core.utils.registry import register_model
-from tests.fixtures.registries import StubTarget
-from tests.utils.configs import build_config, build_loader
+pytestmark = pytest.mark.fgsm
 
 
 def _adversarial_config(root, raw_bytes_data, *, epsilon: float = 2 / 255) -> dict:
@@ -80,7 +81,7 @@ def _stub_expected(frame: np.ndarray, epsilon: float) -> np.ndarray:
 def test_adversarial_run_ledger_and_payloads(raw_bytes_data, test_seed, registry_snapshot, tmp_path) -> None:
     """One real ``fgsm`` run records the expected ledger and payloads.
 
-    The summary counts 8 rows × one fgsm = 8; the ledger has exactly the 13
+    The summary counts 8 rows x one fgsm = 8; the ledger has exactly the 13
     generator columns, every row is a deterministic unary adversarial step of
     magnitude ``epsilon`` in the ``sign`` direction of the stub target's
     gradient, with a null seed and exactly ``{epsilon}`` in ``params``. Each
@@ -110,9 +111,9 @@ def test_adversarial_run_ledger_and_payloads(raw_bytes_data, test_seed, registry
     assert all(re.fullmatch(r"[0-9a-f]{12}", i) is not None for i in ids)
     parents = table.column("parent_id").to_pylist()
     assert set(parents) == {f"syn_{i:04d}" for i in range(8)}
-    parent_by_id = dict(zip(ids, parents))
+    parent_by_id = dict(zip(ids, parents, strict=True))
 
-    artifacts = dict(zip(ids, table.column("artifact").to_pylist()))
+    artifacts = dict(zip(ids, table.column("artifact").to_pylist(), strict=True))
     frames = make_frames(test_seed)
 
     payloads = sorted((root / "synthetic").glob("*.png"))

@@ -7,11 +7,10 @@ preserved on the wheel-installed package.
 
 import sys
 
-import numpy as np
-
 from kcai_data_sampling_images.api.selection import ImageBatch
 from kcai_data_sampling_images.api.transformations.crop_resize import CropResize
 from kcai_data_sampling_images.api.transformations.horizontal_flip import HorizontalFlip
+import numpy as np
 
 
 def _frame() -> np.ndarray:

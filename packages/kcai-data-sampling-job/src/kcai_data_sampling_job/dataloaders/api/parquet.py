@@ -18,20 +18,22 @@ config — :class:`ParquetImageLoaderConfig` — is the plugin's own registered
 schema, resolved against the generic loader keys at config load.
 """
 
+from collections.abc import Callable, Iterator
 import logging
 from pathlib import Path
-from typing import Any, Iterator, Literal
+from typing import Any, Literal
 
 from kcai_data_sampling_core.api.dataloaders import DataLoader, DataSelection
 from kcai_data_sampling_core.api.selection import Batch
 from kcai_data_sampling_core.models.dataloaders import DataLoaderConfig
-from kcai_data_sampling_job.utils.images import decode_image
 import numpy as np
 import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
 from pydantic import Field
 from typing_extensions import override
+
+from kcai_data_sampling_job.utils.images import decode_image
 
 logger = logging.getLogger(__name__)
 
@@ -311,7 +313,52 @@ class ParquetDataSelection(DataSelection):
         if self.errors["on_decode_failure"] == "fail_fast":
             raise
 
-    def _decode_bytes(self, batch: pa.RecordBatch, img_values: list[Any], id_values: list[Any] | None, row_offset: int) -> tuple[list[np.ndarray], list[str]]:
+    def _decode_rows(
+        self,
+        rows: list[Any],
+        id_values: list[Any] | None,
+        row_offset: int,
+        resolve: Callable[[int, Any], tuple[int, int, bytes]],
+    ) -> tuple[list[np.ndarray], list[str]]:
+        """Decode raw payloads into arrays and row ids via ``resolve``.
+
+        The shared per-row skeleton of the bytes and path paths: ``resolve``
+        turns one row into ``(height, width, rgba payload)``; any exception in
+        a row is counted as a decode failure (policy via ``_fail_row``) and
+        drops the row, and ids fall back to the absolute row index when no id
+        column is set.
+
+        Args:
+            rows: The per-row payloads to decode.
+            id_values: Per-row identifiers, or ``None`` to fall back to the
+                absolute row index.
+            row_offset: Absolute index of the batch's first row (id fallback).
+            resolve: Callable mapping ``(i, row)`` to the decoded height,
+                width and raw rgba bytes.
+
+        Returns:
+            The decoded arrays and their row ids, in row order (failed rows
+            dropped).
+        """
+        images: list[np.ndarray] = []
+        ids: list[str] = []
+        for i, row in enumerate(rows):
+            try:
+                height, width, payload = resolve(i, row)
+                images.append(np.frombuffer(payload, dtype=np.uint8).reshape(height, width, 4))
+            except Exception:
+                self._fail_row()
+                continue
+            ids.append(str(id_values[i]) if id_values is not None else str(row_offset + i))
+        return images, ids
+
+    def _decode_bytes(
+        self,
+        batch: pa.RecordBatch,
+        img_values: list[Any],
+        id_values: list[Any] | None,
+        row_offset: int,
+    ) -> tuple[list[np.ndarray], list[str]]:
         """Decode a binary image column into arrays.
 
         Zero-copy ``np.frombuffer`` views; the per-row shape comes from
@@ -329,36 +376,36 @@ class ParquetDataSelection(DataSelection):
             dropped).
         """
         if self.image_shape is not None:
-            shape_h, shape_w = int(self.image_shape[0]), int(self.image_shape[1])
-            per_row_shape = True
+            shape = (int(self.image_shape[0]), int(self.image_shape[1]))
+            h_col = w_col = None
         elif "height" in batch.column_names and "width" in batch.column_names:
-            per_row_shape = False
+            shape = None
             h_col = batch.column("height").to_numpy()
             w_col = batch.column("width").to_numpy()
         else:
             raise ValueError(
-                "parquet bytes image column needs the row shape: set image_shape or provide "
-                "'height'/'width' columns."
+                "parquet bytes image column needs the row shape: set image_shape or provide 'height'/'width' columns."
             )
 
-        images: list[np.ndarray] = []
-        ids: list[str] = []
-        for i, blob in enumerate(img_values):
-            try:
-                if blob is None:
-                    raise ValueError("null image bytes row")
-                if per_row_shape:
-                    height, width = shape_h, shape_w
-                else:
-                    height, width = int(h_col[i]), int(w_col[i])
-                images.append(np.frombuffer(bytes(blob), dtype=np.uint8).reshape(height, width, 4))
-            except Exception:
-                self._fail_row()
-                continue
-            ids.append(str(id_values[i]) if id_values is not None else str(row_offset + i))
-        return images, ids
+        def resolve(i: int, blob: Any) -> tuple[int, int, bytes]:
+            if blob is None:
+                raise ValueError("null image bytes row")
+            if shape is not None:
+                height, width = shape
+            else:
+                assert h_col is not None
+                assert w_col is not None
+                height, width = int(h_col[i]), int(w_col[i])
+            return height, width, bytes(blob)
 
-    def _decode_paths(self, img_values: list[Any], id_values: list[Any] | None, row_offset: int) -> tuple[list[np.ndarray], list[str]]:
+        return self._decode_rows(img_values, id_values, row_offset, resolve)
+
+    def _decode_paths(
+        self,
+        img_values: list[Any],
+        id_values: list[Any] | None,
+        row_offset: int,
+    ) -> tuple[list[np.ndarray], list[str]]:
         """Decode a string image column (paths) into arrays.
 
         Absolute paths resolve directly; relative paths resolve against
@@ -374,26 +421,21 @@ class ParquetDataSelection(DataSelection):
             The decoded arrays and their row ids, in row order (failed rows
             dropped).
         """
-        images: list[np.ndarray] = []
-        ids: list[str] = []
-        for i, raw in enumerate(img_values):
-            try:
-                if raw is None or not str(raw):
-                    raise ValueError("null image path row")
-                value = str(raw)
-                if Path(value).is_absolute():
-                    path = Path(value)
-                elif self.image_prefix:
-                    path = Path(self.image_prefix) / value
-                else:
-                    raise ValueError(f"relative image path {value!r} needs sample_path.prefix")
-                height, width, rgba = decode_image(path)
-                images.append(np.frombuffer(rgba, dtype=np.uint8).reshape(height, width, 4))
-            except Exception:
-                self._fail_row()
-                continue
-            ids.append(str(id_values[i]) if id_values is not None else str(row_offset + i))
-        return images, ids
+
+        def resolve(i: int, raw: Any) -> tuple[int, int, bytes]:
+            if raw is None or not str(raw):
+                raise ValueError("null image path row")
+            value = str(raw)
+            if Path(value).is_absolute():
+                path = Path(value)
+            elif self.image_prefix:
+                path = Path(self.image_prefix) / value
+            else:
+                raise ValueError(f"relative image path {value!r} needs sample_path.prefix")
+            height, width, rgba = decode_image(path)
+            return height, width, rgba
+
+        return self._decode_rows(img_values, id_values, row_offset, resolve)
 
     def _decode_batch(self, batch: pa.RecordBatch, row_offset: int) -> Batch:
         """Decode one chunk into a generic :class:`Batch` (batch = row).
@@ -513,9 +555,7 @@ class ParquetDataLoader(DataLoader):
             ValueError: If ``decode`` is not ``"img_bytes"``.
         """
         if config.decode and config.decode != "img_bytes":
-            raise ValueError(
-                f"parquet: decode mode {config.decode!r} is not implemented yet."
-            )
+            raise ValueError(f"parquet: decode mode {config.decode!r} is not implemented yet.")
         self.name = name
         self.config = config
         self.path = config.path
@@ -530,6 +570,7 @@ class ParquetDataLoader(DataLoader):
         self.image_shape = config.image_shape
         self.errors = errors
 
+    @override
     def get_selections(self) -> list[DataSelection]:
         """Create the loader's single selection.
 

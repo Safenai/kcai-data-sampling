@@ -7,12 +7,12 @@ construction when not implemented. The wiring ends with a real selection
 yielding one decoded ``(B, H, W, 4)`` batch per chunk, image column dropped.
 """
 
+from kcai_data_sampling_core.models.config import JobConfig
+from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry
 import numpy as np
 import pydantic
 import pytest
 
-from kcai_data_sampling_core.models.config import JobConfig
-from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry
 from tests.utils.configs import build_config, build_loader
 
 
@@ -23,10 +23,7 @@ def test_parquet_loader_is_registered_under_the_core_surface() -> None:
     surface); asserting the identity plus the attached ``Config`` schema proves
     the plugin is wired, not copied.
     """
-    from kcai_data_sampling_job.dataloaders.api.parquet import (
-        ParquetDataLoader,
-        ParquetImageLoaderConfig,
-    )
+    from kcai_data_sampling_job.dataloaders.api.parquet import ParquetDataLoader, ParquetImageLoaderConfig
 
     registry = PluginLoadedRegistry.get_dataloaders_registry()
     assert "parquet" in registry
@@ -34,9 +31,7 @@ def test_parquet_loader_is_registered_under_the_core_surface() -> None:
     assert registry["parquet"].Config is ParquetImageLoaderConfig
 
 
-def test_config_resolves_loader_entries_into_the_plugin_schema(
-    raw_bytes_data, tmp_path
-) -> None:
+def test_config_resolves_loader_entries_into_the_plugin_schema(raw_bytes_data, tmp_path) -> None:
     """A config dict becomes a ``ParquetImageLoaderConfig`` at validation.
 
     Loading a job config resolves each ``type`` entry against the registry and
@@ -102,10 +97,7 @@ def test_unimplemented_decode_mode_is_refused() -> None:
     The schema admits the value for forward compatibility; the loader is where
     "not implemented yet" bites — a loud, local failure.
     """
-    from kcai_data_sampling_job.dataloaders.api.parquet import (
-        ParquetDataLoader,
-        ParquetImageLoaderConfig,
-    )
+    from kcai_data_sampling_job.dataloaders.api.parquet import ParquetDataLoader, ParquetImageLoaderConfig
 
     config = ParquetImageLoaderConfig(
         name="synthetic",

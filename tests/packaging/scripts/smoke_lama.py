@@ -39,8 +39,10 @@ def main() -> int:
     frames[..., :3] = 200
     frames[..., 3] = 255
     out = inpaint.apply(frames, None)
-    assert out.shape == frames.shape and out.dtype == np.uint8
-    assert out.min() >= 0 and out.max() <= 255
+    assert out.shape == frames.shape
+    assert out.dtype == np.uint8
+    assert out.min() >= 0
+    assert out.max() <= 255
 
     top, left, height, width = region.values()
     window = (slice(top, top + height), slice(left, left + width))

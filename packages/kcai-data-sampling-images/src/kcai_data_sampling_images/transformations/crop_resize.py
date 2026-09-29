@@ -33,8 +33,7 @@ def crop_resize(xs: np.ndarray, fraction: float, top: int = 0, left: int = 0) ->
     window_w: int = max(1, int(width * fraction))
     if top + window_h > height or left + window_w > width:
         raise ValueError(
-            f"crop_resize: window {window_h}x{window_w} at ({top},{left}) "
-            f"leaves the {height}x{width} image"
+            f"crop_resize: window {window_h}x{window_w} at ({top},{left}) leaves the {height}x{width} image"
         )
     window = xs[:, top : top + window_h, left : left + window_w, :]
 

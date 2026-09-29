@@ -9,11 +9,11 @@ dataloader/transformation types with the registered ``ValueError``s.
 
 from pathlib import Path
 
+from kcai_data_sampling_job import cli as job_cli
+from kcai_data_sampling_job.cli import execute, parse_args, run
 import pytest
 import yaml
 
-from kcai_data_sampling_job import cli as job_cli
-from kcai_data_sampling_job.cli import execute, parse_args, run
 from tests.e2e.fixtures.configs import write_yaml
 from tests.utils.configs import build_config, build_loader
 

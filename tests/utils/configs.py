@@ -14,13 +14,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from tests.fixtures.data import (
-    ID_COLUMN,
-    IMG_COLUMN,
-    PATH_COLUMN,
-    SELECTION_NAME,
-    SYNTHETIC_ROWS,
-)
+from tests.fixtures.data import ID_COLUMN, IMG_COLUMN, SELECTION_NAME, SYNTHETIC_ROWS
 
 DEFAULT_COMPUTE_SEED = 42
 
@@ -152,9 +146,7 @@ def build_config(
     """
     if output_path is None or samples_dir is None:
         if output_root is None:
-            raise ValueError(
-                "build_config needs an output_root, or explicit output_path and samples_dir"
-            )
+            raise ValueError("build_config needs an output_root, or explicit output_path and samples_dir")
         root = Path(output_root)
         if output_path is None:
             output_path = str(root / "ledger" / f"{SELECTION_NAME}.parquet")

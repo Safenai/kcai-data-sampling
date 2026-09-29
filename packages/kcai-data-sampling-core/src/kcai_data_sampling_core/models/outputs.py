@@ -33,16 +33,12 @@ class SamplingOutputsConfig(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    path: str = Field(
-        description="Metadata-only ledger, {selection} substitutable."
-    )
+    path: str = Field(description="Metadata-only ledger, {selection} substitutable.")
     write_samples: bool = Field(
         default=True,
         description="Emit hashed payload files; False → trace-only.",
     )
-    samples_dir: str = Field(
-        description="Payload store, {selection} substitutable."
-    )
+    samples_dir: str = Field(description="Payload store, {selection} substitutable.")
     flush_batch_size: int = Field(
         default=5,
         description="Rows buffered before a parquet write; bounds the payload buffer.",

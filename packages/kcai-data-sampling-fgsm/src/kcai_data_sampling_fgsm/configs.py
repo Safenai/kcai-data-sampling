@@ -11,10 +11,9 @@ instance.
 
 from typing import Literal, Self
 
-from pydantic import Field, model_validator
-
 from kcai_data_sampling_core.models.config import TransformationConfig
 from kcai_data_sampling_core.models.sweep import SweepConfig
+from pydantic import Field, model_validator
 
 
 class FgsmTransformationConfig(TransformationConfig):
@@ -54,12 +53,5 @@ class FgsmTransformationConfig(TransformationConfig):
             ValueError: If ``epsilon`` is not strictly positive, whether given
                 directly or as a sweep interval.
         """
-        if isinstance(self.epsilon, SweepConfig):
-            lo, _ = self.epsilon.bounds
-            if lo <= 0:
-                raise ValueError(
-                    f"fgsm.epsilon sweep {self.epsilon.range} must stay > 0"
-                )
-        elif self.epsilon <= 0:
-            raise ValueError(f"fgsm.epsilon must be > 0, got {self.epsilon}")
+        self._check_parameter_bounds("epsilon", minimum=0, exclusive_min=True)
         return self

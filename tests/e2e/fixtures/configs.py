@@ -11,8 +11,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from tests.utils.configs import build_config, build_loader, build_sweep
 from tests.fixtures.data import PATH_COLUMN
+from tests.utils.configs import build_config, build_loader, build_sweep
 
 
 def standard_config(

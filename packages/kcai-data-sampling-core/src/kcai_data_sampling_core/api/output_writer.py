@@ -52,7 +52,7 @@ class OutputWriter:
         del selection_name, output
         return None
 
-    def add_rows(self, selection_name: str, rows: list[dict]) -> None:
+    def add_rows(self, selection_name: str, rows: list[dict[str, Any]]) -> None:
         """Buffer ledger rows for one selection.
 
         Args:

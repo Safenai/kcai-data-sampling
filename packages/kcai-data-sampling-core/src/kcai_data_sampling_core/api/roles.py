@@ -7,8 +7,9 @@ wrapped in a few lines; a tool model is chosen by an algorithm package
 ``check_output`` checks what only a call can reveal.
 """
 
-import numpy as np
 from typing import Any, Protocol, runtime_checkable
+
+import numpy as np
 
 
 @runtime_checkable

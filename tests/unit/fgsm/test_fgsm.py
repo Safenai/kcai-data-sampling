@@ -11,17 +11,19 @@ model-graded output that breaks the numeric contract (wrong shape /
 non-finite) before the step runs.
 """
 
+from kcai_data_sampling_core.utils.runner import TransformationRunner
 import numpy as np
 import pytest
+from tests.fixtures.registries import StubTarget
 
 pytest.importorskip("kcai_data_sampling_fgsm")
 
-from kcai_data_sampling_core.utils.runner import TransformationRunner
-from kcai_data_sampling_fgsm.api.transformations.fgsm import Fgsm
-from tests.fixtures.registries import StubTarget
+pytestmark = pytest.mark.fgsm
+
+from kcai_data_sampling_fgsm.api.transformations.fgsm import Fgsm  # noqa: E402
 
 
-@pytest.fixture()
+@pytest.fixture
 def fgsm(stub_target: StubTarget) -> Fgsm:
     """An ``Fgsm`` instance stepping along the stub target's gradient.
 
@@ -71,9 +73,7 @@ def test_apply_records_row_fields_and_stays_in_range(fgsm: Fgsm, synthetic_batch
         assert output.params == {"epsilon": 2 / 255}
 
 
-def test_apply_moves_only_the_sign_pixels_by_the_exact_delta(
-    fgsm: Fgsm, synthetic_batch
-) -> None:
+def test_apply_moves_only_the_sign_pixels_by_the_exact_delta(fgsm: Fgsm, synthetic_batch) -> None:
     """Pixels the stub's sign does not touch stay byte-identical; the others move.
 
     The stub's gradient is +1 on the red plane where the green-blue mean is
@@ -98,6 +98,7 @@ def test_check_output_refuses_a_wrong_shaped_grad(fgsm: Fgsm) -> None:
     ``check_output`` runs inside ``apply`` ahead of ``fgsm_step``; the error
     names the model, the method and the expected shape.
     """
+
     class _WrongShape:
         name = "wrong_shape"
 
@@ -105,7 +106,7 @@ def test_check_output_refuses_a_wrong_shaped_grad(fgsm: Fgsm) -> None:
             return np.zeros((xs.shape[0],), dtype=np.float64)
 
     broken = Fgsm({"target_model": _WrongShape(), "epsilon": 2 / 255})
-    with pytest.raises(ValueError, match="wrong_shape.grad returned"):
+    with pytest.raises(ValueError, match=r"wrong_shape\.grad returned"):
         broken.apply(
             np.zeros((2, 4, 4, 3), dtype=np.uint8),
             fgsm.rngs(["a", "b"]),
@@ -118,6 +119,7 @@ def test_check_output_refuses_a_non_finite_grad(fgsm: Fgsm) -> None:
     Finiteness is the numeric contract of a model output; the refusal names the
     model and the method, and the batch is left untouched.
     """
+
     class _NaN:
         name = "nan_grad"
 
@@ -125,7 +127,7 @@ def test_check_output_refuses_a_non_finite_grad(fgsm: Fgsm) -> None:
             return np.full(xs.shape, np.nan, dtype=np.float64)
 
     broken = Fgsm({"target_model": _NaN(), "epsilon": 2 / 255})
-    with pytest.raises(ValueError, match="nan_grad.grad returned non-finite"):
+    with pytest.raises(ValueError, match=r"nan_grad\.grad returned non-finite"):
         broken.apply(
             np.zeros((2, 4, 4, 3), dtype=np.uint8),
             fgsm.rngs(["a", "b"]),

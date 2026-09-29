@@ -75,9 +75,7 @@ class LamaTool:
             ValueError: If ``xs`` does not carry at least ``channels`` planes.
         """
         if xs.ndim != 4 or xs.shape[-1] < self.channels:
-            raise ValueError(
-                f"LamaTool.inpaint expects a (B, H, W, 4) uint8 RGBA batch, got shape {xs.shape}"
-            )
+            raise ValueError(f"LamaTool.inpaint expects a (B, H, W, 4) uint8 RGBA batch, got shape {xs.shape}")
         rows, cols = np.where(masks.any(axis=0))
         if rows.size == 0:
             return xs.copy()

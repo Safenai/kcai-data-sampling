@@ -7,7 +7,8 @@ here assumes images; datatype packages fix the sample's axes and value range
 on their batch subclass.
 """
 
-from typing import Any, Iterator, Protocol, runtime_checkable
+from collections.abc import Iterator
+from typing import Protocol, runtime_checkable
 
 from kcai_data_sampling_core.api.selection import Batch
 
@@ -21,11 +22,13 @@ class DataSelection(Protocol):
 
     Attributes:
         name: Unique name of the selection within the job.
+        dataset: Name of the reader (loader) that assembled the selection.
         sample_axes: Labels of the axes of each row's sample array, or ``None``.
         value_range: ``(low, high)`` domain of values of each row, or ``None``.
     """
 
     name: str
+    dataset: str
     sample_axes: tuple[str, ...] | None
     value_range: tuple[float, float] | None
 

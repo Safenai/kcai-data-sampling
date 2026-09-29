@@ -10,11 +10,12 @@ than that many encoded rows in memory.
 """
 
 from pathlib import Path
-
-from typing_extensions import override
+from typing import Any
 
 from kcai_data_sampling_core.api.output import Output
 from kcai_data_sampling_core.api.output_writer import OutputWriter
+from typing_extensions import override
+
 from kcai_data_sampling_job.utils.images import artifact_name, png_bytes
 
 
@@ -30,7 +31,7 @@ class ImagesOutputWriter(OutputWriter):
         name: Unique writer name.
     """
 
-    def __init__(self, name: str, config: dict | None = None):
+    def __init__(self, name: str, config: dict[str, Any] | None = None):
         """Build the payload writer.
 
         Args:
@@ -77,7 +78,7 @@ class ImagesOutputWriter(OutputWriter):
         return artifact
 
     @override
-    def add_rows(self, selection_name: str, rows: list[dict]) -> None:
+    def add_rows(self, selection_name: str, rows: list[dict[str, Any]]) -> None:
         """Ledger rows belong to the parquet writer; nothing to do here.
 
         Args:

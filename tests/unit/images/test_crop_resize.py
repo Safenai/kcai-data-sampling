@@ -7,10 +7,9 @@ window math): ``fraction=1`` must be byte-exact identity, values stay uint8 in
 from ``kcai_data_sampling_images.api.transformations``.
 """
 
+from kcai_data_sampling_images.api.transformations.crop_resize import CropResize
 import numpy as np
 import pytest
-
-from kcai_data_sampling_images.api.transformations.crop_resize import CropResize
 
 
 def _out_of(batch, fraction: float, top: int = 0, left: int = 0) -> np.ndarray:
@@ -70,7 +69,8 @@ def test_crop_preserves_shape_space_and_value_range(synthetic_batch) -> None:
     transformed = _out_of(synthetic_batch, 0.5)
     assert transformed.shape == synthetic_batch.data.shape
     assert transformed.dtype == np.uint8
-    assert transformed.min() >= 0 and transformed.max() <= 255
+    assert transformed.min() >= 0
+    assert transformed.max() <= 255
 
 
 def test_crop_is_not_reversible(synthetic_batch) -> None:

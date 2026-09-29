@@ -7,18 +7,13 @@ and ``-job`` (the loader/writer owner) never imports ``-images``.
 """
 
 import inspect
-import re
 from pathlib import Path
-
-import pytest
+import re
 
 import kcai_data_sampling_core.api as core_api
-import kcai_data_sampling_job
-from kcai_data_sampling_core.utils.registry import (
-    PluginLoadedRegistry,
-    get_transformations_registry,
-)
+from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry, get_transformations_registry
 from kcai_data_sampling_images.api.selection import ImageBatch
+import kcai_data_sampling_job
 from kcai_data_sampling_job.dataloaders.api.parquet import ParquetDataLoader
 
 _IMPORT_RE = re.compile(r"^\s*(?:import|from)\s+kcai_data_sampling_images", re.MULTILINE)

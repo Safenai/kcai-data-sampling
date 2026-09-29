@@ -7,9 +7,9 @@ into the unary transformation contract.
 
 from typing import override
 
+from kcai_data_sampling_core.api.unary import UnaryTransformation
 import numpy as np
 
-from kcai_data_sampling_core.api.unary import UnaryTransformation
 from kcai_data_sampling_images.configs import HorizontalFlipTransformationConfig
 from kcai_data_sampling_images.transformations.horizontal_flip import horizontal_flip
 

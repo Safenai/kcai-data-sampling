@@ -7,13 +7,9 @@ import through ``optional_dependencies``), and the help action dispatches to
 the requested command.
 """
 
-from contextlib import contextmanager
-
-import pytest
-
-from kcai_data_sampling import dependency
 from kcai_data_sampling.__main__ import execute, parse_args
 from kcai_data_sampling.dependency import get_available_command, optional_dependencies
+import pytest
 
 ALL_COMMANDS = ["version", "list", "process"]
 
@@ -43,7 +39,8 @@ def test_list_prints_the_registered_plugin_groups(capsys) -> None:
     execute(["list"])
     out = capsys.readouterr().out
     assert "Available data transformations" in out
-    assert "- horizontal_flip" in out and "- crop_resize" in out
+    assert "- horizontal_flip" in out
+    assert "- crop_resize" in out
     assert "Available data models" in out
     assert "Available data dataloaders" in out
     assert "- parquet" in out
@@ -126,9 +123,8 @@ def test_optional_dependencies_swallows_missing_imports(capsys, mode: str) -> No
 
 def test_optional_dependencies_raise_rethrows_the_import_error() -> None:
     """``raise`` lets the missing-import error propagate."""
-    with pytest.raises(ImportError, match="missing 'x'"):
-        with optional_dependencies("raise"):
-            raise ImportError("missing 'x'", name="x")
+    with pytest.raises(ImportError, match="missing 'x'"), optional_dependencies("raise"):
+        raise ImportError("missing 'x'", name="x")
 
 
 def test_optional_dependencies_rejects_an_unknown_mode() -> None:

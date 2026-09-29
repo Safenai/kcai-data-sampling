@@ -26,16 +26,12 @@ is exercised here too — a class and a factory constructed with
 
 import json
 
-import pytest
-from pyarrow import parquet as pq
-
 from kcai_data_sampling_core.models.config import JobConfig
-from kcai_data_sampling_core.utils.registry import (
-    PluginLoadedRegistry,
-    get_transformations_registry,
-    register_model,
-)
+from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry, get_transformations_registry, register_model
 from kcai_data_sampling_job import cli
+from pyarrow import parquet as pq
+import pytest
+
 from tests.fixtures.registries import (
     StubTarget,
     StubTool,
@@ -211,8 +207,7 @@ def test_build_models_python_factory_is_called_with_weights_and_params(monkeypat
     """
     source = tmp_path / "factory.py"
     source.write_text(
-        "def build(weights=None, **params):\n"
-        "    return {'weights': weights, 'params': params}\n",
+        "def build(weights=None, **params):\n    return {'weights': weights, 'params': params}\n",
         encoding="utf-8",
     )
     validated = _validated(
@@ -308,7 +303,7 @@ def test_build_transformations_refuses_an_unknown_name_listing_the_section(monke
         adapters={"stub": StubTool},
         algorithms={"test_tool": ToolRoleTransformation},
     )
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError, match="unknown tool_model model 'nope'") as exc:
         cli._build_transformations(validated, get_transformations_registry(), cli._build_models(validated))
     message = str(exc.value)
     assert "unknown tool_model model 'nope'" in message
@@ -324,7 +319,9 @@ def test_build_transformations_refuses_a_role_algorithm_without_models(monkeypat
     validated = _validated(
         monkeypatch,
         models=None,
-        transformations=[{"type": "test_tool", "top": 8, "left": 12, "height": 16, "width": 8, "tool_model": "stub_model"}],
+        transformations=[
+            {"type": "test_tool", "top": 8, "left": 12, "height": 16, "width": 8, "tool_model": "stub_model"}
+        ],
         adapters={},
         algorithms={"test_tool": ToolRoleTransformation},
     )
@@ -381,7 +378,7 @@ def test_build_transformations_refuses_an_unknown_target_name_listing_the_sectio
         adapters={"stub": StubTarget},
         algorithms={"test_target": TargetRoleTransformation},
     )
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError, match="unknown target_model model 'nope'") as exc:
         cli._build_transformations(validated, get_transformations_registry(), cli._build_models(validated))
     message = str(exc.value)
     assert "unknown target_model model 'nope'" in message

@@ -10,8 +10,8 @@ the tests behave identically in the CI runner and this sandbox.
 from __future__ import annotations
 
 import os
-import subprocess
 from pathlib import Path
+import subprocess
 
 import pytest
 

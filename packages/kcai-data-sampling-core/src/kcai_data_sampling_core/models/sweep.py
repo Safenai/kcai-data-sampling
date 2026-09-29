@@ -15,10 +15,26 @@ rounded value in the swept field and an auto-suffixed ``name``; the derived
 
 import itertools
 import typing
-from typing import Any, Self
+from typing import Any, Protocol, Self, TypeVar
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+
+class _Expandable(Protocol):
+    """The pydantic surface ``expand_sweeps`` relies on.
+
+    Kept local so the expansion stays generic (any model carrying
+    ``SweepConfig``-valued fields) without importing the transformation
+    config and creating a models-cycle.
+    """
+
+    name: str | None
+
+    def model_copy(self, *, update: dict[str, Any] | None = None, deep: bool = False) -> BaseModel: ...
+
+
+TModel = TypeVar("TModel", bound=_Expandable)
 
 
 class SweepConfig(BaseModel):
@@ -125,10 +141,12 @@ class SweepConfig(BaseModel):
             raw = [lo + i * step for i in range(int((hi - lo) / step) + 1)]
             raw = [v for v in raw if v <= hi + 1e-9]
         elif self.mode == "even":
+            assert self.samples is not None
             raw = np.linspace(lo, hi, self.samples).tolist()
         else:
             if seed is None:
                 raise ValueError("mode: random needs the compute seed to stay deterministic")
+            assert self.samples is not None
             rng = np.random.default_rng(seed)
             raw = rng.uniform(lo, hi, size=self.samples).tolist()
         return [round(v, self.round) for v in raw]
@@ -153,7 +171,20 @@ def _coerce_to_field(value: float, annotation: Any) -> Any:
     return value
 
 
-def expand_sweeps(model: BaseModel, seed: int | None = None) -> list[BaseModel]:
+def _resolve_annotation(model: Any, name: str) -> Any:
+    """Return the declared type of a config model field.
+
+    Args:
+        model: The validated config model instance.
+        name: The field name.
+
+    Returns:
+        The field's declared annotation.
+    """
+    return model.__class__.model_fields[name].annotation
+
+
+def expand_sweeps(model: TModel, seed: int | None = None) -> list[TModel]:
     """Expand a validated model's ``SweepConfig`` fields into concrete values.
 
     Args:
@@ -172,12 +203,12 @@ def expand_sweeps(model: BaseModel, seed: int | None = None) -> list[BaseModel]:
         return [model]
 
     options = {name: sweep.values(seed) for name, sweep in swept.items()}
-    variants: list[BaseModel] = []
+    variants: list[TModel] = []
     for combo in itertools.product(*(options[name] for name in options)):
         updates = {
-            name: _coerce_to_field(value, model.__class__.model_fields[name].annotation)
-            for name, value in zip(options, combo)
+            name: _coerce_to_field(value, _resolve_annotation(model, name))
+            for name, value in zip(options, combo, strict=True)
         }
         updates["name"] = f"{model.name}__" + "_".join(f"{updates[name]}" for name in options)
-        variants.append(model.model_copy(update=updates))
+        variants.append(typing.cast(TModel, model.model_copy(update=updates)))
     return variants

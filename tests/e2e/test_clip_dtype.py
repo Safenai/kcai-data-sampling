@@ -11,12 +11,12 @@ contract directly and through the full CLI→runner→writer path.
 
 from __future__ import annotations
 
-import numpy as np
-import pyarrow.parquet as pq
-from PIL import Image
-
 from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry
 from kcai_data_sampling_job.cli import run
+import numpy as np
+from PIL import Image
+import pyarrow.parquet as pq
+
 from tests.fixtures.registries import ClipsIdentityTransformation
 from tests.utils.configs import build_config, build_loader
 
@@ -89,7 +89,7 @@ def test_clips_job_writes_uint8_payloads(raw_bytes_data, tmp_path, monkeypatch) 
     assert len(payloads) == 8
     assert all(np.asarray(Image.open(p)).dtype == np.uint8 for p in payloads)
 
-    by_parent = dict(zip(table.column("parent_id").to_pylist(), table.column("artifact").to_pylist()))
+    by_parent = dict(zip(table.column("parent_id").to_pylist(), table.column("artifact").to_pylist(), strict=True))
     frames = raw_bytes_data.parent / "frames"
     for i in range(8):
         parent = f"syn_{i:04d}"

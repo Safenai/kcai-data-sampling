@@ -13,14 +13,11 @@ from pathlib import Path
 from typing import Any
 
 from kcai_data_sampling_core.models.config import JobConfig
-from kcai_data_sampling_core.utils.registry import (
-    PluginLoadedRegistry,
-    get_transformations_registry,
-    load_model_source,
-)
+from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry, get_transformations_registry, load_model_source
+import yaml
+
 from kcai_data_sampling_job.job import SamplingJob
 from kcai_data_sampling_job.utils.shared import merge_errors
-import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -167,6 +164,53 @@ def _build_writers(
     return payload_writer, ledger_writer
 
 
+def _available_models(models: dict[str, Any]) -> str:
+    """The declared ``models:`` names, sorted, or ``'none declared'`` when empty.
+
+    Args:
+        models: The built model instances, keyed by their ``models:`` names.
+
+    Returns:
+        The comma-joined names, or ``'none declared'``.
+    """
+    return ", ".join(sorted(models)) or "none declared"
+
+
+def _build_model(name: str, ref: Any, registry: dict[str, Any]) -> Any:
+    """Instantiate one ``models:`` entry into an adapter instance.
+
+    ``weights=ref.weights`` is dropped when unset; the plugin's own knobs ride
+    along as ``**ref.params``. A ``type: python`` entry sources the user's own
+    code instead (its file/module and export were already resolved at config
+    load): the exported class or factory function is constructed with the same
+    conventions, and an exported instance is used as-is.
+
+    Args:
+        name: The ``models:`` entry name.
+        ref: The validated model reference.
+        registry: The loaded models registry (plugin adapters).
+
+    Returns:
+        The adapter instance.
+
+    Raises:
+        ValueError: If a model ``type`` is not registered (belt-and-braces:
+            config load already refuses unknown types).
+    """
+    kwargs = {} if ref.weights is None else {"weights": ref.weights}
+    if ref.type == "python":
+        export = load_model_source(name, ref.path, ref.module, ref.export)
+        if inspect.isclass(export) or inspect.isfunction(export):
+            return export(**kwargs, **ref.params)
+        return export
+    adapter = registry.get(ref.type)
+    if adapter is None:
+        raise ValueError(
+            f"model {name!r}: unknown type {ref.type!r} (registered models: {', '.join(sorted(registry)) or 'none'})"
+        )
+    return adapter(**kwargs, **ref.params)
+
+
 def _build_models(validated: JobConfig) -> dict[str, Any]:
     """Instantiate the named ``models:`` references into a name→adapter map.
 
@@ -178,9 +222,8 @@ def _build_models(validated: JobConfig) -> dict[str, Any]:
     declared count) and by the adapter at run time against the actual batch.
 
     A ``type: python`` reference names the user's own source instead (its
-    file/module and export were already resolved at config load): the exported
-    class or factory function is constructed with the same conventions, and an
-    exported instance is used as-is.
+    file/module and export were already resolved at config load); see
+    :func:`_build_model`.
 
     Args:
         validated: The validated job configuration.
@@ -188,35 +231,57 @@ def _build_models(validated: JobConfig) -> dict[str, Any]:
     Returns:
         A mapping of model names (as referenced by transformations) to adapter
         instances; empty when no ``models:`` section is present.
-
-    Raises:
-        ValueError: If a model ``type`` is not registered (belt-and-braces:
-            config load already refuses unknown types).
     """
     if validated.models is None:
         return {}
     registry = PluginLoadedRegistry.get_models_registry()
-    built: dict[str, Any] = {}
-    for name, ref in validated.models.models.items():
-        kwargs = {} if ref.weights is None else {"weights": ref.weights}
-        if ref.type == "python":
-            export = load_model_source(name, ref.path, ref.module, ref.export)
-            if inspect.isclass(export) or inspect.isfunction(export):
-                built[name] = export(**kwargs, **ref.params)
-            else:
-                built[name] = export
-            continue
-        adapter = registry.get(ref.type)
-        if adapter is None:
-            raise ValueError(
-                f"model {name!r}: unknown type {ref.type!r} "
-                f"(registered models: {', '.join(sorted(registry)) or 'none'})"
-            )
-        built[name] = adapter(**kwargs, **ref.params)
-    return built
+    return {name: _build_model(name, ref, registry) for name, ref in validated.models.models.items()}
 
 
 _SLOT_BY_ROLE = {"tool": "tool_model", "target": "target_model"}
+
+#: Config keys split off before the resolved algorithm parameters reach the
+#: transformation; they are the base schema's, not the algorithm's.
+_EXCLUDED_PARAMS = ("name", "type", "seed", "storage", "columns")
+
+
+def _bind_role_model(entry: Any, role: str | None, models: dict[str, Any]) -> dict[str, Any]:
+    """Resolve a transformation's model role to its adapter instance.
+
+    A model-bearing algorithm (``tool``/``target`` role) references its model
+    by name in the config; the name is checked against the built ``models``
+    map and the adapter instance lands under the base class's slot key, so the
+    base class's slot/exactly-one checks run as usual.
+
+    Args:
+        entry: The validated transformation entry.
+        role: The algorithm's model role (``tool``/``target``), or ``None``.
+        models: The built model instances, keyed by their ``models:`` names.
+
+    Returns:
+        The ``{slot: adapter}`` params to inject, or ``{}`` when the algorithm
+        carries no model role.
+
+    Raises:
+        ValueError: If the algorithm names an unknown model, or omits the
+            model name outright.
+    """
+    if role is None:
+        return {}
+    slot = _SLOT_BY_ROLE[role]
+    name = getattr(entry, slot, None)
+    if name is None:
+        raise ValueError(
+            f"{entry.type!r} needs a model ({role} role): set '{slot}:' in the "
+            f"transformation config to a name from the models: section "
+            f"({_available_models(models)})"
+        )
+    model = models.get(name)
+    if model is None:
+        raise ValueError(
+            f"{entry.type!r}: unknown {slot} model {name!r} (models: section names: {_available_models(models)})"
+        )
+    return {slot: model}
 
 
 def _build_transformations(
@@ -230,9 +295,8 @@ def _build_transformations(
     config keys (``name``, ``type``, ``seed``, ``storage``, ``columns``) are
     split off and only the resolved algorithm parameters reach the
     transformation. An algorithm with a model role (``tool``/``target``)
-    references its model by name in the config; the name is resolved against
-    the built ``models`` map, the adapter instance is handed to the
-    constructor, and the base class's slot/exactly-one checks run as usual.
+    references its model by name; the name is resolved against the built
+    ``models`` map (see :func:`_bind_role_model`).
 
     Args:
         validated: The validated job configuration.
@@ -241,36 +305,14 @@ def _build_transformations(
 
     Returns:
         A list of transformation instances, one per configured entry.
-
-    Raises:
-        ValueError: If a model-bearing transformation names an unknown model,
-            or omits the model name outright.
     """
     instances: list[Any] = []
-    for entry in validated.operations.transformations:
+    for raw_entry in validated.operations.transformations:
+        entry = raw_entry
         algorithm = transformations_registry[entry.type]
-        role = getattr(algorithm, "model_role", None)
-        slot = _SLOT_BY_ROLE.get(role)
         dumped = entry.model_dump()
-        params = {
-            k: v for k, v in dumped.items()
-            if k not in ("name", "type", "seed", "storage", "columns")
-        }
-        if slot is not None:
-            name = getattr(entry, slot, None)
-            if name is None:
-                raise ValueError(
-                    f"{entry.type!r} needs a model ({role} role): set '{slot}:' in the "
-                    f"transformation config to a name from the models: section "
-                    f"({', '.join(sorted(models)) or 'none declared'})"
-                )
-            model = models.get(name)
-            if model is None:
-                raise ValueError(
-                    f"{entry.type!r}: unknown {slot} model {name!r} "
-                    f"(models: section names: {', '.join(sorted(models)) or 'none declared'})"
-                )
-            params[slot] = model
+        params = {k: v for k, v in dumped.items() if k not in _EXCLUDED_PARAMS}
+        params.update(_bind_role_model(entry, getattr(algorithm, "model_role", None), models))
         instances.append(algorithm(config={"seed": dumped.get("seed"), **params}))
     return instances
 
@@ -303,7 +345,8 @@ def run(config: dict[str, Any]) -> dict[str, int]:
     images_errors = _build_images_error_dict(validated)
 
     dataloaders: dict[str, Any] = {}
-    for loader_cfg in validated.dataloaders.loaders:
+    for raw_loader_cfg in validated.dataloaders.loaders:
+        loader_cfg = raw_loader_cfg
         loader_cls = dataloaders_registry.get(loader_cfg.type)
         if loader_cls is None:
             raise ValueError(f"unknown dataloader type {loader_cfg.type!r}")

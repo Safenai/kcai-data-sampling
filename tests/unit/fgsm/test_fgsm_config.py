@@ -6,35 +6,37 @@ or an expanding ``SweepConfig`` whose interval stays ``> 0``). Resolution keeps
 and a swept epsilon expands into one concrete instance per value.
 """
 
+from kcai_data_sampling_core.models.config import JobConfig
+from kcai_data_sampling_core.utils.registry import get_transformations_registry, register_model
 import pytest
+from tests.fixtures.registries import StubTarget
+from tests.utils.configs import build_config, build_loader, build_sweep
 
 pytest.importorskip("kcai_data_sampling_fgsm")
 
-from kcai_data_sampling_core.models.config import JobConfig
-from kcai_data_sampling_core.utils.registry import get_transformations_registry, register_model
-from kcai_data_sampling_fgsm.api.transformations.fgsm import Fgsm
-from kcai_data_sampling_fgsm.configs import FgsmTransformationConfig
-from tests.fixtures.registries import StubTarget, registry_snapshot
-from tests.utils.configs import build_config, build_loader, build_sweep
+pytestmark = pytest.mark.fgsm
+
+from kcai_data_sampling_fgsm.api.transformations.fgsm import Fgsm  # noqa: E402
+from kcai_data_sampling_fgsm.configs import FgsmTransformationConfig  # noqa: E402
 
 
 def test_epsilon_is_required() -> None:
     """An ``fgsm`` config without ``epsilon`` is refused at load."""
-    with pytest.raises(ValueError, match="epsilon\\b"):
+    with pytest.raises(ValueError, match=r"epsilon\b"):
         FgsmTransformationConfig.model_validate({"type": "fgsm"})
 
 
 def test_epsilon_must_be_positive() -> None:
     """A non-positive budget is refused loudly."""
-    with pytest.raises(ValueError, match="fgsm.epsilon must be > 0"):
+    with pytest.raises(ValueError, match=r"fgsm\.epsilon must be > 0"):
         FgsmTransformationConfig.model_validate({"type": "fgsm", "epsilon": 0.0})
-    with pytest.raises(ValueError, match="fgsm.epsilon must be > 0"):
+    with pytest.raises(ValueError, match=r"fgsm\.epsilon must be > 0"):
         FgsmTransformationConfig.model_validate({"type": "fgsm", "epsilon": -0.01})
 
 
 def test_epsilon_sweep_must_stay_positive() -> None:
     """A swept budget whose interval starts at or below zero is refused."""
-    with pytest.raises(ValueError, match="fgsm.epsilon sweep .* must stay > 0"):
+    with pytest.raises(ValueError, match=r"fgsm\.epsilon sweep .* must stay > 0"):
         FgsmTransformationConfig.model_validate(
             {
                 "type": "fgsm",
@@ -70,9 +72,7 @@ def test_a_swept_epsilon_expands_through_a_job_config(registry_snapshot, tmp_pat
             loaders=[build_loader(parquet_path="missing.parquet")],
             output_path=str(tmp_path / "ledger.parquet"),
             samples_dir=str(tmp_path / "samples"),
-            transformations=[
-                {"type": "fgsm", "target_model": "stub", "epsilon": build_sweep(0.01, 0.03, 3)}
-            ],
+            transformations=[{"type": "fgsm", "target_model": "stub", "epsilon": build_sweep(0.01, 0.03, 3)}],
             models={"stub": {"type": "stub"}},
         )
     )

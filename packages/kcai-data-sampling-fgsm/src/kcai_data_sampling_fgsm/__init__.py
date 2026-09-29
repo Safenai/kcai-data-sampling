@@ -9,4 +9,4 @@ and no model ships: the target model is the user's, provided at run time
 through the ``models:`` section.
 """
 
-from ._version_ import __version__
+from kcai_data_sampling_fgsm._version_ import __version__ as __version__

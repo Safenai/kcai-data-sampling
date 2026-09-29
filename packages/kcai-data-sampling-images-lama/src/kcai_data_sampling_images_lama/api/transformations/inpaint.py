@@ -8,10 +8,10 @@ tool model fills it with content that was not in the image.
 
 from typing import override
 
-import numpy as np
-
 from kcai_data_sampling_core.api.roles import check_output
 from kcai_data_sampling_core.api.unary import UnaryTransformation
+import numpy as np
+
 from kcai_data_sampling_images_lama.configs import InpaintTransformationConfig
 from kcai_data_sampling_images_lama.transformations.inpaint import build_region_mask
 

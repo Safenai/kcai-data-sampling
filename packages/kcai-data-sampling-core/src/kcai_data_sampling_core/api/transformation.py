@@ -1,6 +1,6 @@
 """Base transformation class.
 
-    T : x ↦ x′
+    T : x ↦ x'
 
 A transformation is one fully specified operation: algorithm + resolved
 parameters + seed + model. The family describes what the map does — declared
@@ -14,7 +14,9 @@ from typing import Any
 
 import numpy as np
 
+from kcai_data_sampling_core.api.output import Output
 from kcai_data_sampling_core.api.roles import check_model
+from kcai_data_sampling_core.api.selection import Batch
 
 #: Default family = role of the model in producing the output. Used only when
 #: an algorithm does not declare ``family`` itself (role says where the model
@@ -53,7 +55,7 @@ class Transformation:
         clips: May the output leave the selection's value range? A declaration:
             the base clips to the range only when this is set; an undeclared
             overflow is refused.
-        reversible: Is ``x`` determined by ``x′``? A structural declaration,
+        reversible: Is ``x`` determined by ``x'``? A structural declaration,
             frozen on the row for the downstream judge.
         seed: The random seed; always accepted by the config, but only drawn
             when ``stochastic`` (relaxed seed rule).
@@ -91,7 +93,7 @@ class Transformation:
     #: refused. The range itself has one source, the selection.
     clips: bool = False
 
-    #: Is `x` determined by `x′`? A structural declaration about the map (a
+    #: Is `x` determined by `x'`? A structural declaration about the map (a
     #: flip is a bijection, a crop discards), on trust: resolved parameters can
     #: break it where the range clips. Frozen on the row for the downstream
     #: judge; the interface itself draws nothing from it.
@@ -148,6 +150,37 @@ class Transformation:
         """
         return self.family or FAMILY_BY_ROLE[self.model_role]
 
+    def transform(self, batch: Batch, value_range: tuple[float, float] | None = None) -> list[Output]:
+        """Transform one batch into one ``Output`` per row.
+
+        Args:
+            batch: The decoded sample batch.
+            value_range: The selection's ``(low, high)``, or ``None`` to skip
+                the range handling.
+
+        Returns:
+            One ``Output`` per transformed row, in batch order.
+
+        Raises:
+            NotImplementedError: Subclasses implement the stage.
+        """
+        raise NotImplementedError
+
+    def select_parents(self, batch: Batch) -> Batch:
+        """Pair rows for an n-ary stage.
+
+        Args:
+            batch: The decoded sample batch.
+
+        Returns:
+            The paired batch an n-ary algorithm operates on.
+
+        Raises:
+            NotImplementedError: N-ary subclasses implement pairing; a unary
+                stage never calls it.
+        """
+        raise NotImplementedError
+
     def fit_to_range(self, out: np.ndarray, value_range: tuple[float, float] | None) -> np.ndarray:
         """Clip if the algorithm declared it; then check.
 
@@ -167,7 +200,7 @@ class Transformation:
             return out
         low, high = value_range
         if self.clips:
-            clipped = np.clip(out, low, high)
+            clipped: np.ndarray = np.clip(out, low, high)
             if np.issubdtype(out.dtype, np.integer) and clipped.dtype != out.dtype:
                 clipped = clipped.astype(out.dtype)
             return clipped
@@ -225,6 +258,7 @@ class Transformation:
         """
         if not self.stochastic:
             return None
+        assert self.seed is not None
         params_key = json.dumps(self.params, sort_keys=True, default=str)
         return [
             np.random.default_rng(

@@ -25,7 +25,9 @@ def main() -> int:
         display_version()
     text = out.getvalue()
     assert "kcai-data-sampling:" in text
-    assert "core:" in text and "job:" in text and "images:" in text
+    assert "core:" in text
+    assert "job:" in text
+    assert "images:" in text
 
     for name in ("smoke_core.py", "smoke_images.py", "smoke_job.py"):
         subprocess.run(

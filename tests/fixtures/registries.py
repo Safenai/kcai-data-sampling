@@ -32,15 +32,14 @@ requests it.
 from __future__ import annotations
 
 from pathlib import Path
-
-import numpy as np
-import pytest
-from pydantic import Field
-from typing_extensions import Literal
+from typing import Literal
 
 from kcai_data_sampling_core.api.unary import UnaryTransformation
 from kcai_data_sampling_core.models.config import TransformationConfig
 from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry
+import numpy as np
+from pydantic import Field
+import pytest
 
 
 class ToolRoleConfig(TransformationConfig):

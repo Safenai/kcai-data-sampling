@@ -11,11 +11,11 @@ not the transformation names its model — the missing *name* is a job-start
 error, resolved by the CLI, not a load error.
 """
 
+from kcai_data_sampling_core.models.config import JobConfig
+from kcai_data_sampling_core.models.models import ModelRefConfig, ModelsConfig
 import pydantic
 import pytest
 
-from kcai_data_sampling_core.models.config import JobConfig
-from kcai_data_sampling_core.models.models import ModelRefConfig, ModelsConfig
 from tests.fixtures.registries import (
     StubTool,
     ToolRoleTransformation,
@@ -52,7 +52,8 @@ def test_model_ref_unknown_type_is_refused_loudly(monkeypatch) -> None:
         ModelRefConfig(type="no_such_tool")
     message = str(exc.value)
     assert "unknown model type 'no_such_tool'" in message
-    assert "lama_inpaint" in message and "other_tool" in message
+    assert "lama_inpaint" in message
+    assert "other_tool" in message
 
 
 def test_model_ref_channels_is_limited_to_rgb_or_rgba(monkeypatch) -> None:
@@ -83,7 +84,8 @@ def test_model_ref_refuses_a_channels_conflict_with_the_adapter(monkeypatch) -> 
     with pytest.raises(pydantic.ValidationError) as exc:
         ModelRefConfig(type="stub", channels=4)
     message = str(exc.value)
-    assert "declares channels=3" in message and "channels=4" in message
+    assert "declares channels=3" in message
+    assert "channels=4" in message
 
 
 def test_models_config_flat_and_nested_sections_validate_to_the_same_mapping(monkeypatch) -> None:

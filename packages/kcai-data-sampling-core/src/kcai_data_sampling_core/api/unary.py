@@ -1,11 +1,11 @@
 """Unary transformation base class.
 
-    T : x ↦ x′
+    T : x ↦ x'
 
 The algorithm writes one method, ``apply``, on a **batch**: an array of shape
 ``(B, *sample)`` in, the same shape out, computed as one array operation.
-``x′`` lives in the same space as ``x`` — its shape and its range of values —
-a contract that is what keeps ``δ = x′ − x`` defined. The shape is checked
+``x'`` lives in the same space as ``x`` — its shape and its range of values —
+a contract that is what keeps ``δ = x' - x`` defined. The shape is checked
 here. The range is the selection's, handed to ``transform`` by the runner: an
 algorithm that declares ``clips = True`` has its output clipped to it, any
 other output outside it is refused. An algorithm that would shrink the sample
@@ -13,6 +13,7 @@ resamples back; one that would enlarge it is out of scope.
 """
 
 import numpy as np
+from typing_extensions import override
 
 from kcai_data_sampling_core.api.output import Output
 from kcai_data_sampling_core.api.selection import Batch
@@ -44,6 +45,7 @@ class UnaryTransformation(Transformation):
         """
         raise NotImplementedError
 
+    @override
     def transform(self, batch: Batch, value_range: tuple[float, float] | None = None) -> list[Output]:
         """Transform one batch into one ``Output`` per row.
 
@@ -67,4 +69,7 @@ class UnaryTransformation(Transformation):
                 "A unary transformation preserves it, so that δ stays defined."
             )
         out = self.fit_to_range(out, value_range)
-        return [Output(x=x_prime, parent_id=row_id, **self.describe()) for x_prime, row_id in zip(out, batch.ids)]
+        return [
+            Output(x=x_prime, parent_id=row_id, **self.describe())
+            for x_prime, row_id in zip(out, batch.ids, strict=True)
+        ]

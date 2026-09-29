@@ -11,19 +11,13 @@ and generator columns never overwritten. Runs go through the real
 import json
 import re
 
-import numpy as np
-import pyarrow.parquet as pq
-
 from kcai_data_sampling_images.api.transformations.crop_resize import CropResize
 from kcai_data_sampling_images.api.transformations.horizontal_flip import HorizontalFlip
-from kcai_data_sampling_job.dataloaders.api.parquet import (
-    ParquetDataLoader,
-    ParquetImageLoaderConfig,
-)
+from kcai_data_sampling_job.dataloaders.api.parquet import ParquetDataLoader, ParquetImageLoaderConfig
 from kcai_data_sampling_job.job import GENERATOR_COLUMNS, SamplingJob
 from kcai_data_sampling_job.outputwriter.api.images import ImagesOutputWriter
 from kcai_data_sampling_job.outputwriter.api.parquet import ParquetOutputWriter
-
+import pyarrow.parquet as pq
 
 #: The 13 generator columns, in the order the job emits them.
 assert GENERATOR_COLUMNS == (
@@ -80,13 +74,11 @@ def _run(tmp_path, data_path, *, include=None, exclude=None, write_samples=True)
     return summary, table
 
 
-def test_metadata_only_ledger_carries_the_thirteen_generator_columns(
-    raw_bytes_data, tmp_path
-) -> None:
+def test_metadata_only_ledger_carries_the_thirteen_generator_columns(raw_bytes_data, tmp_path) -> None:
     """A plain run writes exactly the 13 generator columns — no pixels, no extras.
 
     With no ``include``/``exclude`` nothing passes through, so the ledger is
-    metadata-only: 8 samples × 2 algorithms = 16 rows and not a single source
+    metadata-only: 8 samples x 2 algorithms = 16 rows and not a single source
     column in sight.
     """
     summary, table = _run(tmp_path, raw_bytes_data)
@@ -105,9 +97,7 @@ def test_generator_columns_hold_the_row_facts(raw_bytes_data, tmp_path) -> None:
     _, table = _run(tmp_path, raw_bytes_data)
     assert table.column("selection").to_pylist() == ["synthetic"] * 16
     assert table.column("dataloader").to_pylist() == ["synthetic"] * 16
-    assert all(
-        pid in {f"syn_{i:04d}" for i in range(8)} for pid in table.column("parent_id").to_pylist()
-    )
+    assert all(pid in {f"syn_{i:04d}" for i in range(8)} for pid in table.column("parent_id").to_pylist())
     assert len(set(table.column("id").to_pylist())) == 16
     assert table.column("algorithm").to_pylist() == ["horizontal_flip", "crop_resize"] * 8
     assert table.column("family").to_pylist() == ["procedural"] * 16
@@ -118,15 +108,17 @@ def test_generator_columns_hold_the_row_facts(raw_bytes_data, tmp_path) -> None:
     assert table.column("target_model").to_pylist() == [None] * 16
 
     params = [json.loads(v) for v in table.column("params").to_pylist()]
-    assert params == [
-        {},
-        {"fraction": 0.5, "top": 0, "left": 0},
-    ] * 8
+    assert (
+        params
+        == [
+            {},
+            {"fraction": 0.5, "top": 0, "left": 0},
+        ]
+        * 8
+    )
 
 
-def test_include_passes_the_named_source_columns_through(
-    raw_bytes_data, tmp_path
-) -> None:
+def test_include_passes_the_named_source_columns_through(raw_bytes_data, tmp_path) -> None:
     """``include`` appends the selected source columns after the generators.
 
     The requested height/width values survive the round trip into the ledger,
@@ -167,15 +159,16 @@ def test_every_row_names_a_real_payload_artifact(raw_bytes_data, tmp_path) -> No
     payload_dir = tmp_path / "synthetic"
     for name in artifacts:
         assert (payload_dir / name).exists()
-        assert re.fullmatch(
-            r"synthetic__[0-9a-f]{12}__[0-9a-f]{6}\.png",
-            name,
-        ) is not None
+        assert (
+            re.fullmatch(
+                r"synthetic__[0-9a-f]{12}__[0-9a-f]{6}\.png",
+                name,
+            )
+            is not None
+        )
 
 
-def test_trace_only_run_names_artifacts_but_writes_no_files(
-    raw_bytes_data, tmp_path
-) -> None:
+def test_trace_only_run_names_artifacts_but_writes_no_files(raw_bytes_data, tmp_path) -> None:
     """``write_samples: false`` keeps the recipe trace without touching the disk.
 
     A pure recipe trace: same 16 ledger rows, each naming its content-addressed
@@ -185,10 +178,7 @@ def test_trace_only_run_names_artifacts_but_writes_no_files(
     _, table = _run(tmp_path, raw_bytes_data, write_samples=False)
     artifacts = table.column("artifact").to_pylist()
     assert len(artifacts) == 16
-    assert all(
-        re.fullmatch(r"synthetic__[0-9a-f]{12}__[0-9a-f]{6}\.png", name) is not None
-        for name in artifacts
-    )
+    assert all(re.fullmatch(r"synthetic__[0-9a-f]{12}__[0-9a-f]{6}\.png", name) is not None for name in artifacts)
     assert not (tmp_path / "synthetic").exists()
 
 

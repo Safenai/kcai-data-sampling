@@ -10,14 +10,13 @@ the disk.
 import hashlib
 import re
 
-import numpy as np
-import pyarrow.parquet as pq
-import pytest
-from PIL import Image
-
 from kcai_data_sampling_images.api.transformations.horizontal_flip import HorizontalFlip
 from kcai_data_sampling_job.outputwriter.api.images import ImagesOutputWriter
 from kcai_data_sampling_job.outputwriter.api.parquet import ParquetOutputWriter
+import numpy as np
+from PIL import Image
+import pyarrow.parquet as pq
+import pytest
 
 ARTIFACT_RE = re.compile(r"^(?P<selection>.+)__(?P<id>[0-9a-f]{12})__(?P<c6>[0-9a-f]{6})\.png$")
 
@@ -113,11 +112,12 @@ def test_images_writer_pngs_decode_back_to_the_expected_pixels(tmp_path, synthet
     names = [writer.add_payload("synthetic", o) for o in outputs]
     writer.flush()
 
-    for name, output in zip(names, outputs):
+    for name, output in zip(names, outputs, strict=True):
         restored = np.asarray(Image.open(tmp_path / "synthetic" / name))
         assert restored.shape == output.x.shape
         assert restored.dtype == np.uint8
-        assert 0 <= restored.min() and restored.max() <= 255
+        assert restored.min() >= 0
+        assert restored.max() <= 255
         assert np.array_equal(restored, output.x)
 
 
@@ -136,7 +136,7 @@ def test_images_writer_artifact_name_is_content_addressed(tmp_path, synthetic_ba
     names = [writer.add_payload("synthetic", o) for o in outputs]
     writer.flush()
 
-    for name, output in zip(names, outputs):
+    for name, output in zip(names, outputs, strict=True):
         match = ARTIFACT_RE.fullmatch(name)
         assert match is not None
         assert match.group("selection") == "synthetic"

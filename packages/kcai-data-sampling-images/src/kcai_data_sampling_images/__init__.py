@@ -8,4 +8,4 @@ and writes in the ``-job`` outputwriters; everything flows as ``(B, H, W, 4)``
 uint8 RGBA arrays.
 """
 
-from ._version_ import __version__
+from kcai_data_sampling_images._version_ import __version__ as __version__

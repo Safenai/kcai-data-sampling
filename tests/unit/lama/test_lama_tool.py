@@ -14,17 +14,18 @@ frame) and explicitly with a non-multiple-of-8 36x36 frame in
 nonzero-pad branches are covered.
 """
 
+from kcai_data_sampling_core.models.config import JobConfig
+from kcai_data_sampling_job import cli
 import numpy as np
 import pytest
-
 from tests.fixtures.data import REGION
+from tests.utils.configs import build_config, build_loader
 
 pytest.importorskip("kcai_data_sampling_images_lama.api.models.lama")
 
-from kcai_data_sampling_core.models.config import JobConfig
-from kcai_data_sampling_images_lama.api.models.lama import LamaTool
-from kcai_data_sampling_job import cli
-from tests.utils.configs import build_config, build_loader
+pytestmark = pytest.mark.lama
+
+from kcai_data_sampling_images_lama.api.models.lama import LamaTool  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -91,7 +92,8 @@ def test_masked_fill_changes_only_masked_pixels_and_stays_in_range(lama_tool, sy
     assert (out[masks] != synthetic_batch.data[masks]).any()
     assert np.array_equal(out[~masks], synthetic_batch.data[~masks])
     assert np.array_equal(out[..., 3], synthetic_batch.data[..., 3])
-    assert float(out.min()) >= 0.0 and float(out.max()) <= 255.0
+    assert float(out.min()) >= 0.0
+    assert float(out.max()) <= 255.0
 
 
 def test_two_runs_are_byte_identical(lama_tool, synthetic_batch) -> None:
@@ -127,7 +129,8 @@ def test_crop_and_pad_to_multiples_of_8(lama_tool) -> None:
     out = lama_tool.inpaint(frames, masks)
     assert out.shape == shape
     assert out.dtype == np.uint8
-    assert float(out.min()) >= 0.0 and float(out.max()) <= 255.0
+    assert float(out.min()) >= 0.0
+    assert float(out.max()) <= 255.0
 
 
 def test_built_from_bare_model_ref_carries_default_margin(cached_big_lama) -> None:

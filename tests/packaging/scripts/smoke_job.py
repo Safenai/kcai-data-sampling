@@ -10,16 +10,12 @@ finishes with zero rows but the loader's decode path is exercised directly.
 import pathlib
 import sys
 
+from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry
+from kcai_data_sampling_job.cli import execute
+from kcai_data_sampling_job.dataloaders.api.parquet import ParquetDataLoader, ParquetImageLoaderConfig
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
-
-from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry
-from kcai_data_sampling_job.cli import execute
-from kcai_data_sampling_job.dataloaders.api.parquet import (
-    ParquetDataLoader,
-    ParquetImageLoaderConfig,
-)
 
 
 def _frames(count: int = 3, size: int = 8) -> list[bytes]:

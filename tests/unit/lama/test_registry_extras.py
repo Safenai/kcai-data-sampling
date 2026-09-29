@@ -7,11 +7,12 @@ opt-in additions exactly: a models registry holding precisely the
 both exported from the ``-lama`` module roots.
 """
 
+from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry, get_transformations_registry
 import pytest
 
-from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry, get_transformations_registry
-
 pytest.importorskip("kcai_data_sampling_images_lama.api.models.lama")
+
+pytestmark = pytest.mark.lama
 
 
 def test_models_registry_holds_exactly_the_lama_inpaint_plugin() -> None:

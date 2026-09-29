@@ -12,7 +12,13 @@ from kcai_data_sampling_core.models.dataloaders import (
     SamplePathConfig,
     TransformConfig,
 )
-from kcai_data_sampling_core.models.global_ import ComputeConfig, ErrorsConfig, ImageErrorsConfig, StorageConfig, TabularErrorsConfig
+from kcai_data_sampling_core.models.global_ import (
+    ComputeConfig,
+    ErrorsConfig,
+    ImageErrorsConfig,
+    StorageConfig,
+    TabularErrorsConfig,
+)
 from kcai_data_sampling_core.models.interfaces import SamplingInterfaceConfig
 from kcai_data_sampling_core.models.models import ModelRefConfig, ModelsConfig
 from kcai_data_sampling_core.models.outputs import SamplingOutputsConfig
@@ -35,6 +41,6 @@ __all__ = [
     "StorageConfig",
     "SweepConfig",
     "TabularErrorsConfig",
-    "TransformationConfig",
     "TransformConfig",
+    "TransformationConfig",
 ]

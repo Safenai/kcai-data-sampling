@@ -1,6 +1,6 @@
 """KCAI data-sampling core: the sample-generation interface and its registry.
 
-    T : x ↦ x′
+    T : x ↦ x'
 
 A transformation is one fully specified operation: algorithm + resolved
 parameters + seed + model. One output row per generated sample, recording what
@@ -27,11 +27,7 @@ from kcai_data_sampling_core.api import (
     UnaryTransformation,
 )
 from kcai_data_sampling_core.utils import TransformationRunner
-from kcai_data_sampling_core.utils.registry import (
-    PluginLoadedRegistry,
-    load_model_source,
-    register_model,
-)
+from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry, load_model_source, register_model
 
 __all__ = [
     "FAMILY_BY_ROLE",

@@ -40,15 +40,11 @@ def build_region_mask(
     """
     if top < 0 or left < 0 or height <= 0 or width <= 0:
         raise ValueError(
-            f"inpaint region needs top/left >= 0 and height/width > 0, "
-            f"got {top=}, {left=}, {height=}, {width=}"
+            f"inpaint region needs top/left >= 0 and height/width > 0, got {top=}, {left=}, {height=}, {width=}"
         )
     frame_h, frame_w = int(xs_shape[1]), int(xs_shape[2])
     if top + height > frame_h or left + width > frame_w:
-        raise ValueError(
-            f"inpaint region {height}x{width} at ({top},{left}) leaves the "
-            f"{frame_h}x{frame_w} frame"
-        )
+        raise ValueError(f"inpaint region {height}x{width} at ({top},{left}) leaves the {frame_h}x{frame_w} frame")
     masks = np.zeros((int(xs_shape[0]), frame_h, frame_w), dtype=bool)
     masks[:, top : top + height, left : left + width] = True
     return masks

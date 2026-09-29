@@ -15,7 +15,7 @@ stage between the source sample and the output.
 
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 
 from kcai_data_sampling_core.api.output import Output
 from kcai_data_sampling_core.api.selection import Batch
@@ -23,7 +23,9 @@ from kcai_data_sampling_core.api.transformation import Transformation
 from kcai_data_sampling_core.models.global_ import ErrorsConfig
 from kcai_data_sampling_core.utils.matching import resolve_include_exclude
 from kcai_data_sampling_core.utils.runner import TransformationRunner
-from kcai_data_sampling_job.dataloaders import DataLoader, DataSelection as SourceSelection
+
+from kcai_data_sampling_job.dataloaders import DataLoader
+from kcai_data_sampling_job.dataloaders import DataSelection as SourceSelection
 
 logger = logging.getLogger(__name__)
 
@@ -114,9 +116,7 @@ class SamplingJob:
 
         selections = [s for loader in self.dataloaders.values() for s in loader.get_selections()]
 
-        selection_iter = (
-            tqdm(selections, desc="selection", position=0) if self.progress_bar else selections
-        )
+        selection_iter = tqdm(selections, desc="selection", position=0) if self.progress_bar else selections
 
         for selection in selection_iter:
             selection.bootstrap(None)
@@ -148,7 +148,7 @@ class SamplingJob:
                 "Selection '%s': %s output rows, %s payload files",
                 selection.name,
                 row_count,
-                self.payload_writer and "enabled" or "disabled",
+                (self.payload_writer and "enabled") or "disabled",
             )
         return summary
 
@@ -169,27 +169,75 @@ class SamplingJob:
             The number of output rows emitted for this chunk.
         """
         runner = TransformationRunner(batch)
-
         chunk = self.transform_batch_size or len(self.transformations) or 1
         pending: list[dict[str, Any]] = []
-        count = 0
-
         passed = self._passed_rows(batch)
 
+        count = 0
         for i in range(len(batch)):
-            row = batch.row(i)
-            for start in range(0, len(self.transformations), chunk):
-                group = self.transformations[start : start + chunk]
-                for transformation in group:
-                    for output in runner.run(transformation, batch=row):
-                        artifact = None
-                        if self.payload_writer is not None:
-                            artifact = self.payload_writer.add_payload(selection.name, output)
-                        pending.append(self._row(selection.name, selection.dataset, output, artifact, passed[i]))
-                        count += 1
+            count += self._process_row(selection, runner, batch.row(i), chunk, passed[i], pending)
 
         if self.ledger_writer is not None and pending:
             self.ledger_writer.add_rows(selection.name, pending)
+        return count
+
+    def _process_row(
+        self,
+        selection: SourceSelection,
+        runner: TransformationRunner,
+        row: Any,
+        chunk: int,
+        passed: dict[str, Any],
+        pending: list[dict[str, Any]],
+    ) -> int:
+        """Apply every transformation group to one source row.
+
+        Args:
+            selection: The source selection the batch came from.
+            runner: The row's transformation runner.
+            row: The single source row.
+            chunk: The ``transform_batch_size`` grouping.
+            passed: The row's ledger pass-through source values.
+            pending: The ledger rows accumulated for the chunk.
+
+        Returns:
+            The number of output rows emitted for this sample row.
+        """
+        count = 0
+        for start in range(0, len(self.transformations), chunk):
+            for transformation in self.transformations[start : start + chunk]:
+                count += self._apply_transformation(selection, runner, row, transformation, passed, pending)
+        return count
+
+    def _apply_transformation(
+        self,
+        selection: SourceSelection,
+        runner: TransformationRunner,
+        row: Any,
+        transformation: Transformation,
+        passed: dict[str, Any],
+        pending: list[dict[str, Any]],
+    ) -> int:
+        """Emit every output of one transformation on one row.
+
+        Args:
+            selection: The source selection the batch came from.
+            runner: The row's transformation runner.
+            row: The single source row.
+            transformation: The transformation to apply.
+            passed: The row's ledger pass-through source values.
+            pending: The ledger rows accumulated for the chunk.
+
+        Returns:
+            The number of outputs emitted for this transformation.
+        """
+        count = 0
+        for output in runner.run(transformation, batch=row):
+            artifact = None
+            if self.payload_writer is not None:
+                artifact = self.payload_writer.add_payload(selection.name, output)
+            pending.append(self._row(selection.name, selection.dataset, output, artifact, passed))
+            count += 1
         return count
 
     def _passed_rows(self, batch: Batch) -> list[dict[str, Any]]:
@@ -214,7 +262,7 @@ class SamplingJob:
             names = []
         if not names:
             return [{} for _ in range(len(batch))]
-        return batch.columns.select(names).to_pylist()
+        return cast(list[dict[str, Any]], batch.columns.select(names).to_pylist())
 
     @staticmethod
     def _row(

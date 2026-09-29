@@ -3,16 +3,16 @@
 The default-env registry tests in ``tests/unit/core/test_registry.py`` are
 env-agnostic by design (superset / module-root assertions). These pin the
 opt-in adversarial additions exactly: the transformations registry gains
-``fgsm`` exported from the ``-fgsm`` package root, and the models registry
-stays empty (no model ships with the adversarial package — the target is the
-user's, provided at run time).
+``fgsm`` exported from the ``-fgsm`` package root, and no model adapter ships
+with the adversarial package — the target is the user's, provided at run time.
 """
 
+from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry, get_transformations_registry
 import pytest
 
-from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry, get_transformations_registry
-
 pytest.importorskip("kcai_data_sampling_fgsm")
+
+pytestmark = pytest.mark.fgsm
 
 
 def test_transformations_registry_gains_fgsm_from_its_package_root() -> None:
@@ -26,11 +26,13 @@ def test_transformations_registry_gains_fgsm_from_its_package_root() -> None:
     assert registry["fgsm"].__module__.startswith("kcai_data_sampling_fgsm")
 
 
-def test_models_registry_stays_empty_with_the_adversarial_package() -> None:
-    """``-fgsm`` ships no model adapter: the models registry is still empty.
+def test_the_adversarial_package_registers_no_models() -> None:
+    """``-fgsm`` ships no model adapter: no model class is exported from its root.
 
     The adversarial package computes *against* the user's target model — the
-    isolation claimed in the default-env registry tests, so the empty-models
-    guarantee holds in both envs.
+    isolation claimed in the default-env registry tests — so nothing in the
+    models registry carries an ``-fgsm`` module no matter which opt-in
+    packages happen to be co-installed in the same environment.
     """
-    assert PluginLoadedRegistry.get_models_registry() == {}
+    registry = PluginLoadedRegistry.get_models_registry()
+    assert not any(cls.__module__.startswith("kcai_data_sampling_fgsm") for cls in registry.values())

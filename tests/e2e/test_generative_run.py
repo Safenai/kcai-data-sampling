@@ -14,19 +14,20 @@ import hashlib
 import json
 import re
 
+from kcai_data_sampling_job.cli import run
+from kcai_data_sampling_job.job import GENERATOR_COLUMNS
 import numpy as np
-import pytest
-import pyarrow.parquet as pq
 from PIL import Image
+import pyarrow.parquet as pq
+import pytest
 
 from tests.e2e.test_job_run import ARTIFACT_RE
 from tests.fixtures.data import REGION, make_frames
+from tests.utils.configs import build_config, build_loader
 
 pytest.importorskip("kcai_data_sampling_images_lama.api.transformations.inpaint")
 
-from kcai_data_sampling_job.cli import run
-from kcai_data_sampling_job.job import GENERATOR_COLUMNS
-from tests.utils.configs import build_config, build_loader
+pytestmark = pytest.mark.lama
 
 
 def _generative_config(root, raw_bytes_data, *, load: int | None = None) -> dict:
@@ -52,7 +53,7 @@ def _generative_config(root, raw_bytes_data, *, load: int | None = None) -> dict
 def test_generative_run_ledger_and_payloads(raw_bytes_data, test_seed, tmp_path) -> None:
     """One real generative run records the expected ledger and payloads.
 
-    The summary counts 8 rows × one inpaint = 8; the ledger has exactly the 13
+    The summary counts 8 rows x one inpaint = 8; the ledger has exactly the 13
     generator columns, every row is a deterministic unary generative
     transformation of the ``big-lama`` tool with a null seed and the region
     window alone in ``params``. Each content-hashed PNG is the source frame with
@@ -79,9 +80,9 @@ def test_generative_run_ledger_and_payloads(raw_bytes_data, test_seed, tmp_path)
     assert all(re.fullmatch(r"[0-9a-f]{12}", i) is not None for i in ids)
     parents = table.column("parent_id").to_pylist()
     assert set(parents) == {f"syn_{i:04d}" for i in range(8)}
-    parent_by_id = dict(zip(ids, parents))
+    parent_by_id = dict(zip(ids, parents, strict=True))
 
-    artifacts = dict(zip(ids, table.column("artifact").to_pylist()))
+    artifacts = dict(zip(ids, table.column("artifact").to_pylist(), strict=True))
     frames = make_frames(test_seed)
     top, left, height, width = REGION.values()
     window = (slice(top, top + height), slice(left, left + width))

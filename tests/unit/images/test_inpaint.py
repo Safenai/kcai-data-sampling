@@ -14,17 +14,18 @@ to vary. The opt-in generative sweep/batch-invariance coverage lives with the
 end-to-end tests.
 """
 
+from kcai_data_sampling_core.api.roles import check_model
 import numpy as np
 import pytest
-
-from kcai_data_sampling_core.api.roles import check_model
 from tests.fixtures.data import REGION
 
 pytest.importorskip("kcai_data_sampling_images_lama.api.transformations.inpaint")
 
-from kcai_data_sampling_images_lama.api.models.lama import LamaTool
-from kcai_data_sampling_images_lama.api.transformations.inpaint import Inpaint
-from kcai_data_sampling_images_lama.transformations.inpaint import build_region_mask
+pytestmark = pytest.mark.lama
+
+from kcai_data_sampling_images_lama.api.models.lama import LamaTool  # noqa: E402
+from kcai_data_sampling_images_lama.api.transformations.inpaint import Inpaint  # noqa: E402
+from kcai_data_sampling_images_lama.transformations.inpaint import build_region_mask  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -52,9 +53,11 @@ def test_region_mask_marks_the_window_only(synthetic_batch) -> None:
     assert masks.dtype == bool
     top, left, height, width = REGION.values()
     window = (slice(top, top + height), slice(left, left + width))
-    assert masks[:, *window].all()
-    assert not masks[:, :top].any() and not masks[:, top + height :].any()
-    assert not masks[:, :, :left].any() and not masks[:, :, left + width :].any()
+    assert masks[:, window[0], window[1]].all()
+    assert not masks[:, :top].any()
+    assert not masks[:, top + height :].any()
+    assert not masks[:, :, :left].any()
+    assert not masks[:, :, left + width :].any()
 
 
 def test_region_mask_refuses_out_of_frame_and_degenerate_windows(synthetic_batch) -> None:
@@ -84,7 +87,8 @@ def test_lama_tool_satisfies_the_tool_protocol(lama_tool) -> None:
     plane of an RGBA batch out of the network.
     """
     check_model("inpaint", "tool", lama_tool, ("inpaint",))
-    assert isinstance(lama_tool.name, str) and lama_tool.name == "big-lama"
+    assert isinstance(lama_tool.name, str)
+    assert lama_tool.name == "big-lama"
     assert lama_tool.channels == 3
 
 
@@ -124,7 +128,7 @@ def test_apply_erases_and_rewrites_the_region_leaving_the_rest(synthetic_batch, 
     window = (slice(top, top + height), slice(left, left + width))
     outside = np.ones((32, 32), dtype=bool)
     outside[window] = False
-    for out, orig in zip(outputs, synthetic_batch.data):
+    for out, orig in zip(outputs, synthetic_batch.data, strict=True):
         assert out.x.dtype == np.uint8
         assert out.x.shape == orig.shape
         assert (out.x[..., :3][window] != orig[..., :3][window]).any()
@@ -152,7 +156,8 @@ def test_apply_stays_in_range_at_both_extremes(lama_tool) -> None:
     out = inp.apply(frames, None)
     assert out.shape == frames.shape
     assert out.dtype == np.uint8
-    assert float(out.min()) >= 0.0 and float(out.max()) <= 255.0
+    assert float(out.min()) >= 0.0
+    assert float(out.max()) <= 255.0
     assert np.array_equal(out[..., 3], frames[..., 3])
     assert np.array_equal(out[..., :3][window], np.clip(out[..., :3][window], 0, 255))
 

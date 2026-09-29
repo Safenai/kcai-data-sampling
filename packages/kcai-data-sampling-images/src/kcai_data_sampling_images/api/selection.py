@@ -9,9 +9,9 @@ the same sample: ``ids[i]``, ``columns`` slice ``i``, ``images[i]``.
 
 from dataclasses import dataclass
 
-import numpy as np
-
 from kcai_data_sampling_core.api.selection import Batch
+import numpy as np
+from typing_extensions import override
 
 
 @dataclass
@@ -38,6 +38,7 @@ class ImageBatch(Batch):
         """The decoded image stack, an alias of ``data`` for the image math."""
         return self.data
 
+    @override
     def row(self, index: int) -> "ImageBatch":
         """Return a single-row batch: the image at ``index``.
 

@@ -13,8 +13,8 @@ import importlib
 import importlib.util
 import inspect
 import logging
-import sys
 from pathlib import Path
+import sys
 from types import ModuleType
 from typing import Any
 
@@ -99,11 +99,7 @@ def _model_candidate_symbols(module: ModuleType) -> dict[str, Any]:
         The public (non-underscore) attributes that pass :func:`_model_shaped`,
         keyed by attribute name.
     """
-    return {
-        symbol: obj
-        for symbol, obj in vars(module).items()
-        if not symbol.startswith("_") and _model_shaped(obj)
-    }
+    return {symbol: obj for symbol, obj in vars(module).items() if not symbol.startswith("_") and _model_shaped(obj)}
 
 
 def _resolve_export(module: ModuleType, name: str, export: str | None, origin: str) -> Any:
@@ -133,9 +129,7 @@ def _resolve_export(module: ModuleType, name: str, export: str | None, origin: s
         obj: Any = module
         for part in export.split("."):
             if not hasattr(obj, part):
-                raise ValueError(
-                    f"model {name!r}: export {export!r} not found in {origin}"
-                )
+                raise ValueError(f"model {name!r}: export {export!r} not found in {origin}")
             obj = getattr(obj, part)
         return obj
     if hasattr(module, name):
@@ -148,9 +142,7 @@ def _resolve_export(module: ModuleType, name: str, export: str | None, origin: s
             f"model {name!r}: {origin} exposes several model candidates "
             f"({', '.join(sorted(candidates))}); set 'export:' to pick the adapter"
         )
-    public = sorted(
-        s for s in vars(module) if not s.startswith("_") and not inspect.ismodule(getattr(module, s))
-    )
+    public = sorted(s for s in vars(module) if not s.startswith("_") and not inspect.ismodule(getattr(module, s)))
     raise ValueError(
         f"model {name!r}: {origin} exposes no model candidate to default to; "
         f"set 'export:' to one of the module's symbols ({', '.join(public) or 'none'})"
@@ -243,6 +235,7 @@ def load_model_source(
         loaded = _load_path_module(name, path)
         origin = str(Path(path).resolve())
     else:
+        assert module is not None
         origin = str(module)
         try:
             loaded = importlib.import_module(module)

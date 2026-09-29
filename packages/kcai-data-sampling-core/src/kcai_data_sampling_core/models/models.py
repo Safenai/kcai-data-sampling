@@ -57,7 +57,10 @@ class ModelRefConfig(BaseModel):
     )
     export: str | None = Field(
         default=None,
-        description="type: python only — dotted attribute path to export; defaults to the models: key name, then the sole model-shaped symbol.",
+        description=(
+            "type: python only — dotted attribute path to export; defaults to the "
+            "models: key name, then the sole model-shaped symbol."
+        ),
     )
     weights: str | None = Field(default=None, description="Weights/checkpoint file name.")
     params: dict[str, Any] = Field(default_factory=dict, description="Model-specific knobs.")
@@ -115,14 +118,12 @@ class ModelRefConfig(BaseModel):
             for field in ("path", "module", "export"):
                 if getattr(self, field) is not None:
                     raise ValueError(
-                        f"model type {self.type!r} is a registered plugin; "
-                        f"'{field}' is only valid for type: python"
+                        f"model type {self.type!r} is a registered plugin; '{field}' is only valid for type: python"
                     )
             return self
         if (self.path is None) == (self.module is None):
             raise ValueError(
-                "type: python requires exactly one of 'path' (a .py file) "
-                "or 'module' (an importable dotted path)"
+                "type: python requires exactly one of 'path' (a .py file) or 'module' (an importable dotted path)"
             )
         return self
 

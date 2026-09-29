@@ -7,9 +7,9 @@ never a measurement (delta is recomputed downstream), never a path
 would hash", materialized for consumers and lineage.
 """
 
+from dataclasses import dataclass
 import hashlib
 import json
-from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -27,9 +27,7 @@ def output_identity(fields: dict[str, Any]) -> str:
         consumer, and two rows with the same id share the same recipe.
     """
     identity = {k: v for k, v in fields.items() if k != "id"}
-    return hashlib.sha1(
-        json.dumps(identity, sort_keys=True, default=str).encode("utf-8")
-    ).hexdigest()[:12]
+    return hashlib.sha1(json.dumps(identity, sort_keys=True, default=str).encode("utf-8")).hexdigest()[:12]
 
 
 @dataclass
@@ -49,7 +47,7 @@ class Output:
         algorithm: The transformation's identity string.
         family: ``"procedural"``, ``"generative"`` or ``"adversarial"``.
         arity: ``"unary"`` or ``"n-ary"``.
-        reversible: Whether ``x`` is determined by ``x′``, as declared.
+        reversible: Whether ``x`` is determined by ``x'``, as declared.
         params: The fully resolved algorithm parameters, as given in the config.
         seed: The random seed, ``None`` for deterministic algorithms.
         tool_model: Name of the tool model used, or ``None``.

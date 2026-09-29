@@ -10,11 +10,10 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from kcai_data_sampling_core.api.output_writer import OutputWriter
 import pyarrow as pa
 import pyarrow.parquet as pq
 from typing_extensions import override
-
-from kcai_data_sampling_core.api.output_writer import OutputWriter
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +51,7 @@ class ParquetOutputWriter(OutputWriter):
         self._rows: list[dict[str, Any]] = []
 
     @override
-    def add_rows(self, selection_name: str, rows: list[dict]) -> None:
+    def add_rows(self, selection_name: str, rows: list[dict[str, Any]]) -> None:
         """Buffer ledger rows for one selection.
 
         Args:

@@ -13,14 +13,15 @@ with.
 import itertools
 from pathlib import Path
 
+from kcai_data_sampling_job.cli import run
 import pytest
 
 from tests.fixtures.data import REGION
+from tests.utils.configs import build_config, build_loader
 
 pytest.importorskip("kcai_data_sampling_images_lama.api.transformations.inpaint")
 
-from kcai_data_sampling_job.cli import run
-from tests.utils.configs import build_config, build_loader
+pytestmark = pytest.mark.lama
 
 #: The three knobs, the same stress matrix as the procedural invariance test.
 LOAD_SIZES = (4, 8)
@@ -62,12 +63,12 @@ def _generative_config(
 def test_generative_batch_knobs_do_not_change_ledger_or_payloads(raw_bytes_data, tmp_path) -> None:
     """Every knob combination replays the baseline generative output.
 
-    The full 2×2×2 matrix runs the real checkpoint; the summary, the exact
+    The full 2x2x2 matrix runs the real checkpoint; the summary, the exact
     ledger parquet bytes and the exact payload PNG bytes (name + contents) must
     not move from the ``<8, 8, 100>`` baseline.
     """
     baseline_root = tmp_path / "_baseline"
-    baseline = dict(zip(("load", "transform", "flush"), BASELINE))
+    baseline = dict(zip(("load", "transform", "flush"), BASELINE, strict=True))
     assert run(_generative_config(baseline_root, raw_bytes_data, **baseline)) == {"synthetic": 8}
     baseline_ledger = (baseline_root / "ledger" / "synthetic.parquet").read_bytes()
     baseline_payloads = {p.name: p.read_bytes() for p in (baseline_root / "synthetic").glob("*.png")}

@@ -18,20 +18,16 @@ reused by every unit/e2e test through the shared fixtures below.
 from __future__ import annotations
 
 import json
-import shutil
 from pathlib import Path
+import shutil
 
+from kcai_data_sampling_images.api.selection import ImageBatch
+from kcai_data_sampling_job.dataloaders.api.parquet import ParquetDataLoader, ParquetImageLoaderConfig
 import numpy as np
+from PIL import Image
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
-from PIL import Image
-
-from kcai_data_sampling_images.api.selection import ImageBatch
-from kcai_data_sampling_job.dataloaders.api.parquet import (
-    ParquetDataLoader,
-    ParquetImageLoaderConfig,
-)
 
 SYNTHETIC_ROWS = 8
 SYNTHETIC_SIZE = 32
@@ -41,7 +37,7 @@ ID_COLUMN = "id"
 IMG_COLUMN = "img"
 PATH_COLUMN = "path"
 
-#: The one inpaint window that fits the 32×32 synthetic frames: a mask
+#: The one inpaint window that fits the 32x32 synthetic frames: a mask
 #: inside the frame, non-trivial in both axes, leaving pixels everywhere else
 #: untouched for the "unchanged outside the region" assertions.
 REGION = {"top": 8, "left": 12, "height": 16, "width": 8}
@@ -63,7 +59,7 @@ def _jittered(rng: np.random.Generator, base: tuple[int, int, int]) -> tuple[int
         The jittered RGBA color, channels clamped to ``[0, 255]``.
     """
     delta = rng.integers(-10, 11, size=3)
-    return tuple(int(np.clip(c + d, 0, 255)) for c, d in zip(base, delta)) + (255,)
+    return tuple(int(np.clip(c + d, 0, 255)) for c, d in zip(base, delta, strict=True)) + (255,)
 
 
 def _bar(size: int, rng: np.random.Generator) -> np.ndarray:
@@ -78,7 +74,7 @@ def _bar(size: int, rng: np.random.Generator) -> np.ndarray:
 
 
 def _checker(size: int, rng: np.random.Generator) -> np.ndarray:
-    """4×4 checkerboard: nearest-neighbor resize artifacts stay visible."""
+    """4x4 checkerboard: nearest-neighbor resize artifacts stay visible."""
     light = _jittered(rng, (220, 220, 220))
     dark = _jittered(rng, (35, 35, 35))
     out = np.zeros((size, size, 4), dtype=np.uint8)
@@ -209,9 +205,7 @@ def synthetic_data_dir(test_seed: int) -> Path:
             shutil.rmtree(data_dir)
         data_dir.mkdir(parents=True)
         write_sidecars(data_dir, make_frames(test_seed))
-        marker.write_text(
-            json.dumps({"seed": test_seed, "rows": SYNTHETIC_ROWS, "size": SYNTHETIC_SIZE})
-        )
+        marker.write_text(json.dumps({"seed": test_seed, "rows": SYNTHETIC_ROWS, "size": SYNTHETIC_SIZE}))
     return data_dir
 
 

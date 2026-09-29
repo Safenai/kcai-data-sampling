@@ -1,7 +1,7 @@
-"""Root job configuration, and the registry-resolved transformation config.
+"""Root job configuration.
 
-The ``transformations`` entries of the YAML are validated against each
-algorithm's own registered pydantic schema: core
+The input ``transformations`` entries are validated against each algorithm's
+own registered pydantic schema inside :class:`SamplingInterfaceConfig`: core
 cannot enumerate the discriminated union because algorithm packages arrive
 after core, so the ``type`` string is looked up in the loaded transformation
 registry and the entry is validated against the registered schema. Unknown or
@@ -13,98 +13,24 @@ becomes as many concrete models as the values it covers (cartesian product
 across several swept params), so the transformations list the job sees is
 plain and long, and the id/params/artifact machinery is inherited
 untouched.
+
+``ColumnsConfig`` and ``TransformationConfig`` live in
+:mod:`kcai_data_sampling_core.models.transformation`; they are re-imported
+here so ``from kcai_data_sampling_core.models.config import TransformationConfig``
+keeps working for algorithm packages and tests.
 """
 
-from typing import Any, Self
+from typing import Self
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from kcai_data_sampling_core.models.dataloaders import DataLoadersConfig
 from kcai_data_sampling_core.models.global_ import ComputeConfig, ErrorsConfig, StorageConfig
 from kcai_data_sampling_core.models.interfaces import SamplingInterfaceConfig
 from kcai_data_sampling_core.models.models import ModelsConfig
 from kcai_data_sampling_core.models.sweep import expand_sweeps
-
-
-class ColumnsConfig(BaseModel):
-    """Column routing on a transformation; generic, not per-algorithm.
-
-    ``input`` names the source column(s) that feed the transformation.
-    Reserved: a unary transformation reads the batch sample stack, so
-    ``input`` is validated but not consumed — it is the n-ary seam, kept so
-    n-ary transformations can widen it without a config-breaking change.
-
-    Attributes:
-        input: The input column name(s); when present must name the loader's
-            ``sample_path.column``.
-    """
-
-    model_config = ConfigDict(extra="forbid")
-
-    input: list[str] | None = Field(
-        default=None,
-        description="Input column names (reserved; must name the loader's sample column).",
-    )
-
-
-class TransformationConfig(BaseModel):
-    """Base transformation configuration; algorithm packages subclass it.
-
-    The base carries the config keys shared by every transformation and
-    validates ``type`` against the loaded registry. Each algorithm package
-    subclasses this with its own fields (and pins ``type`` to its literal),
-    and registers the **algorithm class** that carries the subclass as its
-    ``Config`` attribute — that is how config validation finds the specific
-    schema.
-
-    Attributes:
-        name: Unique name of the transformation within the interface; optional
-            (the schema doubles as the transformation instance's parameter
-            validator, which has no name).
-        type: Registry-resolved algorithm type (the transformation's identity).
-        seed: Random seed; always accepted but only drawn when the algorithm
-            is stochastic.
-        storage: Optional storage override.
-        columns: Reserved column routing (the n-ary seam); see
-            :class:`ColumnsConfig`.
-    """
-
-    model_config = ConfigDict(extra="forbid")
-
-    name: str | None = Field(
-        default=None,
-        description="Unique name within the interface (optional on the instance schema).",
-    )
-    type: str = Field(description="Registry-resolved transformation type.")
-    seed: int | None = Field(default=None, description="Random seed; drawn only when stochastic.")
-    storage: bool | dict[str, Any] | None = Field(
-        default=None,
-        description="Optional storage override (local only).",
-    )
-    columns: ColumnsConfig | None = Field(
-        default=None,
-        description="Reserved column routing (the n-ary seam).",
-    )
-
-    @field_validator("type")
-    @classmethod
-    def _known(cls, v: str) -> str:
-        """Refuse transformation types the registry does not know.
-
-        Args:
-            v: The ``type`` string from the config.
-
-        Returns:
-            The validated type string.
-
-        Raises:
-            ValueError: If the type is not registered.
-        """
-        from kcai_data_sampling_core.utils.registry import get_transformations_registry
-
-        if v not in get_transformations_registry():
-            raise ValueError(f"unknown transformation type {v!r}")
-        return v
+from kcai_data_sampling_core.models.transformation import ColumnsConfig as ColumnsConfig
+from kcai_data_sampling_core.models.transformation import TransformationConfig as TransformationConfig
 
 
 class JobConfig(BaseModel):
@@ -129,41 +55,6 @@ class JobConfig(BaseModel):
     dataloaders: DataLoadersConfig = Field(description="Data loaders.")
     models: ModelsConfig | None = None
     operations: SamplingInterfaceConfig = Field(description="The single transformations interface.")
-
-    @field_validator("operations")
-    @classmethod
-    def _resolve_operations(cls, v: SamplingInterfaceConfig) -> SamplingInterfaceConfig:
-        """Resolve each raw transformation entry against its registered schema.
-
-        The YAML entries are plain dicts; this validator looks each ``type`` up
-        in the transformation registry, takes the algorithm's own config schema
-        (``algorithm.Config``), and validates the entry against it, so required
-        parameters and unknown fields are refused at config load.
-
-        Args:
-            v: The partially validated interface config.
-
-        Returns:
-            The interface config with every transformation validated against
-            its specific registered schema.
-
-        Raises:
-            ValueError: If a transformation type is unknown or an entry does
-                not pass its algorithm's schema.
-        """
-        from kcai_data_sampling_core.utils.registry import get_transformations_registry
-
-        registry = get_transformations_registry()
-        resolved: list[TransformationConfig] = []
-        for entry in v.transformations:
-            entry = dict(entry)
-            algo = registry.get(entry.get("type", ""))
-            if algo is None:
-                raise ValueError(f"unknown transformation type {entry.get('type')!r}")
-            config_cls = getattr(algo, "Config", TransformationConfig)
-            resolved.append(config_cls.model_validate(entry))
-        v.transformations = resolved
-        return v
 
     @model_validator(mode="after")
     def _expand_sweeps(self) -> Self:
@@ -206,26 +97,20 @@ class JobConfig(BaseModel):
             ValueError: If ``columns.input`` names more than one column, or
                 names a column no loader declares as its ``sample_path.column``.
         """
-        used = [
-            t for t in self.operations.transformations
-            if t.columns is not None and t.columns.input is not None
-        ]
+        used = [t for t in self.operations.transformations if t.columns is not None and t.columns.input is not None]
         if not used:
             return self
-        sample_columns = {
-            sp.column
-            for loader in self.dataloaders.loaders
-            for sp in (loader.sample_path or [])
-        }
+        sample_columns = {sp.column for loader in self.dataloaders.loaders for sp in (loader.sample_path or [])}
         for entry in used:
-            value = entry.columns.input
-            if len(value) != 1:
+            columns = entry.columns
+            assert columns is not None
+            input_columns = columns.input
+            assert input_columns is not None
+            if len(input_columns) != 1:
+                raise ValueError(f"{entry.name}: columns.input must name exactly one column, got {input_columns!r}")
+            if input_columns[0] not in sample_columns:
                 raise ValueError(
-                    f"{entry.name}: columns.input must name exactly one column, got {value!r}"
-                )
-            if value[0] not in sample_columns:
-                raise ValueError(
-                    f"{entry.name}: columns.input {value[0]!r} is not any loader's "
+                    f"{entry.name}: columns.input {input_columns[0]!r} is not any loader's "
                     f"sample_path.column (loaders: {sorted(sample_columns) or 'none declared'})"
                 )
         return self

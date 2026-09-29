@@ -7,13 +7,12 @@ must come from ``kcai_data_sampling_images.api.transformations`` (the split
 surface), with the deterministic declarations.
 """
 
+from kcai_data_sampling_images.api.transformations.horizontal_flip import HorizontalFlip
 import numpy as np
 import pytest
 
-from kcai_data_sampling_images.api.transformations.horizontal_flip import HorizontalFlip
 
-
-@pytest.fixture()
+@pytest.fixture
 def flip() -> HorizontalFlip:
     """A ready ``horizontal_flip`` transformation instance."""
     return HorizontalFlip({})

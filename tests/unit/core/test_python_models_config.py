@@ -12,11 +12,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from kcai_data_sampling_core.models.config import JobConfig
+from kcai_data_sampling_core.models.models import ModelRefConfig, ModelsConfig
 import pydantic
 import pytest
 
-from kcai_data_sampling_core.models.config import JobConfig
-from kcai_data_sampling_core.models.models import ModelRefConfig, ModelsConfig
 from tests.fixtures.registries import StubTool, set_models_registry
 from tests.utils.configs import build_config, build_loader
 
@@ -81,8 +81,8 @@ def test_job_config_resolves_a_python_reference_at_load(tmp_path: Path, adapter_
     """
     mark = tmp_path / "loaded.mark"
 
-    MARKED_SOURCE = _ADAPTER_SOURCE + f"\nmark = {str(mark)!r}\nopen(mark, 'w').close()\n"
-    adapter_file.write_text(MARKED_SOURCE, encoding="utf-8")
+    marked_source = _ADAPTER_SOURCE + f"\nmark = {str(mark)!r}\nopen(mark, 'w').close()\n"
+    adapter_file.write_text(marked_source, encoding="utf-8")
     config = build_config(
         loaders=[build_loader(parquet_path="missing.parquet")],
         output_path=str(tmp_path / "ledger.parquet"),
@@ -118,9 +118,7 @@ def test_models_config_preserves_the_python_reference_fields(adapter_file: Path)
     loader (and the config dump) still sees them; loading is side-effect-free
     beyond the intended execution.
     """
-    section = ModelsConfig.model_validate(
-        {"stub_p": {"type": "python", "path": str(adapter_file), "export": "StubP"}}
-    )
+    section = ModelsConfig.model_validate({"stub_p": {"type": "python", "path": str(adapter_file), "export": "StubP"}})
     ref = section.models["stub_p"]
     assert (ref.type, ref.export) == ("python", "StubP")
     assert ref.path == str(adapter_file)

@@ -6,8 +6,9 @@ the number of rows pulled from a selection per step.
 """
 
 from enum import Enum
+from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from kcai_data_sampling_core.models.global_ import StorageConfig
 
@@ -113,8 +114,8 @@ class DataLoadersConfig(BaseModel):
 
     Attributes:
         storage: Default storage config inherited by all loaders.
-        loaders: List of raw dataloader configuration dicts, resolved through
-            the loader registry.
+        loaders: List of dataloaders, each validated against its loader
+            plugin's registered schema.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -123,10 +124,11 @@ class DataLoadersConfig(BaseModel):
         default=None,
         description="Default storage config inherited by all loaders.",
     )
-    loaders: list[dict] = Field(description="List of raw dataloader configuration dicts.")
+    loaders: list[DataLoaderConfig] = Field(description="List of dataloaders, registry-resolved.")
 
-    @model_validator(mode="after")
-    def _resolve_loaders(self) -> "DataLoadersConfig":
+    @field_validator("loaders", mode="before")
+    @classmethod
+    def _resolve_loaders(cls, v: Any) -> Any:
         """Resolve each raw loader entry against its registered schema.
 
         Each entry's ``type`` is looked up in the dataloader registry; the
@@ -134,24 +136,28 @@ class DataLoadersConfig(BaseModel):
         entry, so datatype-specific keys and required parameters are refused
         or kept at config load.
 
+        Args:
+            v: The raw loaders list, or already-resolved instances.
+
         Returns:
-            This config with every loader validated against its specific
+            The list with every loader validated against its specific
             registered schema.
 
         Raises:
             ValueError: If a loader type is unknown or an entry does not pass
                 its loader's schema.
         """
+        if not isinstance(v, list):
+            return v
         from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry
 
         registry = PluginLoadedRegistry.get_dataloaders_registry()
         resolved: list[DataLoaderConfig] = []
-        for entry in self.loaders:
+        for entry in v:
             entry = dict(entry)
             loader_cls = registry.get(entry.get("type", ""))
             if loader_cls is None:
                 raise ValueError(f"unknown dataloader type {entry.get('type')!r}")
             config_cls = getattr(loader_cls, "Config", DataLoaderConfig)
             resolved.append(config_cls.model_validate(entry))
-        self.loaders = resolved
-        return self
+        return resolved

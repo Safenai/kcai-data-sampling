@@ -22,20 +22,24 @@ def main() -> int:
     assert "ultralytics" not in sys.modules
 
     # The integer-only refusal is loud and names the dtype.
+    message = None
     try:
         fgsm_step(np.zeros((2, 4, 4, 3), dtype=np.float64), np.ones((2, 4, 4, 3)), 1 / 255)
     except ValueError as error:
-        assert "integer batches only" in str(error)
-    else:
+        message = str(error)
+    if message is None:
         raise AssertionError("fgsm_step accepted a float batch")
+    assert "integer batches only" in message
 
     # A uint8 sign-step round-trips shape/dtype and stays in range.
     frame = np.zeros((2, 4, 4, 3), dtype=np.uint8)
     frame[..., 0] = 100
     grad = np.ones_like(frame, dtype=np.float64)
     perturbed = fgsm_step(frame, grad, 2 / 255)
-    assert perturbed.shape == frame.shape and perturbed.dtype == np.uint8
-    assert perturbed.min() >= 0 and perturbed.max() <= 255
+    assert perturbed.shape == frame.shape
+    assert perturbed.dtype == np.uint8
+    assert perturbed.min() >= 0
+    assert perturbed.max() <= 255
 
     class StubTarget:
         name = "stub"
@@ -50,8 +54,10 @@ def main() -> int:
     rgba[..., :3] = 200
     rgba[..., 3] = 255
     out = fgsm.apply(rgba, None)
-    assert out.shape == rgba.shape and out.dtype == np.uint8
-    assert out.min() >= 0 and out.max() <= 255
+    assert out.shape == rgba.shape
+    assert out.dtype == np.uint8
+    assert out.min() >= 0
+    assert out.max() <= 255
     assert out[..., 0].min() == 202  # every red pixel stepped by exactly +2
 
     print("smoke_fgsm ok")

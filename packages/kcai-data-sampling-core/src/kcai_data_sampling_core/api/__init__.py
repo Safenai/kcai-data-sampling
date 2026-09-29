@@ -17,10 +17,10 @@ from kcai_data_sampling_core.api.transformation import FAMILY_BY_ROLE, Transform
 from kcai_data_sampling_core.api.unary import UnaryTransformation
 
 __all__ = [
+    "FAMILY_BY_ROLE",
     "Batch",
     "DataLoader",
     "DataSelection",
-    "FAMILY_BY_ROLE",
     "Output",
     "OutputWriter",
     "TargetModel",

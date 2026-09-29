@@ -13,10 +13,8 @@ from __future__ import annotations
 import itertools
 from pathlib import Path
 
-import pytest
-
 from kcai_data_sampling_job.cli import run
-from tests.e2e.fixtures.configs import standard_config
+
 from tests.utils.configs import build_config, build_loader
 
 #: The three knobs, dqm-ml-style stress matrix against the 8-row selection.
@@ -62,12 +60,14 @@ def _payloads_by_name(root: Path) -> dict[str, bytes]:
 def test_batch_knobs_do_not_change_the_ledger_or_payloads(raw_bytes_data, tmp_path) -> None:
     """Every knob combination replays the baseline output byte-for-byte.
 
-    The full 2×2×2 matrix is compared against the ``<8, 8, 100>`` baseline:
+    The full 2x2x2 matrix is compared against the ``<8, 8, 100>`` baseline:
     the summary, the exact ledger parquet bytes, and the exact PNG file bytes
     (name + contents) must not move.
     """
     baseline_root = tmp_path / "_baseline"
-    baseline_summary = _run_combo(raw_bytes_data, baseline_root, **dict(zip(("load", "transform", "flush"), BASELINE)))
+    baseline_summary = _run_combo(
+        raw_bytes_data, baseline_root, **dict(zip(("load", "transform", "flush"), BASELINE, strict=True))
+    )
     assert baseline_summary == {"synthetic": 16}
     baseline_ledger = _ledger_bytes(baseline_root)
     baseline_payloads = _payloads_by_name(baseline_root)

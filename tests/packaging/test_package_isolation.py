@@ -59,9 +59,7 @@ def test_scenario_installs_independently_and_runs_its_smoke(
     assert len(installed) == len(SCENARIOS[scenario])
 
     for key, module in MODULES.items():
-        assert probe_module(venv, module) == (
-            key in SCENARIOS[scenario]
-        ), f"{scenario}: {module} isolation broken"
+        assert probe_module(venv, module) == (key in SCENARIOS[scenario]), f"{scenario}: {module} isolation broken"
 
     script = Path(__file__).parent / "scripts" / SMOKE_SCRIPTS[scenario]
     result = run_script(venv, script, tmp_path / "scratch")

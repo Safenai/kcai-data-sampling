@@ -8,8 +8,8 @@ shared or pre-fetched caches.
 """
 
 import os
-import urllib.request
 from pathlib import Path
+import urllib.request
 
 
 def weights_path(name: str) -> Path:

@@ -10,12 +10,12 @@ hold the registry pure via the snapshot/restore fixture.
 
 from __future__ import annotations
 
-import pytest
-
 from kcai_data_sampling_core.models.config import JobConfig
 from kcai_data_sampling_core.models.models import ModelRefConfig
 from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry, register_model
 from kcai_data_sampling_job.cli import _build_models
+import pytest
+
 from tests.fixtures.registries import StubTarget, StubTool, set_models_registry
 from tests.utils.configs import build_config, build_loader
 
@@ -52,7 +52,7 @@ def test_register_model_refuses_a_name_an_entry_point_claims(monkeypatch) -> Non
     caller to pick a different name and update the ``models:`` section.
     """
     set_models_registry(monkeypatch, {"lama_inpaint": StubTool})
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError, match="already claimed by an entry-point plugin") as exc:
         register_model("lama_inpaint", StubTarget)
     assert "already claimed by an entry-point plugin" in str(exc.value)
 

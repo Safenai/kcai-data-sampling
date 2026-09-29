@@ -54,7 +54,6 @@ from display import show, rows_table   # presentation only, next to this noteboo
 # Every path (in the YAML, in the outputs) is relative to the repository root.
 REPO = next(p for p in [Path.cwd(), *Path.cwd().parents] if (p / ".git").exists())
 os.chdir(REPO)
-print("working from the repository root:", REPO)
 
 # --- The process config: the one input the CLI way takes ---
 with open("examples/config/walkthrough-procedural.yaml") as f:

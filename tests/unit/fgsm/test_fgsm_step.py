@@ -13,7 +13,9 @@ import pytest
 
 pytest.importorskip("kcai_data_sampling_fgsm")
 
-from kcai_data_sampling_fgsm.transformations.fgsm import fgsm_step
+pytestmark = pytest.mark.fgsm
+
+from kcai_data_sampling_fgsm.transformations.fgsm import fgsm_step  # noqa: E402
 
 
 def test_integer_batches_only() -> None:
@@ -60,7 +62,7 @@ def test_clip_at_zero_and_255_on_a_crossing_ramp() -> None:
     on the extremes, the rest move by the exact delta.
     """
     ramp = np.arange(256, dtype=np.uint8).reshape(1, 16, 16, 1)
-    grad = (ramp.astype(np.float64) - 127.5)  # negative half, positive half
+    grad = ramp.astype(np.float64) - 127.5  # negative half, positive half
     out = fgsm_step(ramp, grad, 2 / 255)
     assert int(out[0, 0, 0, 0]) == 0  # 0 - 2 clipped at 0
     assert int(out[0, 0, 2, 0]) == 0  # 2 - 2 = 0, exactly
@@ -85,14 +87,14 @@ def test_other_integer_dtypes_normalize_by_their_iinfo_max() -> None:
     """uint16 and uint32 normalize through ``np.iinfo``, not a hard-coded 255.
 
     The delta scales with the dtype's max: ``round(epsilon * 65535)`` moves a
-    uint16 pixel, and a uint32 pixel normalizes by its own 2³²−1 maximum.
+    uint16 pixel, and a uint32 pixel normalizes by its own 2³²-1 maximum.
     """
-    u16 = (np.ones((1, 1, 1, 1), dtype=np.uint16) * 30000)
+    u16 = np.ones((1, 1, 1, 1), dtype=np.uint16) * 30000
     out16 = fgsm_step(u16, np.ones(u16.shape, dtype=np.float64), 2 / 65535)
     assert out16.dtype == np.uint16
     assert int(out16[0, 0, 0, 0]) == 30002
 
-    u32 = (np.ones((1, 1, 1, 1), dtype=np.uint32) * 2_000_000_000)
+    u32 = np.ones((1, 1, 1, 1), dtype=np.uint32) * 2_000_000_000
     out32 = fgsm_step(u32, np.ones(u32.shape, dtype=np.float64), 2 / 4_294_967_295)
     assert out32.dtype == np.uint32
     assert int(out32[0, 0, 0, 0]) == 2_000_000_002

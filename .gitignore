@@ -5,7 +5,6 @@ __pycache__/
 build/
 dist/
 .venv/
-uv.lock
 ideas
 .agents
 
@@ -28,3 +27,16 @@ outputs/
 selections/
 deck/
 tmp/
+
+# Script logs: teed output from scripts/*.sh, regenerated on every run
+logs/
+
+# MkDocs generated content: rebuilt by docs/hooks.py on every build, never committed
+site/
+docs/index.md
+docs/packages/
+docs/examples
+
+# Test reports (pytest html + coverage) produced in CI and downloaded into
+# docs/ by the pages job, never committed
+docs/reports/

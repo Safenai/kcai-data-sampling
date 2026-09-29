@@ -14,10 +14,9 @@ within ``[0, +oo)``).
 
 from typing import Literal, Self
 
-from pydantic import Field, model_validator
-
 from kcai_data_sampling_core.models.config import TransformationConfig
 from kcai_data_sampling_core.models.sweep import SweepConfig
+from pydantic import Field, model_validator
 
 
 class HorizontalFlipTransformationConfig(TransformationConfig):
@@ -43,9 +42,7 @@ class CropResizeTransformationConfig(TransformationConfig):
     """
 
     type: Literal["crop_resize"] = "crop_resize"
-    fraction: float | SweepConfig = Field(
-        description="Fraction (0, 1] of the image kept; a SweepConfig expands it."
-    )
+    fraction: float | SweepConfig = Field(description="Fraction (0, 1] of the image kept; a SweepConfig expands it.")
     top: int | SweepConfig = Field(
         default=0,
         description="Crop window top offset in pixels; a SweepConfig expands it.",
@@ -66,22 +63,7 @@ class CropResizeTransformationConfig(TransformationConfig):
             ValueError: If ``fraction`` leaves ``(0, 1]``, or ``top``/``left``
                 go below ``0``, whether given directly or as a sweep interval.
         """
-        if isinstance(self.fraction, SweepConfig):
-            lo, hi = self.fraction.bounds
-            if lo <= 0 or hi > 1:
-                raise ValueError(
-                    f"crop_resize.fraction sweep {self.fraction.range} must stay within (0, 1]"
-                )
-        elif not 0 < self.fraction <= 1:
-            raise ValueError(f"crop_resize.fraction must be in (0, 1], got {self.fraction}")
+        self._check_parameter_bounds("fraction", minimum=0, maximum=1, exclusive_min=True)
         for name in ("top", "left"):
-            value = getattr(self, name)
-            if isinstance(value, SweepConfig):
-                lo, _ = value.bounds
-                if lo < 0:
-                    raise ValueError(
-                        f"crop_resize.{name} sweep {value.range} must stay >= 0"
-                    )
-            elif value < 0:
-                raise ValueError(f"crop_resize.{name} must be >= 0, got {value}")
+            self._check_parameter_bounds(name, minimum=0)
         return self

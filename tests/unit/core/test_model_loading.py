@@ -10,12 +10,11 @@ single-file limitation (no relative imports).
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
-
-import pytest
+import sys
 
 from kcai_data_sampling_core.utils.registry import load_model_source
+import pytest
 
 
 @pytest.fixture
@@ -84,11 +83,11 @@ def test_module_route_supports_relative_imports(tmp_path: Path) -> None:
     (tmp_path / "pkg" / "__init__.py").write_text("", encoding="utf-8")
     (tmp_path / "pkg" / "mixins.py").write_text("HELPER = 'ok'\n", encoding="utf-8")
     (tmp_path / "pkg" / "adapters.py").write_text(
-        'from .mixins import HELPER\n\n'
-        'class Adapter:\n'
+        "from .mixins import HELPER\n\n"
+        "class Adapter:\n"
         '    name = "pkg"\n'
-        '    def grad(self, xs):\n'
-        '        return xs * 0.0\n',
+        "    def grad(self, xs):\n"
+        "        return xs * 0.0\n",
         encoding="utf-8",
     )
     sys.path.insert(0, str(tmp_path))
@@ -110,7 +109,7 @@ def test_module_route_import_failure_is_loud() -> None:
 def test_missing_file_is_loud(adapter_file: Path) -> None:
     """A missing ``path`` names the resolved file in the refusal."""
     missing = adapter_file.parent / "absent.py"
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError, match="file not found") as exc:
         load_model_source("m", path=str(missing))
     assert "file not found" in str(exc.value)
     assert str(missing) in str(exc.value)
@@ -120,7 +119,7 @@ def test_exec_error_is_wrapped_as_raised_while_loading(tmp_path: Path) -> None:
     """A source that raises while executing surfaces as a load error."""
     bad = tmp_path / "broken.py"
     bad.write_text('raise RuntimeError("boom")\n', encoding="utf-8")
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError, match="raised while loading") as exc:
         load_model_source("m", path=str(bad))
     assert "raised while loading" in str(exc.value)
     assert "boom" in str(exc.value)
@@ -130,10 +129,7 @@ def test_export_defaults_to_the_key_named_symbol(tmp_path: Path) -> None:
     """Unset, ``export`` prefers the module attribute named like the key."""
     path = tmp_path / "yolo.py"
     path.write_text(
-        'class yolo:\n'
-        '    name = "key_named"\n'
-        '    def grad(self, xs):\n'
-        '        return xs * 0.0\n',
+        'class yolo:\n    name = "key_named"\n    def grad(self, xs):\n        return xs * 0.0\n',
         encoding="utf-8",
     )
     assert load_model_source("yolo", path=str(path)).name == "key_named"
@@ -143,10 +139,7 @@ def test_export_defaults_to_the_sole_model_shaped_symbol(tmp_path: Path) -> None
     """Unset, ``export`` falls back to the sole model-shaped symbol."""
     path = tmp_path / "only.py"
     path.write_text(
-        'class TheOnly:\n'
-        '    name = "sole"\n'
-        '    def grad(self, xs):\n'
-        '        return xs * 0.0\n',
+        'class TheOnly:\n    name = "sole"\n    def grad(self, xs):\n        return xs * 0.0\n',
         encoding="utf-8",
     )
     assert load_model_source("m", path=str(path)).name == "sole"
@@ -156,27 +149,28 @@ def test_ambiguous_exports_are_refused_loudly(tmp_path: Path) -> None:
     """Several model-shaped symbols without ``export`` list the candidates."""
     path = tmp_path / "many.py"
     path.write_text(
-        'class A:\n'
+        "class A:\n"
         '    name = "a"\n'
-        '    def grad(self, xs):\n'
-        '        return xs * 0.0\n'
-        'class B:\n'
+        "    def grad(self, xs):\n"
+        "        return xs * 0.0\n"
+        "class B:\n"
         '    name = "b"\n'
-        '    def grad(self, xs):\n'
-        '        return xs * 0.0\n',
+        "    def grad(self, xs):\n"
+        "        return xs * 0.0\n",
         encoding="utf-8",
     )
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError, match="exposes several model candidates") as exc:
         load_model_source("m", path=str(path))
     assert "exposes several model candidates" in str(exc.value)
-    assert "A" in str(exc.value) and "B" in str(exc.value)
+    assert "A" in str(exc.value)
+    assert "B" in str(exc.value)
 
 
 def test_no_model_candidate_is_refused_loudly(tmp_path: Path) -> None:
     """A source without a model-shaped symbol names its public symbols."""
     path = tmp_path / "empty.py"
-    path.write_text('VALUE = 42\n', encoding="utf-8")
-    with pytest.raises(ValueError) as exc:
+    path.write_text("VALUE = 42\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="exposes no model candidate") as exc:
         load_model_source("m", path=str(path))
     assert "exposes no model candidate" in str(exc.value)
     assert "VALUE" in str(exc.value)
@@ -184,7 +178,7 @@ def test_no_model_candidate_is_refused_loudly(tmp_path: Path) -> None:
 
 def test_bad_explicit_export_is_refused_loudly(adapter_file: Path) -> None:
     """An ``export`` naming nothing is refused with the module origin."""
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError, match="export 'Missing' not found") as exc:
         load_model_source("m", path=str(adapter_file), export="Missing")
     assert "export 'Missing' not found in" in str(exc.value)
 
@@ -197,13 +191,13 @@ def test_a_file_is_executed_exactly_once(tmp_path: Path) -> None:
     """
     path = tmp_path / "once.py"
     path.write_text(
-        'from pathlib import Path\n'
+        "from pathlib import Path\n"
         'with (Path(__file__).parent / "calls.txt").open("a") as fh:\n'
         '    fh.write("called\\n")\n'
-        'class S:\n'
+        "class S:\n"
         '    name = "once"\n'
-        '    def grad(self, xs):\n'
-        '        return xs * 0.0\n',
+        "    def grad(self, xs):\n"
+        "        return xs * 0.0\n",
         encoding="utf-8",
     )
     assert load_model_source("s", path=str(path)).name == "once"
@@ -218,14 +212,10 @@ def test_a_single_file_cannot_import_its_siblings(tmp_path: Path) -> None:
     a dotted ``module`` package gets relative imports); the import failure is
     wrapped into the loud load error.
     """
-    (tmp_path / "sibling.py").write_text('SIB = 1\n', encoding="utf-8")
+    (tmp_path / "sibling.py").write_text("SIB = 1\n", encoding="utf-8")
     path = tmp_path / "main_file.py"
     path.write_text(
-        'from sibling import SIB\n'
-        'class S:\n'
-        '    name = "main"\n'
-        '    def grad(self, xs):\n'
-        '        return xs * 0.0\n',
+        'from sibling import SIB\nclass S:\n    name = "main"\n    def grad(self, xs):\n        return xs * 0.0\n',
         encoding="utf-8",
     )
     with pytest.raises(ValueError, match="raised while loading"):

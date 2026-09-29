@@ -42,14 +42,16 @@ library) in its own `requirements.txt` — they never belong to `-core` or
 
 ```python
 class MyModel:
-    channels = 3          # RGB only: the adapter receives exactly those planes
+    channels = 3  # RGB only: the adapter receives exactly those planes
+
     def __init__(self, weights: str, **params):
-        self.name = weights        # the ledger records this string
+        self.name = weights  # the ledger records this string
         self._load(weights, **params)
 
     def inpaint(self, xs, masks):
         """(B, H, W, C) uint8 image batch in, (B, H, W, C) uint8 out."""
         ...  # fill every masked pixel; leave the rest unchanged
+
 
 def plugin() -> MyModel:
     return MyModel

@@ -8,7 +8,8 @@ registered concrete writers — ``images`` (payload files) and ``parquet``
 """
 
 from kcai_data_sampling_core.api.output_writer import OutputWriter
+
 from kcai_data_sampling_job.outputwriter.api.images import ImagesOutputWriter
 from kcai_data_sampling_job.outputwriter.api.parquet import ParquetOutputWriter
 
-__all__ = ["OutputWriter", "ImagesOutputWriter", "ParquetOutputWriter"]
+__all__ = ["ImagesOutputWriter", "OutputWriter", "ParquetOutputWriter"]

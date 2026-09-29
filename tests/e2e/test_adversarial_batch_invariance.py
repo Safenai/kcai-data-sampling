@@ -12,14 +12,16 @@ row's output never depends on which other rows it was batched with.
 import itertools
 from pathlib import Path
 
+from kcai_data_sampling_core.utils.registry import register_model
+from kcai_data_sampling_job.cli import run
 import pytest
+
+from tests.fixtures.registries import StubTarget
+from tests.utils.configs import build_config, build_loader
 
 pytest.importorskip("kcai_data_sampling_fgsm.api.transformations.fgsm")
 
-from kcai_data_sampling_job.cli import run
-from kcai_data_sampling_core.utils.registry import register_model
-from tests.fixtures.registries import StubTarget
-from tests.utils.configs import build_config, build_loader
+pytestmark = pytest.mark.fgsm
 
 #: The three knobs, the same stress matrix as the procedural invariance test.
 LOAD_SIZES = (4, 8)
@@ -58,18 +60,16 @@ def _adversarial_config(
     )
 
 
-def test_adversarial_batch_knobs_do_not_change_ledger_or_payloads(
-    raw_bytes_data, registry_snapshot, tmp_path
-) -> None:
+def test_adversarial_batch_knobs_do_not_change_ledger_or_payloads(raw_bytes_data, registry_snapshot, tmp_path) -> None:
     """Every knob combination replays the baseline adversarial output.
 
-    The full 2×2×2 matrix runs the real ``fgsm`` step; the summary, the exact
+    The full 2x2x2 matrix runs the real ``fgsm`` step; the summary, the exact
     ledger parquet bytes and the exact payload PNG bytes (name + contents) must
     not move from the ``<8, 8, 100>`` baseline.
     """
     register_model("stub", StubTarget)
     baseline_root = tmp_path / "_baseline"
-    baseline = dict(zip(("load", "transform", "flush"), BASELINE))
+    baseline = dict(zip(("load", "transform", "flush"), BASELINE, strict=True))
     assert run(_adversarial_config(baseline_root, raw_bytes_data, **baseline)) == {"synthetic": 8}
     baseline_ledger = (baseline_root / "ledger" / "synthetic.parquet").read_bytes()
     baseline_payloads = {p.name: p.read_bytes() for p in (baseline_root / "synthetic").glob("*.png")}

@@ -9,4 +9,4 @@ checkpoint downloads into the weight cache (``$KCAI_WEIGHTS_DIR`` or the
 repository's ``.cache/``) on first use.
 """
 
-from ._version_ import __version__
+from kcai_data_sampling_images_lama._version_ import __version__ as __version__

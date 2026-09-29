@@ -6,4 +6,4 @@ output writer owns the metadata-only ledger. The image sample readers/writers
 are plugins shipped by ``kcai-data-sampling-images``.
 """
 
-from ._version_ import __version__
+from kcai_data_sampling_job._version_ import __version__ as __version__

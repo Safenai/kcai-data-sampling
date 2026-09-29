@@ -14,18 +14,17 @@ the slot/`check_output` mechanics are still exercised.
 """
 
 import re
-
-import numpy as np
-import pyarrow as pa
-import pydantic
-import pytest
-from pydantic import BaseModel, ConfigDict
-from typing_extensions import Literal
+from typing import Literal
 
 from kcai_data_sampling_core.api.output import output_identity
 from kcai_data_sampling_core.api.selection import Batch
 from kcai_data_sampling_core.api.unary import UnaryTransformation
 from kcai_data_sampling_core.utils.runner import TransformationRunner
+import numpy as np
+import pyarrow as pa
+import pydantic
+from pydantic import BaseModel, ConfigDict
+import pytest
 
 ID_RE = re.compile(r"^[0-9a-f]{12}$")
 
@@ -123,9 +122,7 @@ def test_outputs_one_per_row_with_derived_lineage() -> None:
         row = output.row()
         assert ID_RE.fullmatch(output.id)
         assert ID_RE.fullmatch(row["id"])
-        assert output.id == output_identity(
-            {k: v for k, v in row.items() if k != "id"}
-        )
+        assert output.id == output_identity({k: v for k, v in row.items() if k != "id"})
 
 
 def test_output_row_carries_exactly_the_declared_fields() -> None:
@@ -199,9 +196,7 @@ def test_value_range_is_enforced_unless_clips_declared() -> None:
     with pytest.raises(ValueError, match="left the selection's value range"):
         TransformationRunner(_generic_batch(value_range=(0.0, 1.0))).run(transformation)
 
-    clipped = TransformationRunner(_generic_batch(value_range=(0.0, 1.0))).run(
-        _ClippingAdd({"amount": 1.5})
-    )
+    clipped = TransformationRunner(_generic_batch(value_range=(0.0, 1.0))).run(_ClippingAdd({"amount": 1.5}))
     full = TransformationRunner(_generic_batch()).run(_ClippingAdd({"amount": 1.5}))
     assert (np.stack([o.x for o in clipped]) == 1.0).all()
     assert not np.isclose(full[3].x, 1.0).all()
@@ -222,9 +217,7 @@ def test_run_on_subset_matches_the_full_batch_run() -> None:
     one_at_a_time = [runner.run(transformation, batch.row(i))[0] for i in range(len(batch))]
 
     assert [o.parent_id for o in whole] == [o.parent_id for o in one_at_a_time]
-    assert all(
-        np.array_equal(whole[i].x, one_at_a_time[i].x) for i in range(len(batch))
-    )
+    assert all(np.array_equal(whole[i].x, one_at_a_time[i].x) for i in range(len(batch)))
 
 
 def test_stochastic_run_is_seed_and_id_reproducible() -> None:
@@ -237,11 +230,11 @@ def test_stochastic_run_is_seed_and_id_reproducible() -> None:
     batch = _generic_batch()
     first = TransformationRunner(batch).run(_Jitter({"seed": 7}))
     second = TransformationRunner(batch).run(_Jitter({"seed": 7}))
-    assert [np.array_equal(a.x, b.x) for a, b in zip(first, second)] == [True] * len(batch)
+    assert [np.array_equal(a.x, b.x) for a, b in zip(first, second, strict=True)] == [True] * len(batch)
     assert [a.id for a in first] == [b.id for b in second]
 
     diverged = TransformationRunner(batch).run(_Jitter({"seed": 9}))
-    assert any(not np.array_equal(a.x, b.x) for a, b in zip(first, diverged))
+    assert any(not np.array_equal(a.x, b.x) for a, b in zip(first, diverged, strict=True))
 
 
 def test_stochastic_subset_run_matches_full_run() -> None:

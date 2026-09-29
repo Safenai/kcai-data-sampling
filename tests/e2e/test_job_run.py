@@ -10,13 +10,13 @@ content hash.
 import hashlib
 import re
 
-import numpy as np
-import pyarrow as pa
-import pyarrow.parquet as pq
-from PIL import Image
-
 from kcai_data_sampling_job.cli import run
 from kcai_data_sampling_job.job import GENERATOR_COLUMNS
+import numpy as np
+from PIL import Image
+import pyarrow as pa
+import pyarrow.parquet as pq
+
 from tests.e2e.fixtures.configs import all_forms_config, standard_config, swept_fraction_config
 
 ARTIFACT_RE = re.compile(r"^synthetic__(?P<id>[0-9a-f]{12})__(?P<c6>[0-9a-f]{6})\.png$")
@@ -30,7 +30,7 @@ def _read_png(path) -> np.ndarray:
 def test_full_run_ledger_and_payloads(raw_bytes_data, tmp_path) -> None:
     """One nominal run produces the expected ledger and payload store.
 
-    The summary counts 8 rows × 2 algorithms = 16; the ledger has exactly the
+    The summary counts 8 rows x 2 algorithms = 16; the ledger has exactly the
     13 generator columns plus the requested ``height``/``width`` passthrough,
     is metadata-only (no image bytes column), and every row carries the
     deterministic facts — ``seed`` null, sorted-JSON ``params``, 12-hex ``id``.
@@ -58,7 +58,7 @@ def test_full_run_ledger_and_payloads(raw_bytes_data, tmp_path) -> None:
 
     payloads = sorted((root / "synthetic").glob("*.png"))
     assert len(payloads) == 16
-    artifacts = dict(zip(table.column("id").to_pylist(), table.column("artifact").to_pylist()))
+    artifacts = dict(zip(table.column("id").to_pylist(), table.column("artifact").to_pylist(), strict=True))
     for png in payloads:
         match = ARTIFACT_RE.fullmatch(png.name)
         assert match is not None
@@ -66,7 +66,8 @@ def test_full_run_ledger_and_payloads(raw_bytes_data, tmp_path) -> None:
         pixels = _read_png(png)
         assert pixels.shape == (32, 32, 4)
         assert pixels.dtype == np.uint8
-        assert 0 <= pixels.min() and pixels.max() <= 255
+        assert pixels.min() >= 0
+        assert pixels.max() <= 255
         assert match.group("c6") == hashlib.sha1(pixels.tobytes()).hexdigest()[:6]
 
 
@@ -114,7 +115,7 @@ def test_sweep_expansion(raw_bytes_data, tmp_path) -> None:
     """A swept ``fraction`` runs as independent algorithms.
 
     ``{range: [0.2, 0.8], samples: 3, mode: even}`` becomes three crop
-    instances, so 8 rows × (flip + 3 crops) = 32 rows, each output carrying
+    instances, so 8 rows x (flip + 3 crops) = 32 rows, each output carrying
     its resolved fraction in ``params``; the deterministic run replays
     byte-identically into a second output root.
     """
@@ -156,7 +157,7 @@ def test_image_column_forms(raw_bytes_data, path_data, tmp_path) -> None:
     def names_by_id(selection: str) -> dict[str, str]:
         """Map output id → artifact name for one selection's ledger."""
         table = pq.read_table(str(root / "ledger" / f"{selection}.parquet"))
-        return dict(zip(table.column("id").to_pylist(), table.column("artifact").to_pylist()))
+        return dict(zip(table.column("id").to_pylist(), table.column("artifact").to_pylist(), strict=True))
 
     bytes_by_id = names_by_id("bytes")
     for form in ("relative", "absolute"):
