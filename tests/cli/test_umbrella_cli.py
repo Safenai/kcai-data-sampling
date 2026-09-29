@@ -7,8 +7,11 @@ import through ``optional_dependencies``), and the help action dispatches to
 the requested command.
 """
 
-from kcai_data_sampling.__main__ import execute, parse_args
-from kcai_data_sampling.dependency import get_available_command, optional_dependencies
+import argparse
+import builtins
+
+from kcai_data_sampling.__main__ import _HelpAction, execute, parse_args
+from kcai_data_sampling.dependency import display_version, get_available_command, optional_dependencies
 import pytest
 
 ALL_COMMANDS = ["version", "list", "process"]
@@ -110,6 +113,48 @@ def test_help_without_a_command_prints_the_global_help(capsys) -> None:
     with pytest.raises(SystemExit):
         execute(["-h"])
     assert "kcai data-sampling job client" in capsys.readouterr().out
+
+
+def test_execute_verbose_and_quiet_flags_print_versions(capsys) -> None:
+    """``-v`` and ``-q`` set the log level yet still dispatch the command."""
+    execute(["-v", "version"])
+    assert "core:" in capsys.readouterr().out
+
+    execute(["-q", "version"])
+    assert "job:" in capsys.readouterr().out
+
+
+def test_help_action_raises_on_an_unknown_command() -> None:
+    """``<command> -h`` for a name outside the registry is refused loudly."""
+    parser = argparse.ArgumentParser(add_help=False)
+    action = _HelpAction(["-h"])
+    namespace = argparse.Namespace(command="nope")
+    with pytest.raises(ValueError, match=r"Unknown command nope"):
+        action(parser, namespace, None)
+
+
+def test_execute_refuses_a_command_without_a_handler(monkeypatch) -> None:
+    """A listed command that resolved to no handler is refused at dispatch."""
+    monkeypatch.setattr("kcai_data_sampling.__main__.get_available_command", lambda: {"version": None})
+    with pytest.raises(ValueError, match=r"Unknown command version"):
+        execute(["version"])
+
+
+def test_display_version_tolerates_missing_job_and_images_packages(monkeypatch, capsys) -> None:
+    """A package without a ``_version_`` prints ``None`` rather than crashing."""
+    real_import = builtins.__import__
+    missing = ("kcai_data_sampling_job._version_", "kcai_data_sampling_images._version_")
+
+    def fake_import(name, *args, **kwargs):
+        if name in missing:
+            raise ImportError(f"No module named '{name}'", name=name)
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+    display_version(["version"])
+    out = capsys.readouterr().out
+    assert "job: None" in out
+    assert "images: None" in out
 
 
 @pytest.mark.parametrize("mode", ["ignore", "warn"])
