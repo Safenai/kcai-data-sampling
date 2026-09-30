@@ -1,4 +1,4 @@
-# kcai-workspace
+# kcai-data-sampling
 
 Data sampling as a reproducibility pipeline: transformations expand a real
 dataset into a sampled one, recording a metadata-only ledger and
