@@ -13,8 +13,8 @@ transformation, families, label effects — is defined in
 ## Install
 
 ```sh
-git clone git@github.com:Safenai/kcai-workspace.git
-cd kcai-workspace
+git clone git@github.com:Safenai/kcai-data-sampling.git
+cd kcai-data-sampling
 uv sync
 ```
 

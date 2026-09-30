@@ -1,10 +1,10 @@
+from pathlib import Path
 import re
 import shutil
-from pathlib import Path
 from urllib.parse import urljoin
 
 DOCS_INDEX = "docs/index.md"
-REPO_URL = "https://github.com/Safenai/kcai-workspace"
+REPO_URL = "https://github.com/Safenai/kcai-data-sampling"
 
 
 # ---------------------------------------------------------------------------
@@ -59,7 +59,9 @@ def _build_index():
     )
 
     # Inject repository link before "Available on PyPI" if not already present
-    repo_link = "- **[Repository](https://github.com/Safenai/kcai-workspace)**"
+    repo_link = (
+        "- **[Repository](https://github.com/Safenai/kcai-data-sampling)**"
+    )
     if "## Available on PyPI" in content and repo_link not in content:
         content = content.replace(
             "## Available on PyPI",
@@ -143,7 +145,9 @@ def _copy_coverage_report():
     """Copy coverage index.html to coverage_report.html for direct linking."""
     coverage_index = Path("docs/reports/htmlcov/index.html")
     if coverage_index.exists():
-        _copy_if_changed(coverage_index, Path("docs/reports/htmlcov/coverage_report.html"))
+        _copy_if_changed(
+            coverage_index, Path("docs/reports/htmlcov/coverage_report.html")
+        )
 
 
 # ---------------------------------------------------------------------------

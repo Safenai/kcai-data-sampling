@@ -127,8 +127,8 @@ watch:
 site_name: KCAI Data-Sampling
 copyright: Copyright &copy; SafenAI
 # GitHub Specific Configuration.
-repo_name: kcai-workspace
-repo_url: https://github.com/Safenai/kcai-workspace
+repo_name: kcai-data-sampling
+repo_url: https://github.com/Safenai/kcai-data-sampling
 edit_uri: edit/main/docs/
 nav:
   - Home: index.md
