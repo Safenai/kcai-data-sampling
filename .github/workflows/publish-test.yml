@@ -75,6 +75,13 @@ jobs:
             exit 1
           fi
 
+      - name: Derive publishable version from tag
+        run: |
+          TAG="${{ github.ref_name }}"
+          VERSION=$(printf '%s' "$TAG" | sed 's/-//g')
+          echo "Pretend version: $VERSION (from tag $TAG)"
+          echo "SETUPTOOLS_SCM_PRETEND_VERSION=$VERSION" >> "$GITHUB_ENV"
+
       - name: Build packages
         run: |
           uv build packages/kcai-data-sampling-core
