@@ -6,6 +6,7 @@
 [project]
 name = "kcai-workspace"
 dynamic = ["version"]
+license ="Apache-2.0"
 description = "Workspace for kcai data-sampling: generate samples from input samples"
 requires-python = ">=3.11"
 dependencies = [
