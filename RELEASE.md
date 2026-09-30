@@ -1,11 +1,11 @@
-# kcai-workspace 0.1.0 — first release
+# kcai-data-sampling 0.1.0 — first release
 
 > Generate more data from the data you already have — and keep a receipt for
 > every sample you make.
 
 ## What this is
 
-`kcai-workspace` is a toolkit for **data sampling**: taking a real dataset and
+`kcai-data-sampling` is a toolkit for **data sampling**: taking a real dataset and
 expanding it into a larger, sampled one.
 
 The part that matters is the receipt. Every generated sample is written to disk
@@ -37,7 +37,7 @@ three families, and they behave very differently:
 
 The first is cheap and safe to run anywhere. The second needs real compute. The
 third needs a model to attack. Rather than hide that behind three different
-tools, `kcai-workspace` gives them one shared shape, so a job can mix them and
+tools, `kcai-data-sampling` gives them one shared shape, so a job can mix them and
 so you always know which kind you got.
 
 **Nothing is hardwired.** Transformations, data loaders, and models are all
@@ -78,8 +78,8 @@ Four commands, about five minutes, and a small public sample dataset
 downloaded for you:
 
 ```sh
-git clone git@github.com:Safenai/kcai-workspace.git
-cd kcai-workspace
+git clone git@github.com:Safenai/kcai-data-sampling.git
+cd kcai-data-sampling
 uv sync
 uv run kcai-data-sampling version
 uv run scripts/fetch_comma10k_sample.py
