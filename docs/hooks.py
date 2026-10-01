@@ -36,6 +36,36 @@ def _write_if_changed(dst: Path, content: str):
     dst.write_text(content)
 
 
+def _rebase_docs_links(content: str) -> str:
+    """Rebase ``docs/``-prefixed links so they resolve from inside the site.
+
+    A document at the repo root may link to ``docs/quickstart.md`` — correct on
+    GitHub and GitLab, where the reader stays at the root. Once the document is
+    copied into ``docs/`` that same link points one directory too deep, so strip
+    the prefix and let it resolve against the site root instead.
+
+    Args:
+        content: Markdown of a document that lives at the repo root.
+
+    Returns:
+        The markdown with its ``docs/``-prefixed relative links rebased.
+    """
+    content = content.replace("./docs/", "./")
+    return content.replace("(docs/", "(")
+
+
+def _copy_root_doc(src: Path, dst: Path):
+    """Copy a repo-root markdown document into ``docs/``, rebasing its links.
+
+    Args:
+        src: Source file at the repo root.
+        dst: Destination path inside ``docs/``.
+    """
+    if not src.exists():
+        return
+    _write_if_changed(dst, _rebase_docs_links(src.read_text()))
+
+
 # ---------------------------------------------------------------------------
 # docs/index.md pipeline  (single pass — no ordering dependencies)
 # ---------------------------------------------------------------------------
@@ -46,8 +76,7 @@ def _build_index():
     content = Path("README.md").read_text()
 
     # Rewrite relative paths that point into docs/ for GitHub/GitLab
-    content = content.replace("./docs/", "./")
-    content = content.replace("(docs/", "(")
+    content = _rebase_docs_links(content)
     content = content.replace('src="docs/static/', 'src="./static/')
     content = content.replace(
         "(packages/",
@@ -110,16 +139,12 @@ def _build_examples():
 
 def copy_changelog():
     """Copy CHANGELOG.md from repo root to docs/."""
-    src = Path("CHANGELOG.md")
-    if src.exists():
-        _copy_if_changed(src, Path("docs/CHANGELOG.md"))
+    _copy_root_doc(Path("CHANGELOG.md"), Path("docs/CHANGELOG.md"))
 
 
 def copy_release_notes():
     """Copy RELEASE.md from repo root to docs/."""
-    src = Path("RELEASE.md")
-    if src.exists():
-        _copy_if_changed(src, Path("docs/RELEASE.md"))
+    _copy_root_doc(Path("RELEASE.md"), Path("docs/RELEASE.md"))
 
 
 def copy_package_readmes():

@@ -82,6 +82,72 @@ def test_packaging(s: Session) -> None:
 
 
 @session(
+    uv_groups=["test"],
+)
+def test_packaging_testpypi(s: Session) -> None:
+    """Install each scenario's package subset from test.pypi.org and smoke it.
+
+    Tests the artifact you actually uploaded, extras metadata included. Manual
+    rather than CI: Test PyPI propagates a new file over a few minutes, and the
+    model-backed scenarios pull a few hundred MB of wheels.
+    """
+    s.env["KCAI_TEST_SEED"] = "42"
+    s.run(
+        "pytest",
+        "tests/packaging",
+        "-m",
+        "packaging_index",
+        "--index-source",
+        "testpypi",
+        # addopts pins 300s; installing CPU torch on a cold cache outruns that.
+        "--timeout=1800",
+        *s.posargs,
+    )
+
+
+@session(
+    uv_groups=["test"],
+)
+def test_packaging_pypi(s: Session) -> None:
+    """Install each scenario's package subset from pypi.org and smoke it."""
+    s.env["KCAI_TEST_SEED"] = "42"
+    s.run(
+        "pytest",
+        "tests/packaging",
+        "-m",
+        "packaging_index",
+        "--index-source",
+        "pypi",
+        "--timeout=1800",
+        *s.posargs,
+    )
+
+
+@session(
+    uv_groups=["test"],
+)
+def test_packaging_notebook(s: Session) -> None:
+    """Run the real walkthrough notebook against an index install (slow, opt-in).
+
+    Installs ``kcai-data-sampling[notebook]`` from test.pypi.org into a fresh venv and
+    executes ``examples/notebooks/walkthrough.ipynb`` in it: the procedural pipeline,
+    LaMa inpainting and FGSM against the user's own target model, weights and all.
+    Expect several hundred megabytes of downloads and minutes of CPU inference.
+    """
+    s.env["KCAI_TEST_SEED"] = "42"
+    s.run(
+        "pytest",
+        "tests/packaging",
+        "-m",
+        "packaging_notebook",
+        "--index-source",
+        "testpypi",
+        "--timeout=3600",
+        *s.posargs,
+    )
+
+
+@session(
     uv_groups=["test-lama"],
 )
 def test_lama(s: Session) -> None:
@@ -219,6 +285,16 @@ def docs_serve(s: Session) -> None:
 def docs_github_pages(s: Session) -> None:
     """Deploy mkdocs site to GitHub Pages via gh-deploy."""
     s.run("mkdocs", "gh-deploy", "--force", env=doc_env)
+
+
+@session(uv_groups=["docs"])
+def docs_build(s: Session) -> None:
+    """Build the documentation site with warnings as errors.
+
+    Catches broken internal links and missing nav entries before they reach the
+    deployed site; pair it with `nox -s docs_serve` for a local preview.
+    """
+    s.run("mkdocs", "build", "--strict", env=doc_env)
 
 
 # Install only main dependencies for the license report.

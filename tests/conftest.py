@@ -26,6 +26,25 @@ from tests.fixtures.registries import cached_big_lama, registry_snapshot, stub_t
 from tests.utils.seeds import get_test_seed
 
 
+def pytest_addoption(parser: pytest.Parser) -> None:
+    """Register the command-line options the packaging tests are configured with.
+
+    Lives here rather than in ``tests/packaging/conftest.py`` because that file is
+    only an *initial* conftest when pytest is invoked with ``tests/packaging`` as
+    the exact argpath; this one is an ancestor of every argpath in use.
+    """
+    parser.addoption(
+        "--index-source",
+        choices=("testpypi", "pypi"),
+        default=None,
+        help=(
+            "Which package index the published-install tests install from. "
+            "Set it via 'nox -s test_packaging_testpypi' or "
+            "'nox -s test_packaging_pypi' rather than by hand."
+        ),
+    )
+
+
 @pytest.fixture(scope="session")
 def test_seed() -> int:
     """Return the single seed that drives every fixture in the run.
