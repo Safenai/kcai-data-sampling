@@ -12,33 +12,17 @@ from pathlib import Path
 import pytest
 
 from tests.fixtures.packaging_fixtures import (
-    LAMA_INDEX,
     MODULES,
     SCENARIOS,
     SMOKE_SCRIPTS,
-    TORCH_PIN,
     create_venv,
+    extra_requirements_for,
     install_wheels,
     probe_module,
     run_script,
 )
 
 pytestmark = pytest.mark.packaging
-
-
-def _extra_requirements(scenario: str) -> list[str] | None:
-    """The ``all+lama`` scenario's extra install args: CPU torch from its index.
-
-    Args:
-        scenario: One of ``SCENARIOS``.
-
-    Returns:
-        ``["--extra-index-url", LAMA_INDEX, TORCH_PIN]`` for ``all+lama``,
-        else ``None``.
-    """
-    if scenario == "all+lama":
-        return ["--extra-index-url", LAMA_INDEX, TORCH_PIN]
-    return None
 
 
 @pytest.mark.parametrize("scenario", sorted(SCENARIOS))
@@ -55,7 +39,7 @@ def test_scenario_installs_independently_and_runs_its_smoke(
     the PyTorch CPU index (the full opt-in recipe).
     """
     venv = create_venv(tmp_path / "venv")
-    installed = install_wheels(venv, built_wheels_dir, scenario, extra_requirements=_extra_requirements(scenario))
+    installed = install_wheels(venv, built_wheels_dir, scenario, extra_requirements=extra_requirements_for(scenario))
     assert len(installed) == len(SCENARIOS[scenario])
 
     for key, module in MODULES.items():

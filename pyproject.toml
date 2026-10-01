@@ -229,7 +229,7 @@ addopts = [
     "--timeout=300",
     "--basetemp=tmp",
     "-m",
-    "not packaging and not fgsm and not lama",
+    "not packaging and not packaging_index and not packaging_notebook and not fgsm and not lama",
 ]
 xfail_strict = true
 filterwarnings = [
@@ -240,6 +240,8 @@ markers = [
     "e2e: Full job runs driven through the CLI as a user would (tests/e2e/)",
     "slow: Marks potentially slow tests (deselect with '-m \"not slow\"')",
     "packaging: Marks package-isolation tests (deselect with '-m \"not packaging\"')",
+    "packaging_index: Marks published-index install tests (run via 'nox -s test_packaging_testpypi')",
+    "packaging_notebook: Marks the walkthrough-notebook run (run via 'nox -s test_packaging_notebook')",
     "fgsm: Opt-in adversarial surface (kcai-data-sampling-fgsm, importorskip-gated)",
     "lama: Opt-in generative surface (kcai-data-sampling-lama, importorskip-gated)",
 ]

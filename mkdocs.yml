@@ -134,6 +134,8 @@ nav:
   - Home: index.md
   - Quick Start: quickstart.md
   - Terminology: terminology.md
+  - Packaging Tests: packaging-tests.md
+  - Developer Guide: developer.md
   - Examples:
     - Walkthrough Notebook: examples/notebooks/walkthrough.ipynb
   - Packages:
