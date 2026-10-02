@@ -33,6 +33,11 @@ jobs:
     environment: release
     permissions:
       id-token: write
+    # Named here, once, because the tolerant wrapper defaults to Test PyPI: a step
+    # that omits the URL publishes production artifacts to the throwaway index
+    # and still exits green. One definition keeps the six steps from disagreeing.
+    env:
+      PUBLISH_URL: https://upload.pypi.org/legacy/
     steps:
       - uses: actions/checkout@v4
         with:
@@ -67,19 +72,19 @@ jobs:
           uv build packages/kcai-data-sampling
 
       - name: Publish kcai-data-sampling-core
-        run: uv publish dist/kcai_data_sampling_core-*
+        run: bash .github/scripts/publish-tolerantly.sh 'dist/kcai_data_sampling_core-*' "$PUBLISH_URL"
 
       - name: Publish kcai-data-sampling-images
-        run: uv publish dist/kcai_data_sampling_images-*
+        run: bash .github/scripts/publish-tolerantly.sh 'dist/kcai_data_sampling_images-*' "$PUBLISH_URL"
 
       - name: Publish kcai-data-sampling-lama
-        run: uv publish dist/kcai_data_sampling_lama-*
+        run: bash .github/scripts/publish-tolerantly.sh 'dist/kcai_data_sampling_lama-*' "$PUBLISH_URL"
 
       - name: Publish kcai-data-sampling-fgsm
-        run: uv publish dist/kcai_data_sampling_fgsm-*
+        run: bash .github/scripts/publish-tolerantly.sh 'dist/kcai_data_sampling_fgsm-*' "$PUBLISH_URL"
 
       - name: Publish kcai-data-sampling-job
-        run: uv publish dist/kcai_data_sampling_job-*
+        run: bash .github/scripts/publish-tolerantly.sh 'dist/kcai_data_sampling_job-*' "$PUBLISH_URL"
 
       - name: Publish kcai-data-sampling
-        run: uv publish dist/kcai_data_sampling-*
+        run: bash .github/scripts/publish-tolerantly.sh 'dist/kcai_data_sampling-*' "$PUBLISH_URL"
