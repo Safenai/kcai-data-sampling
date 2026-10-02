@@ -1,0 +1,251 @@
+# Workspace meta-package that ties together the kcai data-sampling packages
+# and the umbrella CLI. No code lives at the root: it only declares the UV
+# workspace, how the members resolve each other, the dev-tool dependency
+# groups (dqm-ml mirror) and shared tool config (ruff / mypy / cspell /
+# pytest) below.
+[project]
+name = "kcai-workspace"
+dynamic = ["version"]
+license ="Apache-2.0"
+description = "Workspace for kcai data-sampling: generate samples from input samples"
+requires-python = ">=3.11"
+dependencies = [
+    "kcai-data-sampling>=0.0.1",
+    "kcai-data-sampling-core>=0.0.1",
+    "kcai-data-sampling-images>=0.0.1",
+    "kcai-data-sampling-job>=0.0.1",
+    "pandas>=3.0.6",
+    "python-pptx",
+]
+
+[build-system]
+requires = ["setuptools>=80", "setuptools-scm[simple]>=8"]
+build-backend = "setuptools.build_meta"
+
+# Root meta package uses the src-layout convention (mirrors dqm-ml-workspace).
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# UV workspace: every package under packages/ is a member, resolved locally.
+[tool.uv.workspace]
+members = ["packages/*"]
+
+# Local packages take precedence over any published versions.
+[tool.uv.sources]
+kcai-data-sampling-core = { workspace = true }
+kcai-data-sampling-fgsm = { workspace = true }
+kcai-data-sampling-images = { workspace = true }
+kcai-data-sampling-job = { workspace = true }
+kcai-data-sampling-lama = { workspace = true }
+kcai-data-sampling = { workspace = true }
+# torch resolves from the CPU index only (mirrors dqm-ml-workspace); the root
+# never pulls it — only the opt-in -lama member depends on torch.
+torch = { index = "pytorch" }
+
+# CPU-only torch wheels for the opt-in -lama member (dqm-ml-workspace
+# pattern). explicit: the index serves only packages routed to it by
+# `[tool.uv.sources]` (torch), so the pytorch mirror's stale setuptools copy
+# never shadows PyPI on a bare sync.
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv]
+default-groups = ["nox", "lint", "type_check"]
+
+# Dependency groups, installed by uv/nox when running the corresponding task
+# (mirrors dqm-ml-workspace; the association with a session lives in noxfile.py).
+[dependency-groups]
+
+# Session runner for the dev tasks defined in noxfile.py.
+nox = [
+    "nox-uv",
+]
+
+# Test suite: pytest plus reporting plugins. No pytest-randomly — the suite
+# runs in a fixed order.
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-html",
+    "pytest-timeout",
+    "pytest-sugar",
+]
+
+# opt-in surface: the same test deps as `test`, plus the -lama member. torch
+# resolves from the CPU index via `[tool.uv.sources]`; the `test-lama` nox
+# session runs the opt-in (torch-gated) tests for real. The default `test`
+# group stays torch-free (Q2 pin).
+test-lama = [
+    "kcai-data-sampling-lama",
+    { include-group = "test" },
+]
+
+# opt-in adversarial surface: the -fgsm member (numpy-only, no torch), pulled
+# by `UV_INDEX= uv sync --group fgsm`. A later surface extends the group into
+# the fgsm test suite; the default env gains nothing from it (Q2 pin).
+fgsm = [
+    "kcai-data-sampling-fgsm",
+]
+
+# opt-in adversarial test surface: the same test deps as `test`, plus the -fgsm
+# member (numpy-only, no torch — no index, no download). The `test-fgsm` nox
+# session runs the opt-in (importorskip-gated) adversarial tests for real. The
+# default `test` group stays fgsm-free (Q1 pin).
+test-fgsm = [
+    "kcai-data-sampling-fgsm",
+    { include-group = "test" },
+]
+
+# Lint and auto-format Python code. Backs the `lint` and `fmt` nox sessions.
+lint = [
+    "ruff",
+]
+
+# Static type checking. Backs the `type_check` nox session.
+type_check = [
+    "mypy",
+]
+
+# Spell-check source and documentation files. Backs the `spell` nox session.
+spell = [
+    "cspell",
+]
+
+# Report third-party package licenses. Backs the `licenses` nox session.
+licenses = [
+    "pip-licenses-cli",
+]
+
+# Measure cyclomatic complexity. Backs the `complexity` / `test_complexity`
+# nox sessions.
+complexity = [
+    "complexipy>=5.5.0",
+]
+
+# Documentation tooling for the mkdocs site. Backs the `docs_github_pages`
+# nox session; the site configuration itself (mkdocs.yml) lands in a later
+# task, so the session is declared but stays red until then.
+docs = [
+    "markdown-callouts",
+    "mkdocs-api-autonav",
+    "mkdocs-htmlproofer-plugin",
+    # Floor 0.25: drops the internal `mkdocs.tests` import (removed from the
+    # mkdocs 1.6 wheel), which broke the pages build on 0.24.x. Ceiling 0.26:
+    # avoids the abs_src_path=None bug with api-autonav.
+    "mkdocs-jupyter>=0.25,<0.26",
+    "mkdocs-material",
+    "mkdocs-mermaid2-plugin",
+    "mkdocs-simple-hooks",
+    "mkdocstrings[python]",
+    "pymdown-extensions",
+    "kcai-data-sampling-fgsm",
+    "kcai-data-sampling-lama",
+]
+
+# ruff config (dqm-ml mirror): 120 columns, full ruleset from the upstream
+# workspace. `scripts/`, `examples/` and the design/notes folders stay out of
+# scope for now (see ideas/nox_sessions.md D3).
+[tool.ruff]
+line-length = 120
+src = ["src", "packages", "tests"]
+extend-exclude = ["examples/", "scripts/", "ideas/", "deck/", "assets/", "*_version_.py"]
+
+[tool.ruff.lint]
+select = [
+    "F", # pyflakes
+    "E", # pycodestyle
+    "I", # isort
+    "N", # pep8-naming
+    "UP", # pyupgrade
+    "RUF", # ruff
+    "B", # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "ISC", # flake8-implicit-str-concat
+    "PIE", # flake8-pie
+    "PT", # flake-pytest-style
+    "PTH", # flake8-use-pathlib
+    "SIM", # flake8-simplify
+    "TID", # flake8-tidy-imports
+]
+extend-ignore = [
+    "RUF005",  # Allow `list + [item]` over `[*list, item]` when clearer
+    "RUF100",  # Permit unused noqa directives during development
+    "RUF012",  # Allow mutable default values (e.g. `x=[]`) where practical
+    "I001",    # Handled by formatter; skip lint-level sorting check
+]
+unfixable = [
+    # Disable removing unused imports by default and only enable within nox
+    # (`fmt`) so editors don't delete unused imports mid-edit.
+    "F401",
+]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+split-on-trailing-comma = false
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+# mypy config (dqm-ml mirror): strict with extra error codes. No per-module
+# overrides pre-declared; any needed for third-party untyped packages in the
+# six members are added when the first strict run reports (ideas/nox_sessions.md M5).
+[tool.mypy]
+ignore_missing_imports = true
+strict = true
+enable_error_code = ["deprecated", "exhaustive-match", "explicit-override"]
+exclude = 'build'
+
+# Spell-check all tracked files in the repository.
+[tool.cspell]
+files = ["**/*"]
+
+# Measure branch coverage in addition to line coverage. Reports land in
+# docs/reports/ (uploaded to the CI site pages job).
+[tool.coverage.run]
+branch = true
+
+# Patterns to exclude from coverage reporting (e.g. unreachable branches,
+# TYPE_CHECKING blocks).
+[tool.coverage.report]
+exclude_also = [
+    "case _ as unreachable",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@abstractmethod",
+]
+
+# pytest config: strict, warnings-as-errors, a global per-test timeout, the
+# HTML report, and our own basetemp to avoid the
+# /tmp disk quota. Suppressions grow here as third-party warnings fire.
+[tool.pytest.ini_options]
+addopts = [
+    "--strict-config",
+    "--strict-markers",
+    "--html=pytest_report.html",
+    "-vvv",
+    "-s",
+    "--timeout=300",
+    "--basetemp=tmp",
+    "-m",
+    "not packaging and not packaging_index and not packaging_notebook and not fgsm and not lama",
+]
+xfail_strict = true
+filterwarnings = [
+    "error",
+    "ignore::SyntaxWarning",
+]
+markers = [
+    "e2e: Full job runs driven through the CLI as a user would (tests/e2e/)",
+    "slow: Marks potentially slow tests (deselect with '-m \"not slow\"')",
+    "packaging: Marks package-isolation tests (deselect with '-m \"not packaging\"')",
+    "packaging_index: Marks published-index install tests (run via 'nox -s test_packaging_testpypi')",
+    "packaging_notebook: Marks the walkthrough-notebook run (run via 'nox -s test_packaging_notebook')",
+    "fgsm: Opt-in adversarial surface (kcai-data-sampling-fgsm, importorskip-gated)",
+    "lama: Opt-in generative surface (kcai-data-sampling-lama, importorskip-gated)",
+]
+
+[tool.setuptools_scm]
+version_file = "src/kcai_workspace/_version_.py"
+fallback_version = "0.0.1"

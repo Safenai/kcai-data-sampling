@@ -1,0 +1,4 @@
+numpy>=1.24
+pyarrow>=14
+pydantic>=2.5
+typing-extensions>=4.7

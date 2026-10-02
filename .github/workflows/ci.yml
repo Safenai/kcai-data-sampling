@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+    - main
+    - dev
+  workflow_dispatch:
+
+# Cancel in-progress runs when a newer commit is pushed to the same PR.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        nox-session: ["lint", "spell", "type_check", "complexity", "test_complexity"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Install hunspell library
+        run: sudo apt-get update && sudo apt-get install -y libhunspell-dev
+
+      - name: Run nox session
+        run: uv run --frozen nox -s ${{ matrix.nox-session }}
+
+  compatibility:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Compatibility with Nox
+        run: TQDM_DISABLE=1 uv run --frozen nox -s compatibility-${{ matrix.python-version }}
+
+  test-coverage:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Restore lama weights from cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache
+          key: kcai-test-lama-weights
+
+      - name: Full-suite coverage with Nox
+        run: TQDM_DISABLE=1 uv run --frozen nox -s test_coverage
+
+      - name: Update cache containing lama weights
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .cache
+          key: kcai-test-lama-weights
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pytest-coverage
+          path: docs/reports/htmlcov
+          retention-days: 1
+          overwrite: true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pytest-coverage-json
+          path: docs/reports/coverage.json
+          retention-days: 1
+          overwrite: true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results
+          path: docs/reports/pytest
+          retention-days: 1
+          overwrite: true
+
+  test-packaging:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Packaging tests with Nox
+        run: TQDM_DISABLE=1 uv run --frozen nox -s test_packaging
+
+  pages:
+    runs-on: ubuntu-24.04
+    needs: [test-coverage]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Configure Git User
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: pytest-results
+          path: docs/reports/pytest
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: pytest-coverage
+          path: docs/reports/htmlcov
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: pytest-coverage-json
+          path: docs/reports
+
+      - name: Publish Docs
+        run: uv run --frozen nox -s docs_github_pages

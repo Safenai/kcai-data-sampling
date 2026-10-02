@@ -1,0 +1,1 @@
+"""E2E fixtures: config builders and output-tree path helpers."""

@@ -1,0 +1,110 @@
+name: Publish (Test PyPI)
+
+on:
+  push:
+    tags:
+      - '[0-9]*'
+
+jobs:
+  check-dev:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      is_on_dev: ${{ steps.check.outputs.is_on_dev }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check if tag commit is on dev
+        id: check
+        run: |
+          git fetch origin +refs/heads/dev:refs/remotes/origin/dev --depth=1
+          if git merge-base --is-ancestor "${{ github.sha }}" origin/dev; then
+            echo "is_on_dev=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_on_dev=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  test-packaging:
+    needs: check-dev
+    if: needs.check-dev.outputs.is_on_dev == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: ./.github/actions/setup
+
+      - name: Validate tag format
+        run: |
+          TAG="${{ github.ref_name }}"
+          if ! echo "$TAG" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-?(rc|a)[0-9]+)?$'; then
+            echo "Invalid tag format: $TAG"
+            exit 1
+          fi
+
+      - name: Run packaging tests
+        run: TQDM_DISABLE=1 uv run --frozen nox -s test_packaging
+
+  publish-test-pypi:
+    needs: [check-dev, test-packaging]
+    if: needs.check-dev.outputs.is_on_dev == 'true'
+    runs-on: ubuntu-24.04
+    environment: test-pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: ./.github/actions/setup
+
+      - name: Validate tag format
+        run: |
+          TAG="${{ github.ref_name }}"
+          if ! echo "$TAG" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-?(rc|a)[0-9]+)?$'; then
+            echo "Invalid tag format: $TAG"
+            echo "Allowed: X.Y.Z, X.Y.Z[-](rc|a)D"
+            exit 1
+          fi
+
+      - name: Derive publishable version from tag
+        run: |
+          TAG="${{ github.ref_name }}"
+          VERSION=$(printf '%s' "$TAG" | sed 's/-//g')
+          echo "Pretend version: $VERSION (from tag $TAG)"
+          echo "SETUPTOOLS_SCM_PRETEND_VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Build packages
+        run: |
+          uv build packages/kcai-data-sampling-core
+          uv build packages/kcai-data-sampling-images
+          uv build packages/kcai-data-sampling-lama
+          uv build packages/kcai-data-sampling-fgsm
+          uv build packages/kcai-data-sampling-job
+          uv build packages/kcai-data-sampling
+
+      - name: Publish kcai-data-sampling-core
+        run: bash .github/scripts/publish-tolerantly.sh 'dist/kcai_data_sampling_core-*'
+
+      - name: Publish kcai-data-sampling-images
+        run: bash .github/scripts/publish-tolerantly.sh 'dist/kcai_data_sampling_images-*'
+
+      - name: Publish kcai-data-sampling-lama
+        run: bash .github/scripts/publish-tolerantly.sh 'dist/kcai_data_sampling_lama-*'
+
+      - name: Publish kcai-data-sampling-fgsm
+        run: bash .github/scripts/publish-tolerantly.sh 'dist/kcai_data_sampling_fgsm-*'
+
+      - name: Publish kcai-data-sampling-job
+        run: bash .github/scripts/publish-tolerantly.sh 'dist/kcai_data_sampling_job-*'
+
+      - name: Publish kcai-data-sampling
+        run: bash .github/scripts/publish-tolerantly.sh 'dist/kcai_data_sampling-*'
