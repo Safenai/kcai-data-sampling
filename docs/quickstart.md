@@ -21,15 +21,29 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 Then install the package:
 
 ```bash
-pip install kcai-data-sampling
+pip install "kcai-data-sampling[job,images]"
 ```
 
-The default install is torch-free: it brings the core pipeline, the CLI and
-the image transformations, but no model heavyweight. Verify the install:
+The umbrella's base install is the core library alone, and the surfaces you
+actually use arrive as extras. `[job]` brings the `process` command and the
+parquet dataloader, `[images]` brings the image transformations — between them,
+everything the first job below needs. Neither pulls a model framework, so the
+result is torch-free.
+
+Verify the install:
 
 ```bash
 kcai-data-sampling version
+kcai-data-sampling list
 ```
+
+`version` and `list` work on any install; `process` exists only once `-job` is
+there. Without it, `version` prints `job: None` and `list` shows empty
+categories rather than failing.
+
+The extras are independent, so compose what you need: `[job]` alone for the
+CLI, `[images]` alone if you are driving the library from Python, or `[all]` for
+every surface plus Jupyter.
 
 ## Get the examples
 
@@ -93,23 +107,22 @@ it works from any launch directory.
 
 ## Optional surfaces (opt-in)
 
-Two transformations need an extra install; the default environment stays free
-of their dependencies:
+Two transformations need an extra install; the environment above stays free
+of their dependencies. Each has its own umbrella extra:
 
-- **Generative inpainting** (`kcai-data-sampling-lama`, pulls CPU torch,
-  weights fetched into `.cache/` on first use):
+- **Generative inpainting** (`[lama]`, which pulls CPU torch, weights fetched
+  into `.cache/` on first use):
 
   ```bash
-  pip install kcai-data-sampling-lama
+  pip install "kcai-data-sampling[lama]"
   kcai-data-sampling process -p examples/config/walkthrough-generative.yaml
   ```
 
-- **Adversarial FGSM** (`kcai-data-sampling-fgsm`, numpy-only in the package;
-  the *target model* is your own source with its own weights — the job never
-  ships it):
+- **Adversarial FGSM** (`[fgsm]`, numpy-only in the package; the *target model*
+  is your own source with its own weights — the job never ships it):
 
   ```bash
-  pip install kcai-data-sampling-fgsm
+  pip install "kcai-data-sampling[fgsm]"
   kcai-data-sampling process -p examples/config/walkthrough-adversarial.yaml
   ```
 
@@ -117,12 +130,17 @@ of their dependencies:
   (`examples/adapters/yolo_target.py`) and expects your `yolov8n.pt` weights,
   resolved via `ultralytics` on the machine running the job.
 
-To get everything the walkthrough notebook needs in one go, install the
-`notebook` extra instead — it pulls both opt-in packages plus Jupyter:
+To get everything the walkthrough notebook needs in one go, install the `all`
+extra — it is the union of `notebooks`, `job`, `images`, `fgsm` and `lama`:
 
 ```bash
-pip install "kcai-data-sampling[notebook]"
+pip install "kcai-data-sampling[all]"
 ```
+
+Want just the notebook tooling, with no model surface? `[notebooks]` installs
+pandas, `python-pptx`, ipykernel and ultralytics, and deliberately does *not*
+pull `-fgsm` or `-lama`. Note it does still resolve torch, because ultralytics
+depends on it itself.
 
 ## Where to go next
 

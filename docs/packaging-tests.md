@@ -19,7 +19,7 @@ once the release goes out.
 | `kcai-data-sampling-job` | The YAML pipeline and its CLI | pyarrow, pyyaml |
 | `kcai-data-sampling-fgsm` | FGSM adversarial attack | numpy only — **no torch** |
 | `kcai-data-sampling-lama` | LaMa inpainting | torch, but only on first checkpoint load |
-| `kcai-data-sampling` | Umbrella CLI plus the `notebook` extra | pulls the others by extra |
+| `kcai-data-sampling` | Umbrella CLI; its extras compose the surfaces | core only, then by extra |
 
 Two invariants follow, and both are asserted rather than assumed:
 
@@ -39,7 +39,7 @@ gets caught.
 | `nox -s test_packaging` | locally built wheels | `packaging` | Before every PR — tests your changes |
 | `nox -s test_packaging_testpypi` | test.pypi.org | `packaging_index` | After publishing an rc — tests the uploaded artifact |
 | `nox -s test_packaging_pypi` | pypi.org | `packaging_index` | After a real release — tests what users get |
-| `nox -s test_packaging_notebook` | test.pypi.org | `packaging_notebook` | When the extras or the walkthrough change |
+| `nox -s test_packaging_notebook` | test.pypi.org | `packaging_notebook` | When the `all` extra or the walkthrough change |
 
 None of these run in the default suite (`nox -s lint spell test type_check`), and
 `nox -s test` never even collects them.
@@ -79,7 +79,8 @@ KCAI_PACKAGING_VERSION=0.1.0rc1 nox -s test_packaging_testpypi
 
 ## Scenarios
 
-The first six run against every source. The seventh and the notebook are index-only.
+The first six run against every source. The six extras scenarios and the notebook
+walkthrough are index-only.
 
 | Scenario | Installs | Smoke script | What it proves |
 |----------|----------|--------------|----------------|
@@ -89,20 +90,42 @@ The first six run against every source. The seventh and the notebook are index-o
 | `all` | `-core`, `-images`, `-job`, umbrella | `smoke_all.py` | Umbrella `version`/`list`/`process` dispatch works |
 | `all+lama` | the four above + `-lama` + CPU torch | `smoke_lama.py` | The model plugin loads and inpaints on a stub tool, still without importing torch |
 | `all+fgsm` | the four above + `-fgsm` | `smoke_fgsm.py` | The attack is importable and numpy-only — no torch, no ultralytics |
-| `all+notebook` | umbrella`[notebook]` | `smoke_notebook.py` | The extra's third-party deps installed and every plugin is discoverable from wheel metadata |
-| `notebook-walkthrough` | umbrella`[notebook]` + nbclient | `execute_walkthrough.py` | The real walkthrough notebook runs end to end |
+| `umbrella+notebooks` | umbrella`[notebooks]` | `smoke_extras.py` | The notebook stack installed, and **no** `-fgsm`/`-lama` dragged in |
+| `umbrella+job` | umbrella`[job]` | `smoke_extras.py` | `-job` pulled by the extra alone; `process` appears |
+| `umbrella+images` | umbrella`[images]` | `smoke_extras.py` | `-images` pulled by the extra alone; no sibling leaks |
+| `umbrella+fgsm` | umbrella`[fgsm]` | `smoke_extras.py` | `-fgsm` pulled by the extra alone, still without torch |
+| `umbrella+lama` | umbrella`[lama]` | `smoke_extras.py` | `-lama` plus CPU torch; its plugins register from wheel metadata |
+| `umbrella+all` | umbrella`[all]` | `smoke_extras.py` | The union extra pulls every member |
+| `notebook-walkthrough` | umbrella`[all]` + nbclient | `execute_walkthrough.py` | The real walkthrough notebook runs end to end |
 
-`all+lama` and `all+notebook` additionally pull `torch` from the PyTorch CPU wheel
-index, pinned to `torch==2.14.0+cpu`. Plain `torch` on Linux would otherwise drag in the
-multi-gigabyte CUDA build.
+### Extras scenarios
 
-`all+notebook` installs **only** the umbrella with the extra, named rather than pointed
-at wheels. That is deliberate: it is the published `[notebook]` extra's own dependency
-metadata being resolved, not a locally assembled set. Its smoke script probes the extra's
-distributions with `importlib.util.find_spec` (top-level names only, so `ultralytics` is
-never actually imported and never pulls in `cv2`) and resolves `lama_inpaint`, `inpaint`,
-`fgsm`, `horizontal_flip`, `crop_resize`, `parquet`, `images` out of the *installed*
-wheel entry points — the same lookup a YAML `type: lama_inpaint` performs.
+Each extras scenario installs **one** spec — `kcai-data-sampling[<extra>]` — and nothing
+else. That is the point: the siblings are never named, so the extra's own published
+dependency metadata is the only thing that can pull them in. What arrives is asserted on
+both sides. `smoke_extras.py` reads `importlib.metadata` for the *present* distributions
+and the *absent* members without importing anything, so nothing heavy is loaded — notably
+`ultralytics`, whose `cv2` import needs a system OpenGL library these venvs have no reason
+to carry. It then resolves one representative entry point per installed member, which is
+the same lookup a YAML `type: lama_inpaint` performs.
+
+The umbrella's base install is `kcai-data-sampling-core` alone, so `version` and `list`
+always work while `process` appears only once `-job` is installed — with `[job]`, and with
+`[all]`. `smoke_extras.py` asserts that relationship directly: `process` present if and only
+if `-job` is.
+
+`umbrella+notebooks` is the one scenario whose *absent* half is load-bearing. It installs
+pandas, `python-pptx`, ipykernel and ultralytics, and must **not** install `-fgsm` or
+`-lama`; if either ever came back, that is what would catch it. Note it still resolves
+`torch`, because ultralytics declares torch itself — so the absence claim is about the kcai
+members, never about torch.
+
+Four scenarios additionally pull `torch` from the PyTorch CPU wheel index, pinned to
+`torch==2.14.0+cpu`: `all+lama`, `umbrella+lama`, `umbrella+all` and `umbrella+notebooks`.
+Plain `torch` on Linux would otherwise drag in the multi-gigabyte CUDA build — resolving
+`[notebooks]` without the pin selects twelve `nvidia-*` wheels alongside it. The pin only
+takes effect together with `--index-strategy unsafe-best-match`, which the fixture already
+passes.
 
 ## The walkthrough notebook
 
@@ -129,7 +152,7 @@ Two things worth knowing before you run it:
   yourself if you care about disk.
 
 The notebook executor is installed into the test venv only, not added to the published
-`[notebook]` extra: the extra targets notebook authors who already have a working Jupyter
+`[all]` extra: the extra targets notebook authors who already have a working Jupyter
 install, whereas the executor is the runner's own tool. The practical consequence is that
 this test proves the extra is sufficient *except* for an executor.
 
@@ -152,8 +175,10 @@ Both flags are load-bearing, and dropping either one fails the install:
 - `--index-strategy unsafe-best-match` — `uv`'s default `first-index` strategy will not
   fall through to the second index. See the gotcha below; it is not optional.
 
-Add `[notebook]` to the spec for the extras (`'kcai-data-sampling[notebook]==0.1.0rc1'`), or
-swap the Test PyPI index for `https://pypi.org/simple/` to reproduce a release install.
+Add an extra to the spec to reproduce one of the extras scenarios — for example
+`'kcai-data-sampling[all]==0.1.0rc1'`, or `'kcai-data-sampling[job]==0.1.0rc1'` for just the
+`process` command. Swap the Test PyPI index for `https://pypi.org/simple/` to reproduce a
+release install.
 
 Two more things about this recipe. `0.1.0rc1` is simply the version published at the
 time of writing — substitute whatever is current, remembering that a git tag like

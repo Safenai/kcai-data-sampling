@@ -54,6 +54,29 @@ SCENARIOS = {
     "all+fgsm": ("core", "images", "job", "umbrella", "fgsm"),
 }
 
+#: The six extras the umbrella publishes, in ``pyproject.toml`` order.
+EXTRAS = ("notebooks", "job", "images", "fgsm", "lama", "all")
+
+#: Published-index scenarios that install **one** umbrella extra and nothing else
+#: — the spec is only ``kcai-data-sampling[<extra>]``, never the siblings by name,
+#: so the extra's own published dependency metadata is the only thing that can pull
+#: them in. Each value is the module roots the install is expected to yield:
+#: ``umbrella`` and ``core`` always (every member depends on core), plus the members
+#: the extra names. Written out rather than derived from the extra's name, so the
+#: expectation is an independent statement of what the metadata *should* say.
+EXTRAS_SCENARIOS: dict[str, tuple[str, ...]] = {
+    "umbrella+notebooks": ("core", "umbrella"),
+    "umbrella+job": ("core", "job", "umbrella"),
+    "umbrella+images": ("core", "images", "umbrella"),
+    "umbrella+fgsm": ("core", "fgsm", "umbrella"),
+    "umbrella+lama": ("core", "lama", "umbrella"),
+    "umbrella+all": ("core", "fgsm", "images", "job", "lama", "umbrella"),
+}
+
+#: Scenario that installs the umbrella under ``all`` for the walkthrough: the notebook
+#: exercises all three families, so the union extra is what it genuinely needs.
+NOTEBOOK_SCENARIO = "umbrella+all"
+
 SMOKE_SCRIPTS = {
     "core": "smoke_core.py",
     "core+images": "smoke_images.py",
@@ -62,29 +85,29 @@ SMOKE_SCRIPTS = {
     "all+lama": "smoke_lama.py",
     "all+fgsm": "smoke_fgsm.py",
     # Published-index runs only; unreachable from the wheels tests because those
-    # iterate ``SCENARIOS``, which does not contain this key.
-    "all+notebook": "smoke_notebook.py",
+    # iterate ``SCENARIOS``, which does not contain these keys.
+    **dict.fromkeys(EXTRAS_SCENARIOS, "smoke_extras.py"),
 }
 
-#: Scenario that exercises the umbrella distribution's ``notebook`` extra.
-NOTEBOOK_SCENARIO = "all+notebook"
-
-#: The scenarios the published-index runs cover: the six wheel scenarios plus the
-#: notebook extra. Kept separate from ``SCENARIOS`` so ``nox -s test_packaging`` keeps
+#: The scenarios the published-index runs cover: the six wheel scenarios plus one per
+#: extras scenario. Kept separate from ``SCENARIOS`` so ``nox -s test_packaging`` keeps
 #: running exactly its own six.
 PUBLISHED_SCENARIOS = {
     **SCENARIOS,
-    # The notebook extra pulls in the two model-backed members, so all six module
-    # roots must resolve here.
-    NOTEBOOK_SCENARIO: ("core", "images", "job", "umbrella", "fgsm", "lama"),
+    **EXTRAS_SCENARIOS,
 }
 
-#: Extra names to request, keyed by scenario then package key. The notebook scenario
-#: names *only* the umbrella spec with its extra, so the extra's own published
-#: dependency metadata is what actually gets exercised.
+#: Extra names to request, keyed by scenario then package key. The extras scenarios
+#: name *only* the umbrella spec, so nothing but the published extra metadata can pull
+#: a member in.
 PUBLISHED_EXTRAS: dict[str, dict[str, tuple[str, ...]]] = {
-    NOTEBOOK_SCENARIO: {"umbrella": ("notebook",)},
+    **{f"umbrella+{extra}": {"umbrella": (extra,)} for extra in EXTRAS},
 }
+
+#: Scenarios whose resolution includes ``torch``, and so need the PyTorch CPU wheel
+#: index rather than the multi-gigabyte CUDA build plain ``torch`` pulls on Linux.
+#: ``umbrella+notebooks`` qualifies transitively: ``ultralytics`` depends on torch.
+TORCH_SCENARIOS = frozenset({"all+lama", "umbrella+lama", "umbrella+all", "umbrella+notebooks"})
 
 #: Environment variable that pins which published version the index tests install.
 VERSION_ENV_VAR = "KCAI_PACKAGING_VERSION"
@@ -179,9 +202,11 @@ def create_venv(venv_dir: Path) -> Path:
 def extra_requirements_for(scenario: str) -> list[str] | None:
     """The extra ``uv pip install`` arguments a scenario needs beyond its wheels.
 
-    ``all+lama`` and ``all+notebook`` both pull the model-backed ``-lama`` member,
-    which needs CPU torch from the PyTorch wheel index; plain ``torch`` on Linux
-    would otherwise drag in the multi-gigabyte CUDA build.
+    Any scenario resolving ``-lama`` needs CPU torch from the PyTorch wheel index:
+    plain ``torch`` on Linux would otherwise drag in the multi-gigabyte CUDA build.
+    That covers ``all+lama``, ``umbrella+lama``, ``umbrella+all`` and
+    ``umbrella+notebooks`` -- the last because ``ultralytics`` declares ``torch`` as
+    its own dependency, so the notebooks extra pulls it transitively too.
 
     Args:
         scenario: One of ``SCENARIOS`` or ``PUBLISHED_SCENARIOS``.
@@ -189,7 +214,7 @@ def extra_requirements_for(scenario: str) -> list[str] | None:
     Returns:
         The extra arguments, or None when the scenario needs none.
     """
-    if scenario in {"all+lama", "all+notebook"}:
+    if scenario in TORCH_SCENARIOS:
         return ["--index", LAMA_INDEX, TORCH_PIN]
     return None
 
@@ -231,10 +256,15 @@ def install_from_index(
     else:
         raise ValueError(f"unknown index source {index_source!r}")
 
-    extras = PUBLISHED_EXTRAS.get(scenario, {})
+    # The specs to request, not the modules to expect: an extras scenario lists only
+    # the umbrella in ``PUBLISHED_EXTRAS``, so the extra's own published metadata is
+    # the only thing that can pull a member in. A wheel scenario has no extras, so its
+    # whole subset is requested by name.
+    extras = PUBLISHED_EXTRAS.get(scenario)
+    keys = tuple(extras) if extras else PUBLISHED_SCENARIOS[scenario]
     specs = []
-    for key in PUBLISHED_SCENARIOS[scenario]:
-        names = extras.get(key)
+    for key in keys:
+        names = extras.get(key) if extras else None
         spec = f"{PACKAGES[key]}=={version}"
         specs.append(f"{PACKAGES[key]}[{','.join(names)}]=={version}" if names else spec)
 
@@ -324,7 +354,7 @@ def install_specs(venv: Path, specs: list[str], extra_requirements: list[str] | 
     """Install named distributions into a venv, resolved from public PyPI.
 
     For test-only tooling that is not part of any kcai extra -- the notebook
-    executor, for instance, which the harness needs but the ``notebook`` extra
+    executor, for instance, which the harness needs but the ``all`` extra
     deliberately does not ship.
 
     Args:
@@ -356,7 +386,7 @@ def install_specs(venv: Path, specs: list[str], extra_requirements: list[str] | 
     )
 
 
-def run_script(venv: Path, script: Path, scratch: Path) -> subprocess.CompletedProcess[str]:
+def run_script(venv: Path, script: Path, scratch: Path, *args: str) -> subprocess.CompletedProcess[str]:
     """Run a smoke script inside the venv with a scratch directory.
 
     Args:
@@ -364,13 +394,16 @@ def run_script(venv: Path, script: Path, scratch: Path) -> subprocess.CompletedP
         script: The smoke script path.
         scratch: Writable scratch directory handed to the script (``argv[1]``)
             for any files it needs to produce; never the source tree.
+        *args: Anything after the scratch directory (``argv[2:]``) — ``smoke_extras.py``
+            takes the extra name under test there, since one script serves all six
+            extras scenarios.
 
     Returns:
         The completed subprocess (checked, output captured).
     """
     env = _subprocess_env()
     return subprocess.run(
-        [str(venv / "bin" / "python"), str(script), str(scratch)],
+        [str(venv / "bin" / "python"), str(script), str(scratch), *args],
         env=env,
         check=True,
         capture_output=True,

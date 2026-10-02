@@ -1,9 +1,10 @@
 """The walkthrough notebook, executed against an installed index.
 
 The expensive end of the packaging suite: a fresh venv gets ``kcai-data-sampling`` with
-its ``notebook`` extra from a real index, and the published walkthrough notebook then
+its ``all`` extra from a real index, and the published walkthrough notebook then
 runs in it -- procedural pipeline, LaMa inpainting behind the ``lama_inpaint`` entry
-point, and FGSM against the user's own YOLO adapter.
+point, and FGSM against the user's own YOLO adapter. It needs all three families, so
+the union extra is what it genuinely requires.
 
 Marked ``packaging_notebook`` and *not* ``packaging``, so the wheels-based
 ``nox -s test_packaging`` never collects it. Long by nature (a few hundred MB of wheels,
@@ -14,7 +15,7 @@ Two things are deliberate. The notebook is executed in the repository as-is, so 
 ``examples/config/*.yaml``, ``examples/adapters/yolo_target.py`` and the comma10k sample
 -- every one of which lives under a git-ignored path, so the tree stays clean. And
 nbclient is installed into the venv as test-only tooling rather than added to the
-published ``notebook`` extra, which means this proves the extra is sufficient *except*
+published ``all`` extra, which means this proves the extra is sufficient *except*
 for an executor, a notebook author brings their own.
 """
 
@@ -24,6 +25,7 @@ import subprocess
 import pytest
 
 from tests.fixtures.packaging_fixtures import (
+    NOTEBOOK_SCENARIO,
     WORKSPACE_ROOT,
     create_venv,
     extra_requirements_for,
@@ -72,7 +74,7 @@ def _samples_present() -> bool:
 
 
 def test_walkthrough_notebook_runs_from_an_installed_index(index_source: str, tmp_path: Path) -> None:
-    """Install the notebook extra from an index, then run the walkthrough in it.
+    """Install the ``all`` extra from an index, then run the walkthrough in it.
 
     Args:
         index_source: The index to install from.
@@ -84,9 +86,9 @@ def test_walkthrough_notebook_runs_from_an_installed_index(index_source: str, tm
     install_from_index(
         venv,
         index_source,
-        "all+notebook",
+        NOTEBOOK_SCENARIO,
         version,
-        extra_requirements=extra_requirements_for("all+notebook"),
+        extra_requirements=extra_requirements_for(NOTEBOOK_SCENARIO),
     )
     # The executor is the runner's tool, not the extra's: see the module docstring.
     install_specs(venv, ["nbclient"])

@@ -1343,16 +1343,33 @@ name = "kcai-data-sampling"
 source = { editable = "packages/kcai-data-sampling" }
 dependencies = [
     { name = "kcai-data-sampling-core" },
-    { name = "kcai-data-sampling-images" },
-    { name = "kcai-data-sampling-job" },
-    { name = "pyyaml" },
 ]
 
 [package.optional-dependencies]
-notebook = [
+all = [
     { name = "ipykernel" },
     { name = "kcai-data-sampling-fgsm" },
+    { name = "kcai-data-sampling-images" },
+    { name = "kcai-data-sampling-job" },
     { name = "kcai-data-sampling-lama" },
+    { name = "pandas" },
+    { name = "python-pptx" },
+    { name = "ultralytics" },
+]
+fgsm = [
+    { name = "kcai-data-sampling-fgsm" },
+]
+images = [
+    { name = "kcai-data-sampling-images" },
+]
+job = [
+    { name = "kcai-data-sampling-job" },
+]
+lama = [
+    { name = "kcai-data-sampling-lama" },
+]
+notebooks = [
+    { name = "ipykernel" },
     { name = "pandas" },
     { name = "python-pptx" },
     { name = "ultralytics" },
@@ -1360,18 +1377,18 @@ notebook = [
 
 [package.metadata]
 requires-dist = [
-    { name = "ipykernel", marker = "extra == 'notebook'" },
+    { name = "ipykernel", marker = "extra == 'notebooks'" },
+    { name = "kcai-data-sampling", extras = ["fgsm", "images", "job", "lama", "notebooks"], marker = "extra == 'all'", editable = "packages/kcai-data-sampling" },
     { name = "kcai-data-sampling-core", editable = "packages/kcai-data-sampling-core" },
-    { name = "kcai-data-sampling-fgsm", marker = "extra == 'notebook'", editable = "packages/kcai-data-sampling-fgsm" },
-    { name = "kcai-data-sampling-images", editable = "packages/kcai-data-sampling-images" },
-    { name = "kcai-data-sampling-job", editable = "packages/kcai-data-sampling-job" },
-    { name = "kcai-data-sampling-lama", marker = "extra == 'notebook'", editable = "packages/kcai-data-sampling-lama" },
-    { name = "pandas", marker = "extra == 'notebook'", specifier = ">=3.0.6" },
-    { name = "python-pptx", marker = "extra == 'notebook'" },
-    { name = "pyyaml" },
-    { name = "ultralytics", marker = "extra == 'notebook'" },
+    { name = "kcai-data-sampling-fgsm", marker = "extra == 'fgsm'", editable = "packages/kcai-data-sampling-fgsm" },
+    { name = "kcai-data-sampling-images", marker = "extra == 'images'", editable = "packages/kcai-data-sampling-images" },
+    { name = "kcai-data-sampling-job", marker = "extra == 'job'", editable = "packages/kcai-data-sampling-job" },
+    { name = "kcai-data-sampling-lama", marker = "extra == 'lama'", editable = "packages/kcai-data-sampling-lama" },
+    { name = "pandas", marker = "extra == 'notebooks'", specifier = ">=3.0.6" },
+    { name = "python-pptx", marker = "extra == 'notebooks'" },
+    { name = "ultralytics", marker = "extra == 'notebooks'" },
 ]
-provides-extras = ["notebook"]
+provides-extras = ["notebooks", "job", "images", "fgsm", "lama", "all"]
 
 [[package]]
 name = "kcai-data-sampling-core"
