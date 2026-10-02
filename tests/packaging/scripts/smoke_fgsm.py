@@ -8,14 +8,24 @@ the other opt-in packages, the target model is the user's: this venv proves
 the wheel itself never pulls a model backend in.
 """
 
+import contextlib
+import io
 import sys
 
 import numpy as np
 
 
 def main() -> int:
+    # `version` resolves this member: it is installed here, so it must not read
+    # as absent the way it does in the fgsm-free `all` scenario.
+    from kcai_data_sampling.dependency import display_version
     from kcai_data_sampling_fgsm.api.transformations.fgsm import Fgsm
     from kcai_data_sampling_fgsm.transformations.fgsm import fgsm_step
+
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        display_version()
+    assert "fgsm: None" not in out.getvalue()
 
     # The opt-in surface never imports torch (or a YOLO backend) at import time.
     assert "torch" not in sys.modules

@@ -110,11 +110,23 @@ it works from any launch directory.
 Two transformations need an extra install; the environment above stays free
 of their dependencies. Each has its own umbrella extra:
 
-- **Generative inpainting** (`[lama]`, which pulls CPU torch, weights fetched
-  into `.cache/` on first use):
+- **Generative inpainting** (`[lama]`, weights fetched into `.cache/` on first
+  use). This is the extra that pulls torch. On Linux the default install gets a
+  CUDA build, so on a machine without an NVIDIA GPU ask for the CPU wheel:
 
   ```bash
+  # GPU (default)
   pip install "kcai-data-sampling[lama]"
+
+  # CPU only, no CUDA libraries
+  pip install "kcai-data-sampling[lama]" --extra-index-url https://download.pytorch.org/whl/cpu
+  ```
+
+  The flavour shows in torch's own version string:
+  `python -c "import torch; print(torch.__version__)"` prints a `+cpu` suffix.
+  Then run the generative job:
+
+  ```bash
   kcai-data-sampling process -p examples/config/walkthrough-generative.yaml
   ```
 
@@ -137,10 +149,18 @@ extra — it is the union of `notebooks`, `job`, `images`, `fgsm` and `lama`:
 pip install "kcai-data-sampling[all]"
 ```
 
+`[all]` pulls torch twice over — directly through `[lama]`, and again through
+`ultralytics` in `[notebooks]` — so one flag covers both. As above, add the CPU
+index on a machine without an NVIDIA GPU:
+
+```bash
+pip install "kcai-data-sampling[all]" --extra-index-url https://download.pytorch.org/whl/cpu
+```
+
 Want just the notebook tooling, with no model surface? `[notebooks]` installs
 pandas, `python-pptx`, ipykernel and ultralytics, and deliberately does *not*
 pull `-fgsm` or `-lama`. Note it does still resolve torch, because ultralytics
-depends on it itself.
+depends on it itself — the same GPU/CPU choice applies as for `[lama]` above.
 
 ## Where to go next
 

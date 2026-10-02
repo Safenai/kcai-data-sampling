@@ -5,7 +5,6 @@ from contextlib import contextmanager
 import logging
 from typing import Any
 
-from kcai_data_sampling_core._version_ import __version__ as core_version
 from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry
 
 logger = logging.getLogger(__name__)
@@ -33,39 +32,47 @@ def optional_dependencies(error: str = "ignore") -> Generator[None, None, None]:
             print(f"Warning: missing optional dependency {exc.name}. Use pip to install.")
 
 
-def _job_version() -> str | None:
-    """Return the installed job package version, or ``None`` if absent."""
-    try:
-        from kcai_data_sampling_job._version_ import __version__
+#: Module holding ``__version__`` for each installable member package, in the
+#: order ``version`` reports them. A member that is not installed reads as
+#: ``None`` rather than being hidden, so ``version`` reflects what an install
+#: actually resolved to. Mirrors the extras table in the umbrella README.
+_MEMBER_VERSION_MODULES = {
+    "core": "kcai_data_sampling_core._version_",
+    "job": "kcai_data_sampling_job._version_",
+    "images": "kcai_data_sampling_images._version_",
+    "fgsm": "kcai_data_sampling_fgsm._version_",
+    "lama": "kcai_data_sampling_lama._version_",
+}
 
-        return __version__
+
+def _member_version(module: str) -> str | None:
+    """Return the version of the member package owning ``module``.
+
+    Args:
+        module: Dotted path to the member's ``_version_`` module.
+
+    Returns:
+        The member's version string, or ``None`` when it is not installed.
+    """
+    try:
+        version: str = __import__(module, fromlist=["__version__"]).__version__
     except ImportError:
         return None
-
-
-def _images_version() -> str | None:
-    """Return the installed images package version, or ``None`` if absent."""
-    try:
-        from kcai_data_sampling_images._version_ import __version__
-
-        return __version__
-    except ImportError:
-        return None
+    return version
 
 
 def display_version(arg_list: list[str] | None = None) -> None:
     """Print the installed package versions to stdout.
 
+    Every member is listed, installed or not, so an absent extra is visible
+    instead of silently missing.
+
     Args:
         arg_list: Unused, provided for CLI compatibility.
     """
     del arg_list
-    versions = {
-        "kcai-data-sampling": __import__("kcai_data_sampling").__version__,
-        "core": core_version,
-        "job": _job_version(),
-        "images": _images_version(),
-    }
+    versions = {"kcai-data-sampling": __import__("kcai_data_sampling").__version__}
+    versions.update((name, _member_version(module)) for name, module in _MEMBER_VERSION_MODULES.items())
     for name, version in versions.items():
         print(f"{name}: {version}")
 

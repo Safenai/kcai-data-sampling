@@ -8,6 +8,8 @@ never pulls it in itself: the checkpoint load in ``LamaTool()`` is the only
 place torch is needed, and it stays deferred.
 """
 
+import contextlib
+import io
 import sys
 
 import numpy as np
@@ -19,6 +21,15 @@ def main() -> int:
 
     # The opt-in surface never imports torch at import time.
     assert "torch" not in sys.modules
+
+    # `version` resolves this member: it is installed here, so it must not read
+    # as absent the way it does in the lama-free `all` scenario.
+    from kcai_data_sampling.dependency import display_version
+
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        display_version()
+    assert "lama: None" not in out.getvalue()
 
     # The plugin's declared class surface on the wheel.
     assert LamaTool.channels == 3

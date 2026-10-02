@@ -47,6 +47,13 @@ pip install "kcai-data-sampling[all]"
 python scripts/fetch_comma10k_sample.py
 ```
 
+`[all]` pulls torch, which on Linux defaults to a CUDA build. On a machine
+without an NVIDIA GPU, ask for the CPU wheel instead:
+
+```bash
+pip install "kcai-data-sampling[all]" --extra-index-url https://download.pytorch.org/whl/cpu
+```
+
 Open `examples/notebooks/walkthrough.ipynb` in Jupyter (JupyterLab or VS Code)
 and pick the interpreter of the environment you activated as the kernel. Run it
 top to bottom — the setup cell re-chdirs to the repository root and reads
