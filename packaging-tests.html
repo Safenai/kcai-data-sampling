@@ -1,0 +1,1413 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="terminology.html">
+      
+      
+        <link rel="next" href="developer.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Packaging Tests - KCAI Data-Sampling</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="static/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#packaging-tests" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="index.html" title="KCAI Data-Sampling" class="md-header__button md-logo" aria-label="KCAI Data-Sampling" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            KCAI Data-Sampling
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Packaging Tests
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Safenai/kcai-data-sampling" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kcai-data-sampling
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="index.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="quickstart.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quick Start
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="RELEASE.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Release Notes
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="terminology.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Terminology
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="packaging-tests.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Packaging Tests
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="developer.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Developer Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="examples/notebooks/walkthrough.html" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="packages/kcai-data-sampling-core.html" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Packages
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="reference/kcai_data_sampling_core/index.html" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="index.html" title="KCAI Data-Sampling" class="md-nav__button md-logo" aria-label="KCAI Data-Sampling" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    KCAI Data-Sampling
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Safenai/kcai-data-sampling" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kcai-data-sampling
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="quickstart.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="RELEASE.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="terminology.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Terminology
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Packaging Tests
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="packaging-tests.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Packaging Tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-package-isolation-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Package Isolation Matters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sessions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sessions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sessions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#which-version-gets-tested" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Which version gets tested
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenarios
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Scenarios">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#extras-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extras scenarios
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-walkthrough-notebook" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The walkthrough notebook
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#manual-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Manual testing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gotchas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gotchas
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="developer.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="examples/notebooks/walkthrough.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="packages/kcai-data-sampling-core.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Packages
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    
+  
+  
+  
+    <a href="reference/kcai_data_sampling_core/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="packaging-tests">Packaging Tests</h1>
+<p>The six kcai distributions are published separately on purpose: a user who only wants
+to run procedural transforms should not download a deep-learning framework. This page
+documents how that separation is verified — each scenario installs its own subset into
+a fresh virtual environment and proves the environment resolves <em>exactly</em> that subset.</p>
+<p>Three sources are covered, because they fail differently. Locally built wheels prove
+your working tree is packaged correctly. test.pypi.org proves the artifact you actually
+uploaded, extras metadata and entry points included. pypi.org proves what a user gets
+once the release goes out.</p>
+<h2 id="why-package-isolation-matters">Why Package Isolation Matters</h2>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Purpose</th>
+<th>Notable dependencies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kcai-data-sampling-core</code></td>
+<td>Batch, transformations, the model protocols</td>
+<td>pydantic, numpy</td>
+</tr>
+<tr>
+<td><code>kcai-data-sampling-images</code></td>
+<td>Image transforms, the dataloader/writer plugins</td>
+<td>Pillow</td>
+</tr>
+<tr>
+<td><code>kcai-data-sampling-job</code></td>
+<td>The YAML pipeline and its CLI</td>
+<td>pyarrow, pyyaml</td>
+</tr>
+<tr>
+<td><code>kcai-data-sampling-fgsm</code></td>
+<td>FGSM adversarial attack</td>
+<td>numpy only — <strong>no torch</strong></td>
+</tr>
+<tr>
+<td><code>kcai-data-sampling-lama</code></td>
+<td>LaMa inpainting</td>
+<td>torch, but only on first checkpoint load</td>
+</tr>
+<tr>
+<td><code>kcai-data-sampling</code></td>
+<td>Umbrella CLI; its extras compose the surfaces</td>
+<td>core only, then by extra</td>
+</tr>
+</tbody>
+</table>
+<p>Two invariants follow, and both are asserted rather than assumed:</p>
+<ul>
+<li><code>kcai-data-sampling-fgsm</code> must never pull in <code>torch</code>. It is a closed-form attack
+  against a caller-supplied gradient, so it needs nothing beyond numpy.</li>
+<li><code>-lama</code> must not import <code>torch</code> at import time. The framework is needed only when a
+  checkpoint is actually loaded, so importing the plugin stays cheap.</li>
+</ul>
+<p>Every scenario installs a subset and then probes <strong>all six</strong> module roots. A venv that
+resolves a package it did not ask for fails the test, which is how a transitive leak
+gets caught.</p>
+<h2 id="sessions">Sessions</h2>
+<table>
+<thead>
+<tr>
+<th>Session</th>
+<th>Installs from</th>
+<th>Marker</th>
+<th>Use it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nox -s test_packaging</code></td>
+<td>locally built wheels</td>
+<td><code>packaging</code></td>
+<td>Before every PR — tests your changes</td>
+</tr>
+<tr>
+<td><code>nox -s test_packaging_testpypi</code></td>
+<td>test.pypi.org</td>
+<td><code>packaging_index</code></td>
+<td>After publishing an rc — tests the uploaded artifact</td>
+</tr>
+<tr>
+<td><code>nox -s test_packaging_pypi</code></td>
+<td>pypi.org</td>
+<td><code>packaging_index</code></td>
+<td>After a real release — tests what users get</td>
+</tr>
+<tr>
+<td><code>nox -s test_packaging_notebook</code></td>
+<td>test.pypi.org</td>
+<td><code>packaging_notebook</code></td>
+<td>When the <code>all</code> extra or the walkthrough change</td>
+</tr>
+</tbody>
+</table>
+<p>None of these run in the default suite (<code>nox -s lint spell test type_check</code>), and
+<code>nox -s test</code> never even collects them.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Every published-index scenario</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>nox<span class="w"> </span>-s<span class="w"> </span>test_packaging_testpypi
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># One scenario</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>nox<span class="w"> </span>-s<span class="w"> </span>test_packaging_testpypi<span class="w"> </span>--<span class="w"> </span>-k<span class="w"> </span>all+lama
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># The real walkthrough notebook (slow, see below)</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>nox<span class="w"> </span>-s<span class="w"> </span>test_packaging_notebook
+</span></code></pre></div>
+<p>The index sessions are <strong>manual, not CI</strong>, for two reasons: test.pypi.org propagates a
+newly uploaded file over a few minutes, so a CI job would race the upload; and the
+model-backed scenarios pull several hundred megabytes of wheels. Run them after a
+publish has settled.</p>
+<h3 id="which-version-gets-tested">Which version gets tested</h3>
+<p>Every distribution is pinned to one version, resolved in this order:</p>
+<ol>
+<li><code>KCAI_PACKAGING_VERSION</code>, if set</li>
+<li>otherwise the newest numeric tag, via
+   <code>git describe --tags --match "[0-9]*" --abbrev=0</code></li>
+</ol>
+<p>The tag is normalized the same way the publish workflows normalize it (<code>sed 's/-//g'</code>),
+so <code>0.1.0-rc1</code> becomes <code>0.1.0rc1</code> — exactly the wheel name on the index. Pinning means
+a re-run tests the artifact you uploaded rather than whatever else the index may serve
+later. To test a specific build:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">KCAI_PACKAGING_VERSION</span><span class="o">=</span><span class="m">0</span>.1.0rc1<span class="w"> </span>nox<span class="w"> </span>-s<span class="w"> </span>test_packaging_testpypi
+</span></code></pre></div>
+<h2 id="scenarios">Scenarios</h2>
+<p>The first six run against every source. The six extras scenarios and the notebook
+walkthrough are index-only.</p>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Installs</th>
+<th>Smoke script</th>
+<th>What it proves</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>core</code></td>
+<td><code>-core</code></td>
+<td><code>smoke_core.py</code></td>
+<td>Batch + transformation runner round-trip; no sibling leaks in</td>
+</tr>
+<tr>
+<td><code>core+images</code></td>
+<td><code>-core</code>, <code>-images</code></td>
+<td><code>smoke_images.py</code></td>
+<td>Image transforms and the image dataloader/writer plugins register</td>
+</tr>
+<tr>
+<td><code>core+job</code></td>
+<td><code>-core</code>, <code>-job</code></td>
+<td><code>smoke_job.py</code></td>
+<td>A synthetic parquet through the CLI — in-memory frames, no dataset</td>
+</tr>
+<tr>
+<td><code>all</code></td>
+<td><code>-core</code>, <code>-images</code>, <code>-job</code>, umbrella</td>
+<td><code>smoke_all.py</code></td>
+<td>Umbrella <code>version</code>/<code>list</code>/<code>process</code> dispatch works</td>
+</tr>
+<tr>
+<td><code>all+lama</code></td>
+<td>the four above + <code>-lama</code> + CPU torch</td>
+<td><code>smoke_lama.py</code></td>
+<td>The model plugin loads and inpaints on a stub tool, still without importing torch</td>
+</tr>
+<tr>
+<td><code>all+fgsm</code></td>
+<td>the four above + <code>-fgsm</code></td>
+<td><code>smoke_fgsm.py</code></td>
+<td>The attack is importable and numpy-only — no torch, no ultralytics</td>
+</tr>
+<tr>
+<td><code>umbrella+notebooks</code></td>
+<td>umbrella<code>[notebooks]</code></td>
+<td><code>smoke_extras.py</code></td>
+<td>The notebook stack installed, and <strong>no</strong> <code>-fgsm</code>/<code>-lama</code> dragged in</td>
+</tr>
+<tr>
+<td><code>umbrella+job</code></td>
+<td>umbrella<code>[job]</code></td>
+<td><code>smoke_extras.py</code></td>
+<td><code>-job</code> pulled by the extra alone; <code>process</code> appears</td>
+</tr>
+<tr>
+<td><code>umbrella+images</code></td>
+<td>umbrella<code>[images]</code></td>
+<td><code>smoke_extras.py</code></td>
+<td><code>-images</code> pulled by the extra alone; no sibling leaks</td>
+</tr>
+<tr>
+<td><code>umbrella+fgsm</code></td>
+<td>umbrella<code>[fgsm]</code></td>
+<td><code>smoke_extras.py</code></td>
+<td><code>-fgsm</code> pulled by the extra alone, still without torch</td>
+</tr>
+<tr>
+<td><code>umbrella+lama</code></td>
+<td>umbrella<code>[lama]</code></td>
+<td><code>smoke_extras.py</code></td>
+<td><code>-lama</code> plus CPU torch; its plugins register from wheel metadata</td>
+</tr>
+<tr>
+<td><code>umbrella+all</code></td>
+<td>umbrella<code>[all]</code></td>
+<td><code>smoke_extras.py</code></td>
+<td>The union extra pulls every member</td>
+</tr>
+<tr>
+<td><code>notebook-walkthrough</code></td>
+<td>umbrella<code>[all]</code> + nbclient</td>
+<td><code>execute_walkthrough.py</code></td>
+<td>The real walkthrough notebook runs end to end</td>
+</tr>
+</tbody>
+</table>
+<h3 id="extras-scenarios">Extras scenarios</h3>
+<p>Each extras scenario installs <strong>one</strong> spec — <code>kcai-data-sampling[&lt;extra&gt;]</code> — and nothing
+else. That is the point: the siblings are never named, so the extra's own published
+dependency metadata is the only thing that can pull them in. What arrives is asserted on
+both sides. <code>smoke_extras.py</code> reads <code>importlib.metadata</code> for the <em>present</em> distributions
+and the <em>absent</em> members without importing anything, so nothing heavy is loaded — notably
+<code>ultralytics</code>, whose <code>cv2</code> import needs a system OpenGL library these venvs have no reason
+to carry. It then resolves one representative entry point per installed member, which is
+the same lookup a YAML <code>type: lama_inpaint</code> performs.</p>
+<p>The umbrella's base install is <code>kcai-data-sampling-core</code> alone, so <code>version</code> and <code>list</code>
+always work while <code>process</code> appears only once <code>-job</code> is installed — with <code>[job]</code>, and with
+<code>[all]</code>. <code>smoke_extras.py</code> asserts that relationship directly: <code>process</code> present if and only
+if <code>-job</code> is.</p>
+<p><code>umbrella+notebooks</code> is the one scenario whose <em>absent</em> half is load-bearing. It installs
+pandas, <code>python-pptx</code>, ipykernel and ultralytics, and must <strong>not</strong> install <code>-fgsm</code> or
+<code>-lama</code>; if either ever came back, that is what would catch it. Note it still resolves
+<code>torch</code>, because ultralytics declares torch itself — so the absence claim is about the kcai
+members, never about torch.</p>
+<p>Four scenarios additionally pull <code>torch</code> from the PyTorch CPU wheel index, pinned to
+<code>torch==2.14.0+cpu</code>: <code>all+lama</code>, <code>umbrella+lama</code>, <code>umbrella+all</code> and <code>umbrella+notebooks</code>.
+Plain <code>torch</code> on Linux would otherwise drag in the multi-gigabyte CUDA build — resolving
+<code>[notebooks]</code> without the pin selects twelve <code>nvidia-*</code> wheels alongside it. The pin only
+takes effect together with <code>--index-strategy unsafe-best-match</code>, which the fixture already
+passes.</p>
+<h2 id="the-walkthrough-notebook">The walkthrough notebook</h2>
+<p><code>nox -s test_packaging_notebook</code> executes <code>examples/notebooks/walkthrough.ipynb</code> itself,
+in a venv built from the index. It covers all three families: the procedural pipeline
+through the CLI, LaMa inpainting behind the <code>lama_inpaint</code> entry point, and FGSM against
+<code>examples/adapters/yolo_target.py</code> loaded through the <code>python</code> model route.</p>
+<p>It needs the comma10k sample, which the script fetches on first use:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>python<span class="w"> </span>scripts/fetch_comma10k_sample.py
+</span></code></pre></div>
+<p>Two things worth knowing before you run it:</p>
+<ul>
+<li><strong>It is slow, and it downloads.</strong> Expect minutes and several hundred megabytes on a
+  cold cache: CPU torch, the ~200 MB <code>big-lama.pt</code> checkpoint, and YOLO weights fetched
+  by <code>ultralytics</code>. With the checkpoint already in <code>.cache/</code> it runs in under two
+  minutes.</li>
+<li><strong>It writes inside the repository</strong>, under <code>examples/outputs/</code>, <code>examples/data/</code> and
+  <code>.cache/</code>. Every one of those paths is git-ignored, so <code>git status</code> stays clean — but
+  <code>examples/outputs/</code> grows by ~300 MB per run and nothing prunes it. Delete it
+  yourself if you care about disk.</li>
+</ul>
+<p>The notebook executor is installed into the test venv only, not added to the published
+<code>[all]</code> extra: the extra targets notebook authors who already have a working Jupyter
+install, whereas the executor is the runner's own tool. The practical consequence is that
+this test proves the extra is sufficient <em>except</em> for an executor.</p>
+<h2 id="manual-testing">Manual testing</h2>
+<p>For a quick look at what a user would install, without running the suite:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>uv<span class="w"> </span>venv<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.12<span class="w"> </span>/tmp/kcai
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nv">VIRTUAL_ENV</span><span class="o">=</span>/tmp/kcai<span class="w"> </span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--no-config<span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--index-strategy<span class="w"> </span>unsafe-best-match<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span>--index<span class="w"> </span>https://test.pypi.org/simple/<span class="w"> </span>--index<span class="w"> </span>https://pypi.org/simple/<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span>kcai-data-sampling<span class="o">==</span><span class="m">0</span>.1.0rc1
+</span></code></pre></div>
+<p>Both flags are load-bearing, and dropping either one fails the install:</p>
+<ul>
+<li><code>--no-config</code> — the workspace maps every kcai package to a local path, so without it
+  <code>uv</code> resolves those instead of the index.</li>
+<li><code>--index-strategy unsafe-best-match</code> — <code>uv</code>'s default <code>first-index</code> strategy will not
+  fall through to the second index. See the gotcha below; it is not optional.</li>
+</ul>
+<p>Add an extra to the spec to reproduce one of the extras scenarios — for example
+<code>'kcai-data-sampling[all]==0.1.0rc1'</code>, or <code>'kcai-data-sampling[job]==0.1.0rc1'</code> for just the
+<code>process</code> command. Swap the Test PyPI index for <code>https://pypi.org/simple/</code> to reproduce a
+release install.</p>
+<p>Two more things about this recipe. <code>0.1.0rc1</code> is simply the version published at the
+time of writing — substitute whatever is current, remembering that a git tag like
+<code>0.1.0-rc1</code> normalizes to the PyPI form <code>0.1.0rc1</code>. And the recipe assumes no
+<code>UV_INDEX</code> or <code>UV_INDEX_URL</code> in your environment; if you have one set (some setups point
+it at an internal registry) you are resolving against a third index you did not intend.
+The test harness strips those variables in <code>_subprocess_env()</code>; do the same by hand with
+<code>env -u UV_INDEX</code> if you need to reproduce it exactly.</p>
+<h2 id="gotchas">Gotchas</h2>
+<ul>
+<li><strong>Just published?</strong> Wait a few minutes. Test PyPI serves the file once it has
+  propagated, and a 404 in that window is not a packaging bug.</li>
+<li><strong>Re-running the same version proves nothing new.</strong> <code>publish-tolerantly.sh</code> skips a
+  filename that already exists, so a second run does not re-upload. Bump the version (or
+  the tag) before expecting the index tests to see new code.</li>
+<li><strong><code>--index-strategy unsafe-best-match</code> is set on purpose.</strong> <code>uv</code>'s default refuses to
+  fall through to a second index, and it bites in two separate places. The obvious one is
+  direct dependency resolution: seeing any <code>pydantic</code> on Test PyPI (1.5a1) hides PyPI's
+  2.13 from the resolver. The less obvious one is building source-only distributions —
+  <code>pyyaml</code> 3.11 has no wheel, so <code>uv</code> must build it, and its <code>setup.py</code> requires
+  <code>setuptools&gt;=40.8.0</code>; Test PyPI has a <code>setuptools</code> but not a satisfying version, so the
+  build fails with <em>"there are no versions of setuptools and you require
+  setuptools&gt;=40.8.0"</em>. Both indexes here are public and trusted, and every kcai spec is
+  pinned to an exact version, so there is no dependency-confusion surface to protect.</li>
+<li><strong>The scenarios need no dataset.</strong> Frames are synthesized in memory, and the index
+  sessions never download data. Only the notebook walkthrough fetches comma10k.</li>
+<li><strong>The campaign ledger holds one campaign.</strong> Every walkthrough config reuses the
+  <code>comma10k</code> selection, so each run overwrites <code>examples/outputs/comma10k/ledger.parquet</code>
+  and only the last campaign's rows survive. That is why the driver asserts on the
+  adversarial rows and leaves the rest to the notebook's own cells.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="terminology.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Terminology">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Terminology
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="developer.html" class="md-footer__link md-footer__link--next" aria-label="Next: Developer Guide">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Developer Guide
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; SafenAI
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "navigation.indexes", "navigation.footer", "navigation.instant", "navigation.instant.progress", "navigation.top", "search.highlight", "search.share", "search.suggest", "toc.follow", "toc.integrate", "navigation.tabs", "navigation.tabs.sticky", "navigation.path", "navigation.prune"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
