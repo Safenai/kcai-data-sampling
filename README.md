@@ -22,16 +22,33 @@ procedural example and read its output — see
 
 ## Running the walkthrough notebook
 
-The walkthrough on real comma10k frames lives in
-`examples/notebooks/walkthrough.ipynb`; its presentation helpers are a
-hand-maintained import (no matplotlib), next to it.
+The walkthrough runs the procedural job, LaMa inpainting and FGSM on real
+comma10k frames. Its notebook, configs and data all live in the repository
+rather than in the wheel, so if you have not cloned it yet:
 
-    uv sync --package kcai-data-sampling --extra all
-    uv run scripts/fetch_comma10k_sample.py   # 10 frames (+ masks) into examples/data/comma10k_sample/
+```bash
+git clone https://github.com/Safenai/kcai-data-sampling.git
+cd kcai-data-sampling
+```
 
-Then open the notebook in your Jupyter environment (JupyterLab or VS Code) and
-pick the workspace interpreter `.venv/bin/python` as the kernel. Run it top to
-bottom — the setup cell re-chdirs to the repository root and reads
-`examples/config/walkthrough-procedural.yaml` so it works
-regardless of the launch directory. Generated files are left under
-`examples/outputs/`.
+If you have not been through the [quickstart](docs/quickstart.md), set up an
+environment first:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+```
+
+Then install the `all` extra — the union of everything the notebook touches —
+and fetch the ten sample frames:
+
+```bash
+pip install "kcai-data-sampling[all]"
+python scripts/fetch_comma10k_sample.py
+```
+
+Open `examples/notebooks/walkthrough.ipynb` in Jupyter (JupyterLab or VS Code)
+and pick the interpreter of the environment you activated as the kernel. Run it
+top to bottom — the setup cell re-chdirs to the repository root and reads
+`examples/config/walkthrough-procedural.yaml`, so it works regardless of the
+launch directory. Generated files are left under `examples/outputs/`.

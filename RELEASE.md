@@ -54,14 +54,15 @@ deliberately.
   A working example ships with the repository, and there is a guided
   walkthrough notebook if you would rather read than script.
 - **Six packages, one repository**, each installable on its own or together:
-  the shared core, an image-handling package, a job runner, an umbrella CLI, and
-  two optional model-backed packages (generative inpainting and adversarial
-  perturbation).
+  the shared core, the procedural image methods, the job runner that owns
+  image and ledger IO, the umbrella CLI, and two optional model-backed packages
+  (generative inpainting and adversarial perturbation).
 - **A provenance ledger.** One row per generated sample; the generated images
   themselves are stored separately, addressed by content. Inspect the result
   with any Parquet reader.
 - **Image input and output** from a standard tabular sample description, with
-  masks supported.
+  masks supported — the dataloader, the ledger writer and the payload writer all
+  ship in the job runner.
 - **Parameter sweeps** — ask for "crop to 10%, 20%, 30%" in one line rather
   than writing three jobs.
 - **Procedural transformations** included: horizontal flip and crop-and-resize.
@@ -74,17 +75,23 @@ deliberately.
 
 ## Try it
 
-Four commands, about five minutes, and a small public sample dataset
+A handful of commands, about five minutes, and a small public sample dataset
 downloaded for you:
 
-```sh
-git clone git@github.com:Safenai/kcai-data-sampling.git
+```bash
+git clone https://github.com/Safenai/kcai-data-sampling.git
 cd kcai-data-sampling
-uv sync
-uv run kcai-data-sampling version
-uv run scripts/fetch_comma10k_sample.py
-uv run kcai-data-sampling process -p examples/config/walkthrough-procedural.yaml
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install "kcai-data-sampling[job,images]"
+kcai-data-sampling version
+python scripts/fetch_comma10k_sample.py
+kcai-data-sampling process -p examples/config/walkthrough-procedural.yaml
 ```
+
+`[job]` brings the `process` command and the parquet dataloader, `[images]` the
+image transformations; between them they cover the procedural job above and
+pull no model framework, so the download stays small.
 
 You end up with a ledger of what was generated and a folder of images, and you
 can look at both.
