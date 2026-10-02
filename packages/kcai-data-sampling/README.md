@@ -42,9 +42,14 @@ kcai-data-sampling: 0.1.0
 core: 0.1.0
 job: None
 images: None
+fgsm: None
+lama: None
 ```
 
-Add the extra for the surface you want and the matching command appears.
+Every member is listed whether or not it is installed, so this is also the
+quickest way to confirm a large extra landed: `[lama]` pulls CPU or CUDA torch,
+and `lama: None` tells you it did not. Add the extra for the surface you want and
+the matching command appears.
 
 ## Extras
 

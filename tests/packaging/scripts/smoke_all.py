@@ -25,9 +25,11 @@ def main() -> int:
         display_version()
     text = out.getvalue()
     assert "kcai-data-sampling:" in text
-    assert "core:" in text
-    assert "job:" in text
-    assert "images:" in text
+    for member in ("core", "job", "images", "fgsm", "lama"):
+        assert f"{member}:" in text
+    # The optional model-backed members must resolve under the `all` extra.
+    assert "fgsm: None" not in text
+    assert "lama: None" not in text
 
     for name in ("smoke_core.py", "smoke_images.py", "smoke_job.py"):
         subprocess.run(

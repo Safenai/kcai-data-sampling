@@ -82,8 +82,8 @@ def main() -> int:
     os.environ["JUPYTER_DATA_DIR"] = str(pathlib.Path(sys.prefix) / "share" / "jupyter")
     os.environ.pop("JUPYTER_PATH", None)
 
-    import nbformat
     from nbclient import NotebookClient
+    import nbformat
 
     notebook = nbformat.read(notebook_path, as_version=4)
     # The kernel's cwd must be the notebook's own directory: the setup cell imports a

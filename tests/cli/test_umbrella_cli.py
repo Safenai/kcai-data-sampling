@@ -17,20 +17,39 @@ import pytest
 ALL_COMMANDS = ["version", "list", "process"]
 
 
-def test_version_prints_all_four_package_versions(capsys) -> None:
-    """``version`` prints each installed package's version line.
+def test_version_prints_all_five_member_versions(capsys) -> None:
+    """``version`` prints a line for the umbrella and every member package.
 
-    The umbrella, core, job and images versions are all present and parseable
-    semver strings — nothing silently missing.
+    All five members — including the optional ``fgsm`` and ``lama`` — appear,
+    so an extra that resolved is never silently missing from the report. The
+    always-present umbrella and ``core`` carry semver; an optional member that
+    is not installed reads ``None``, which this torch-free group relies on for
+    ``fgsm`` and ``lama``.
     """
     execute(["version"])
     out = capsys.readouterr().out
     lines = dict(line.split(": ", 1) for line in out.splitlines())
-    assert set(lines) == {"kcai-data-sampling", "core", "job", "images"}
+    assert set(lines) == {
+        "kcai-data-sampling",
+        "core",
+        "job",
+        "images",
+        "fgsm",
+        "lama",
+    }
     import re
 
-    for version in lines.values():
-        assert re.fullmatch(r"\d+\.\d+\.\d+.*", version) is not None
+    for name in ("kcai-data-sampling", "core"):
+        assert re.fullmatch(r"\d+\.\d+\.\d+.*", lines[name]) is not None
+    for name in ("job", "images", "fgsm", "lama"):
+        assert lines[name] == "None" or re.fullmatch(r"\d+\.\d+\.\d+.*", lines[name])
+
+
+def test_version_lists_members_in_documented_order(capsys) -> None:
+    """``version`` orders members to match the extras table in the README."""
+    execute(["version"])
+    names = [line.split(": ", 1)[0] for line in capsys.readouterr().out.splitlines()]
+    assert names == ["kcai-data-sampling", "core", "job", "images", "fgsm", "lama"]
 
 
 def test_list_prints_the_registered_plugin_groups(capsys) -> None:
@@ -140,21 +159,24 @@ def test_execute_refuses_a_command_without_a_handler(monkeypatch) -> None:
         execute(["version"])
 
 
-def test_display_version_tolerates_missing_job_and_images_packages(monkeypatch, capsys) -> None:
+@pytest.mark.parametrize("member", ["job", "images", "fgsm", "lama"])
+def test_display_version_tolerates_a_missing_member_package(monkeypatch, capsys, member) -> None:
     """A package without a ``_version_`` prints ``None`` rather than crashing."""
     real_import = builtins.__import__
-    missing = ("kcai_data_sampling_job._version_", "kcai_data_sampling_images._version_")
+    missing = f"kcai_data_sampling_{member}._version_"
 
     def fake_import(name, *args, **kwargs):
-        if name in missing:
+        if name == missing:
             raise ImportError(f"No module named '{name}'", name=name)
         return real_import(name, *args, **kwargs)
 
     monkeypatch.setattr(builtins, "__import__", fake_import)
     display_version(["version"])
     out = capsys.readouterr().out
-    assert "job: None" in out
-    assert "images: None" in out
+    lines = dict(line.split(": ", 1) for line in out.splitlines())
+    # The absent member is reported as None rather than dropped from the list.
+    assert lines[member] == "None"
+    assert set(lines) == {"kcai-data-sampling", "core", "job", "images", "fgsm", "lama"}
 
 
 @pytest.mark.parametrize("mode", ["ignore", "warn"])
