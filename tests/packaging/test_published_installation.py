@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from tests.fixtures.packaging_fixtures import (
+    EXTRAS_SCENARIOS,
     MODULES,
     PUBLISHED_SCENARIOS,
     SMOKE_SCRIPTS,
@@ -56,6 +57,9 @@ def test_scenario_installs_from_index_and_runs_its_smoke(scenario: str, index_so
     rather than whatever else the index may serve later, and a re-run is
     reproducible. The per-module probes still hold: a venv must resolve exactly the
     scenario's own subset, so an absent sibling proves nothing leaks in transitively.
+    For an extras scenario that is the whole assertion -- the install requests only
+    ``kcai-data-sampling[<extra>]``, so each member that resolves got there through the
+    extra's published dependency metadata.
 
     Args:
         scenario: The scenario name.
@@ -70,5 +74,7 @@ def test_scenario_installs_from_index_and_runs_its_smoke(scenario: str, index_so
         assert probe_module(venv, module) == (key in PUBLISHED_SCENARIOS[scenario]), f"{scenario}: {module} broken"
 
     script = Path(__file__).parent / "scripts" / SMOKE_SCRIPTS[scenario]
-    result = run_script(venv, script, tmp_path / "scratch")
+    # smoke_extras.py serves all six extras scenarios, so it takes the extra under test.
+    extra_args = (scenario.removeprefix("umbrella+"),) if scenario in EXTRAS_SCENARIOS else ()
+    result = run_script(venv, script, tmp_path / "scratch", *extra_args)
     assert result.returncode == 0, result.stderr

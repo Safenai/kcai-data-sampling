@@ -24,14 +24,19 @@ kcai-data-sampling = "kcai_data_sampling.cli_tools:main"
 
 [project.optional-dependencies]
 
-notebook = [
-    "kcai-data-sampling-fgsm",
-    "kcai-data-sampling-lama",
+notebooks = [
     "ipykernel",
     "pandas>=3.0.6",
     "python-pptx",
     "ultralytics",
 ]
+
+job = ["kcai-data-sampling-job"]
+images = ["kcai-data-sampling-images"]
+fgsm = ["kcai-data-sampling-fgsm"]
+lama = ["kcai-data-sampling-lama"]
+
+all = ["kcai-data-sampling[notebooks, job, images, fgsm, lama]"]
 
 [build-system]
 requires = ["setuptools>=80", "setuptools-scm[simple]>=8"]

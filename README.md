@@ -7,11 +7,11 @@ content-addressed payload files.
 The workspace is a uv monorepo of six member packages under `packages/`:
 
 - `kcai-data-sampling-core` — transformation interface, configuration models, registries and runner;
-- `kcai-data-sampling-images` — image input/output plugins and image transformations;
+- `kcai-data-sampling-images` — the procedural family: model-free image transformations (`horizontal_flip`, `crop_resize`) on a decoded image batch;
 - `kcai-data-sampling-lama` — generative inpainting (LaMa) transformation and tool-model plugin;
 - `kcai-data-sampling-fgsm` — adversarial perturbation (FGSM) transformation and target-model support;
-- `kcai-data-sampling-job` — pipeline orchestration, parquet dataloader and ledger writer;
-- `kcai-data-sampling` — umbrella CLI (`version`, `list`, `process`).
+- `kcai-data-sampling-job` — pipeline orchestration and all the IO plugins: the `parquet` dataloader, the `parquet` ledger writer and the `images` payload writer;
+- `kcai-data-sampling` — umbrella CLI (`version`, `list`, and `process` once the `[job]` extra is installed).
 
 The vocabulary used across the code and the configs — transformation, families,
 regimes, label effects — is defined in [docs/terminology.md](docs/terminology.md).
@@ -26,7 +26,7 @@ The walkthrough on real comma10k frames lives in
 `examples/notebooks/walkthrough.ipynb`; its presentation helpers are a
 hand-maintained import (no matplotlib), next to it.
 
-    uv sync --package kcai-data-sampling --extra notebook
+    uv sync --package kcai-data-sampling --extra all
     uv run scripts/fetch_comma10k_sample.py   # 10 frames (+ masks) into examples/data/comma10k_sample/
 
 Then open the notebook in your Jupyter environment (JupyterLab or VS Code) and
