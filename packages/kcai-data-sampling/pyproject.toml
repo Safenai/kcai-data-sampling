@@ -35,6 +35,7 @@ job = ["kcai-data-sampling-job"]
 images = ["kcai-data-sampling-images"]
 fgsm = ["kcai-data-sampling-fgsm"]
 lama = ["kcai-data-sampling-lama"]
+art = ["kcai-data-sampling-art"]
 
 all = ["kcai-data-sampling[notebooks, job, images, fgsm, lama]"]
 
