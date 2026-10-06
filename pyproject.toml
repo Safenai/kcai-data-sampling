@@ -32,6 +32,7 @@ members = ["packages/*"]
 
 # Local packages take precedence over any published versions.
 [tool.uv.sources]
+kcai-data-sampling-art = { workspace = true }
 kcai-data-sampling-core = { workspace = true }
 kcai-data-sampling-fgsm = { workspace = true }
 kcai-data-sampling-images = { workspace = true }
@@ -229,7 +230,7 @@ addopts = [
     "--timeout=300",
     "--basetemp=tmp",
     "-m",
-    "not packaging and not packaging_index and not packaging_notebook and not fgsm and not lama",
+    "not packaging and not packaging_index and not packaging_notebook and not fgsm and not lama and not art",
 ]
 xfail_strict = true
 filterwarnings = [
@@ -244,6 +245,7 @@ markers = [
     "packaging_notebook: Marks the walkthrough-notebook run (run via 'nox -s test_packaging_notebook')",
     "fgsm: Opt-in adversarial surface (kcai-data-sampling-fgsm, importorskip-gated)",
     "lama: Opt-in generative surface (kcai-data-sampling-lama, importorskip-gated)",
+    "art: Opt-in ART adversarial surface (kcai-data-sampling-art, importorskip-gated)",
 ]
 
 [tool.setuptools_scm]
