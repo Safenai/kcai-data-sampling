@@ -16,6 +16,12 @@ import numpy as np
 class TargetModel(Protocol):
     """The model an adversarial transformation is computed *against*.
 
+    ``grad`` serves the gradient attacks. A target may instead, or also,
+    expose ``predict(xs) -> (B, n_classes)`` class scores, on the same
+    normalized batch, for the black-box attacks that only query the model.
+    Each transformation declares which of the two it needs
+    (``model_methods``), and only that one is checked.
+
     Attributes:
         name: Readable name, recorded on every output row.
     """

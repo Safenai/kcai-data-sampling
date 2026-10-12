@@ -6,14 +6,25 @@ Adversarial attacks from the [Adversarial Robustness Toolbox](https://github.com
 ## What it ships today
 
 - `art_fgsm` — ART's `FastGradientMethod` (L-infinity, one step of budget
-  `epsilon` in normalized `[0, 1]` pixel units), against your target model.
+  `epsilon` in normalized `[0, 1]` pixel units), against your target model's
+  `grad`.
+- `art_square` — ART's `SquareAttack` (L-infinity, black-box): a random search
+  that only queries your target model's `predict` (class scores), so it also
+  attacks inference-only models. Stochastic: needs a `seed`.
 
 ## How it works
 
-ART attacks take an *estimator*; kcai gives a *target model* (`name` + `grad`).
-`TargetEstimator` is the adapter: `loss_gradient` forwards to your `grad`, the
-labels ART threads through are unused, and `clip_values` is `(0, 1)`. Any
-target that works with `fgsm` works with `art_fgsm` unchanged.
+ART attacks take an *estimator*; kcai gives a *target model*. Two bridges, in
+`estimator.py`:
+
+- `TargetEstimator` (gradient attacks): `loss_gradient` forwards to your
+  `grad`; the labels ART threads through are unused. Any target that works
+  with `fgsm` works with `art_fgsm` unchanged.
+- `TargetClassifier` (black-box attacks): `predict` forwards to your
+  `predict`, checked to return `(B, n_classes)` scores.
+
+Both keep kcai's layout (`(B, H, W, C)`, channels last) and units (`[0, 1]`,
+`clip_values = (0, 1)`). See `docs/target-models.md` for writing a target.
 
 ## Install
 
@@ -33,6 +44,12 @@ operations:
       type: art_fgsm
       target_model: yolo
       epsilon: 0.05
+    - name: art_square
+      type: art_square
+      target_model: my_classifier   # needs predict
+      epsilon: 0.03
+      max_iter: 100
+      seed: 0
 ```
 
 See `examples/config/walkthrough-adversarial-art.yaml`.

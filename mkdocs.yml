@@ -134,6 +134,7 @@ nav:
   - Home: index.md
   - Quick Start: quickstart.md
   - Terminology: terminology.md
+  - Target Models: target-models.md
   - Packaging Tests: packaging-tests.md
   - Developer Guide: developer.md
   - Examples:
