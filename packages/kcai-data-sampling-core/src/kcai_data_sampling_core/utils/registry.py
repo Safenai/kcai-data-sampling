@@ -22,7 +22,7 @@ from kcai_data_sampling_core.api.transformation import Transformation
 
 logger = logging.getLogger(__name__)
 
-_MODEL_PROTOCOL_METHODS = ("grad", "inpaint")
+_MODEL_PROTOCOL_METHODS = ("grad", "predict", "inpaint")
 
 
 def load_registered_plugins(plugin_group: str, base_class: Any, base_name: str = "default") -> dict[str, Any]:
@@ -68,8 +68,8 @@ def _model_shaped(obj: Any) -> bool:
     """Probe whether a symbol is shaped like a model adapter.
 
     The union of the role protocols' *shape* — a non-empty ``name`` plus at
-    least one of the model methods (``grad`` for the target role, ``inpaint``
-    for the tool role) — so the probe works on a class or an instance without
+    least one of the model methods (``grad`` or ``predict`` for the target
+    role, ``inpaint`` for the tool role) — so the probe works on a class or an instance without
     committing to a role. Real conformance is still enforced by
     ``check_model`` at construction, against the role the transformation
     declares.
