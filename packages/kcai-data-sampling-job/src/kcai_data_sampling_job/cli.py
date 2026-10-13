@@ -136,6 +136,10 @@ def _build_writers(
 
     Returns:
         A ``(payload_writer, ledger_writer)`` tuple; each may be ``None``.
+
+    Raises:
+        ValueError: If ``outputs.payload_format`` names no registered writer.
+            A missing default ``images`` writer only warns (trace-only run).
     """
     outputs = validated.operations.outputs
 
@@ -149,17 +153,20 @@ def _build_writers(
         logger.warning("Output writer type 'parquet' not found in the registry; no ledger is written.")
 
     payload_writer = None
-    if "images" in outputs_registry:
-        payload_writer = outputs_registry["images"](
-            name="images",
+    payload_format = outputs.payload_format
+    if payload_format in outputs_registry:
+        payload_writer = outputs_registry[payload_format](
+            name=payload_format,
             config={
                 "samples_dir": outputs.samples_dir,
                 "write_samples": outputs.write_samples,
                 "flush_batch_size": outputs.flush_batch_size,
             },
         )
-    else:
+    elif payload_format == "images":
         logger.warning("Output writer type 'images' not found in the registry; trace-only run.")
+    else:
+        raise ValueError(f"unknown payload_format {payload_format!r}; registered writers: {sorted(outputs_registry)}")
 
     return payload_writer, ledger_writer
 

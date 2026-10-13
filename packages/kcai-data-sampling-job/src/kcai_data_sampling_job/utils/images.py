@@ -56,7 +56,7 @@ def encode_image(path: str | Path, array: np.ndarray) -> None:
     Image.fromarray(np.ascontiguousarray(array)).save(path, format="PNG")
 
 
-def artifact_name(selection_name: str, output_id: str, x: np.ndarray) -> str:
+def artifact_name(selection_name: str, output_id: str, x: np.ndarray, suffix: str = "png") -> str:
     """Build the content-addressed payload file name for a row.
 
     ``c6`` is a hash of the decoded payload bytes, so identical pixels plus
@@ -67,13 +67,15 @@ def artifact_name(selection_name: str, output_id: str, x: np.ndarray) -> str:
     Args:
         selection_name: Name of the selection the row belongs to.
         output_id: The output's derived ``id``.
-        x: The output ``(H, W, C)`` uint8 pixel array.
+        x: The output sample array (an ``(H, W, C)`` uint8 image, or any
+            other sample).
+        suffix: The file extension of the payload format, without the dot.
 
     Returns:
-        The ``.png`` artifact file stem to store under the payload directory.
+        The artifact file name to store under the payload directory.
     """
     c6 = hashlib.sha1(np.ascontiguousarray(x).tobytes()).hexdigest()[:6]
-    return f"{selection_name}__{output_id}__{c6}.png"
+    return f"{selection_name}__{output_id}__{c6}.{suffix}"
 
 
 def png_bytes(x: np.ndarray) -> bytes:
