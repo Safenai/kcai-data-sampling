@@ -279,6 +279,7 @@ def type_check(s: Session) -> None:
     s.run("mypy", "packages/kcai-data-sampling-lama")
     s.run("mypy", "packages/kcai-data-sampling-fgsm")
     s.run("mypy", "packages/kcai-data-sampling-albumentation")
+    s.run("mypy", "packages/kcai-data-sampling-timeseries")
     s.run("mypy", "packages/kcai-data-sampling")
 
 

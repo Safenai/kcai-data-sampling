@@ -11,6 +11,7 @@ from tests.e2e.fixtures.configs import all_forms_config, standard_config, swept_
 from tests.e2e.fixtures.paths import ledger_file, output_root, samples_dir  # noqa: F401
 from tests.fixtures.data import path_data, raw_bytes_data, synthetic_batch, synthetic_data_dir, synthetic_selection  # noqa: F401
 from tests.fixtures.packaging_fixtures import built_wheels_dir  # noqa: F401
+from tests.fixtures.series import synthetic_series_batch  # noqa: F401
 from tests.fixtures.registries import cached_big_lama, registry_snapshot, stub_target, stub_tool  # noqa: F401
 from tests.utils.seeds import get_test_seed
 
