@@ -1,7 +1,7 @@
 """What one transformation output is, in memory.
 
 The row carries declarations, what replays the run, and a derived ``id`` —
-never a judgement (a regime is read afterwards, from the input/output pair),
+never a judgement (a regime is judged downstream, against a task),
 never a measurement (delta is recomputed downstream), never a path
 (storage/IO adds it), never an *arbitrary* key: the id is "the fields it
 would hash", materialized for consumers and lineage.

@@ -1,7 +1,7 @@
 [project]
 name = "kcai-data-sampling-fgsm"
 dynamic = ["dependencies", "version"]
-description = "Adversarial perturbation (FGSM) for kcai data-sampling"
+description = "Adversarial transformation (FGSM) for kcai data-sampling"
 authors = [
   {name = "Safenai", email = "support@safenai.io"},
 ]

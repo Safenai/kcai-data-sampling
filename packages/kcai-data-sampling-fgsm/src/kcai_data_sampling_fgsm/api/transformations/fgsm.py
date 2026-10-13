@@ -21,7 +21,7 @@ class Fgsm(UnaryTransformation):
 
     The ``epsilon``-signed step may push pixels past the selection's value
     range, so the algorithm declares ``clips`` and the base clips the output
-    back to it. The step is a lossy perturbation (not ``reversible``) and
+    back to it. The step is lossy (not ``reversible``) and
     deterministic, so the row records no seed. The target model is the user's
     ``TargetModel``: only its ``grad`` is used.
     """
