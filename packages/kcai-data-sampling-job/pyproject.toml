@@ -21,6 +21,7 @@ classifiers = [
 
 [project.entry-points."kcai_data_sampling.dataloaders"]
 parquet = "kcai_data_sampling_job.dataloaders.api.parquet:ParquetDataLoader"
+timeseries_parquet = "kcai_data_sampling_job.dataloaders.api.timeseries:TimeSeriesParquetDataLoader"
 
 [project.entry-points."kcai_data_sampling.outputwriter"]
 images = "kcai_data_sampling_job.outputwriter.api.images:ImagesOutputWriter"
