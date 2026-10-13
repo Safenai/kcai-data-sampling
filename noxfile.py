@@ -251,12 +251,13 @@ def lint(s: Session) -> None:
 
 @session(uv_groups=["type_check"])
 def type_check(s: Session) -> None:
-    """Run mypy static type checking on all 6 sub-packages."""
+    """Run mypy static type checking on all 7 sub-packages."""
     s.run("mypy", "packages/kcai-data-sampling-job")
     s.run("mypy", "packages/kcai-data-sampling-core")
     s.run("mypy", "packages/kcai-data-sampling-images")
     s.run("mypy", "packages/kcai-data-sampling-lama")
     s.run("mypy", "packages/kcai-data-sampling-fgsm")
+    s.run("mypy", "packages/kcai-data-sampling-timeseries")
     s.run("mypy", "packages/kcai-data-sampling")
 
 

@@ -22,6 +22,7 @@ from tests.fixtures.data import (  # noqa: F401
     synthetic_selection,
 )
 from tests.fixtures.packaging_fixtures import built_wheels_dir  # noqa: F401
+from tests.fixtures.series import synthetic_series_batch  # noqa: F401
 from tests.fixtures.registries import cached_big_lama, registry_snapshot, stub_target, stub_tool  # noqa: F401
 from tests.utils.seeds import get_test_seed
 

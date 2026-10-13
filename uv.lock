@@ -28,6 +28,7 @@ members = [
     "kcai-data-sampling-images",
     "kcai-data-sampling-job",
     "kcai-data-sampling-lama",
+    "kcai-data-sampling-timeseries",
     "kcai-workspace",
 ]
 
@@ -1473,6 +1474,21 @@ requires-dist = [
 ]
 
 [[package]]
+name = "kcai-data-sampling-timeseries"
+source = { editable = "packages/kcai-data-sampling-timeseries" }
+dependencies = [
+    { name = "kcai-data-sampling-core" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "kcai-data-sampling-core", editable = "packages/kcai-data-sampling-core" },
+    { name = "numpy" },
+]
+
+[[package]]
 name = "kcai-workspace"
 source = { editable = "." }
 dependencies = [
@@ -1480,6 +1496,7 @@ dependencies = [
     { name = "kcai-data-sampling-core" },
     { name = "kcai-data-sampling-images" },
     { name = "kcai-data-sampling-job" },
+    { name = "kcai-data-sampling-timeseries" },
     { name = "pandas" },
     { name = "python-pptx" },
 ]
@@ -1549,6 +1566,7 @@ requires-dist = [
     { name = "kcai-data-sampling-core", editable = "packages/kcai-data-sampling-core" },
     { name = "kcai-data-sampling-images", editable = "packages/kcai-data-sampling-images" },
     { name = "kcai-data-sampling-job", editable = "packages/kcai-data-sampling-job" },
+    { name = "kcai-data-sampling-timeseries", editable = "packages/kcai-data-sampling-timeseries" },
     { name = "pandas", specifier = ">=3.0.6" },
     { name = "python-pptx" },
 ]

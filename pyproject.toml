@@ -14,6 +14,7 @@ dependencies = [
     "kcai-data-sampling-core>=0.0.1",
     "kcai-data-sampling-images>=0.0.1",
     "kcai-data-sampling-job>=0.0.1",
+    "kcai-data-sampling-timeseries>=0.0.1",
     "pandas>=3.0.6",
     "python-pptx",
 ]
@@ -37,6 +38,7 @@ kcai-data-sampling-fgsm = { workspace = true }
 kcai-data-sampling-images = { workspace = true }
 kcai-data-sampling-job = { workspace = true }
 kcai-data-sampling-lama = { workspace = true }
+kcai-data-sampling-timeseries = { workspace = true }
 kcai-data-sampling = { workspace = true }
 # torch resolves from the CPU index only (mirrors dqm-ml-workspace); the root
 # never pulls it — only the opt-in -lama member depends on torch.
