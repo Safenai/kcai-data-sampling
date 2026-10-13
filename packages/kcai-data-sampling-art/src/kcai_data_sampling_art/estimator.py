@@ -23,7 +23,7 @@ from art.estimators.estimator import BaseEstimator, LossGradientsMixin, NeuralNe
 import numpy as np
 
 
-class TargetEstimator(LossGradientsMixin, BaseEstimator):
+class TargetEstimator(LossGradientsMixin, BaseEstimator):  # type: ignore[misc]  # ART ships no type hints
     """Expose a kcai ``TargetModel`` to ART's gradient-based attacks.
 
     The estimator works in kcai's normalized ``[0, 1]`` units, so
@@ -72,7 +72,7 @@ class TargetEstimator(LossGradientsMixin, BaseEstimator):
         raise NotImplementedError("TargetEstimator does not train the user's target model")
 
 
-class TargetClassifier(ClassifierMixin, NeuralNetworkMixin, BaseEstimator):
+class TargetClassifier(ClassifierMixin, NeuralNetworkMixin, BaseEstimator):  # type: ignore[misc]  # ART ships no type hints
     """Expose a kcai target model's ``predict`` to ART's black-box attacks.
 
     Inputs stay in kcai's layout and units: ``(B, H, W, C)`` (channels last)
@@ -100,7 +100,7 @@ class TargetClassifier(ClassifierMixin, NeuralNetworkMixin, BaseEstimator):
     @property
     def nb_classes(self) -> int:
         """Number of classes, known once ``predict`` has answered."""
-        return self._nb_classes
+        return int(self._nb_classes)
 
     def predict(self, x: np.ndarray, batch_size: int = 128, **kwargs: Any) -> np.ndarray:
         """Forward to the target's ``predict`` and check its answer.

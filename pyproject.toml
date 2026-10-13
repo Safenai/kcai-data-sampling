@@ -99,6 +99,17 @@ test-fgsm = [
     { include-group = "test" },
 ]
 
+# opt-in ART test surface: the same test deps as `test`, plus the -art member
+# (ART's core: numpy, scipy, scikit-learn — no torch) and the -fgsm member,
+# the reference `art_fgsm` is checked against. The `test-art` nox session runs
+# the opt-in (importorskip-gated) ART tests for real; the default `test` group
+# stays art-free.
+test-art = [
+    "kcai-data-sampling-art",
+    "kcai-data-sampling-fgsm",
+    { include-group = "test" },
+]
+
 # Lint and auto-format Python code. Backs the `lint` and `fmt` nox sessions.
 lint = [
     "ruff",
@@ -141,6 +152,7 @@ docs = [
     "mkdocs-simple-hooks",
     "mkdocstrings[python]",
     "pymdown-extensions",
+    "kcai-data-sampling-art",
     "kcai-data-sampling-fgsm",
     "kcai-data-sampling-lama",
 ]
@@ -236,6 +248,9 @@ xfail_strict = true
 filterwarnings = [
     "error",
     "ignore::SyntaxWarning",
+    # ART warns on import when torch is absent (its torch-only certification
+    # tools); the -art transformations never use them.
+    "ignore:PyTorch not found:UserWarning",
 ]
 markers = [
     "e2e: Full job runs driven through the CLI as a user would (tests/e2e/)",

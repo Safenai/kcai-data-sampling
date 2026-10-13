@@ -57,5 +57,5 @@ class ArtFgsm(UnaryTransformation):
             batch_size=len(xs),
         )
         # The target's loss needs no labels; ART only threads ``y`` through.
-        adversarial = attack.generate(normalized, y=np.zeros(len(xs)))
+        adversarial: np.ndarray = attack.generate(normalized, y=np.zeros(len(xs)))
         return np.rint(adversarial * top).astype(xs.dtype)

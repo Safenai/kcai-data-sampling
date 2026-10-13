@@ -35,12 +35,12 @@ def test(s: Session) -> None:
 
 
 @session(
-    uv_groups=["test", "test-fgsm", "test-lama"],
+    uv_groups=["test", "test-fgsm", "test-lama", "test-art"],
 )
 def test_coverage(s: Session) -> None:
-    """Run every test (unit, e2e, CLI, opt-in fgsm/lama surfaces) with full coverage.
+    """Run every test (unit, e2e, CLI, opt-in fgsm/lama/art surfaces) with full coverage.
 
-    The env includes the -fgsm and -lama members (CPU torch + ``big-lama.pt``),
+    The env includes the -fgsm, -lama and -art members (CPU torch + ``big-lama.pt``),
     so every package in the workspace is measured here.
     """
     s.env["KCAI_TEST_SEED"] = "42"
@@ -50,6 +50,7 @@ def test_coverage(s: Session) -> None:
         "--cov=packages/kcai-data-sampling-images/src",
         "--cov=packages/kcai-data-sampling-lama/src",
         "--cov=packages/kcai-data-sampling-fgsm/src",
+        "--cov=packages/kcai-data-sampling-art/src",
         "--cov=packages/kcai-data-sampling-job/src",
         "--cov=packages/kcai-data-sampling/src",
         "--cov-report=html:docs/reports/htmlcov",
@@ -165,6 +166,23 @@ def test_lama(s: Session) -> None:
 
 
 @session(
+    uv_groups=["test-art"],
+)
+def test_art(s: Session) -> None:
+    """Run only the opt-in (importorskip-gated) ART tests in the -art env."""
+    s.env["KCAI_TEST_SEED"] = "42"
+    s.run(
+        "pytest",
+        "tests/unit",
+        "tests/e2e",
+        "tests/cli",
+        "-m",
+        "art",
+        *s.posargs,
+    )
+
+
+@session(
     uv_groups=["test-fgsm"],
 )
 def test_fgsm(s: Session) -> None:
@@ -251,12 +269,13 @@ def lint(s: Session) -> None:
 
 @session(uv_groups=["type_check"])
 def type_check(s: Session) -> None:
-    """Run mypy static type checking on all 6 sub-packages."""
+    """Run mypy static type checking on all 7 sub-packages."""
     s.run("mypy", "packages/kcai-data-sampling-job")
     s.run("mypy", "packages/kcai-data-sampling-core")
     s.run("mypy", "packages/kcai-data-sampling-images")
     s.run("mypy", "packages/kcai-data-sampling-lama")
     s.run("mypy", "packages/kcai-data-sampling-fgsm")
+    s.run("mypy", "packages/kcai-data-sampling-art")
     s.run("mypy", "packages/kcai-data-sampling")
 
 
