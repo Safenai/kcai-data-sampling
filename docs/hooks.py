@@ -158,6 +158,7 @@ def copy_package_readmes():
         "kcai-data-sampling-images",
         "kcai-data-sampling-lama",
         "kcai-data-sampling-fgsm",
+        "kcai-data-sampling-art",
         "kcai-data-sampling-job",
         "kcai-data-sampling",
     ]:

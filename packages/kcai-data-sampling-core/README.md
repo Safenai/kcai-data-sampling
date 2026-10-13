@@ -136,8 +136,10 @@ The flags are declarations, and the base enforces every one of them:
   requires that exactly the model slot named by the role is filled: a tool role
   with a target model, or neither, is an error at construction. This is also
   what derives your family.
-- **`model_methods`** — the method the role needs: `("grad",)` for a target,
-  `("inpaint",)` for a tool. Conformance is checked against the declared role.
+- **`model_methods`** — the methods the algorithm needs from its model:
+  `("grad",)` for a gradient attack, `("predict",)` for a black-box one that
+  only queries class scores, `("inpaint",)` for a tool. Only the methods
+  declared are checked, at construction.
 - **`reversible`** — is `x` determined by `x'`? A structural claim, recorded on
   the output row. `horizontal_flip` is its own inverse, so yes; `fgsm` throws
   information away, so no.
@@ -181,9 +183,10 @@ package, not of the core.
 
 ### 4. Writing a model adapter
 
-An adapter is recognised by shape: a non-empty `name`, plus the method its role
-needs — `grad` for a target, `inpaint` for a tool. `name` is yours to choose and
-is what your config refers to.
+An adapter is recognised by shape: a non-empty `name`, plus at least one model
+method — `grad` and/or `predict` for a target, `inpaint` for a tool. `name` is
+yours to choose and is what your config refers to. The repository's
+`docs/target-models.md` is a full guide to writing a target model.
 
 Three routes, from least ceremony to owning your own name:
 

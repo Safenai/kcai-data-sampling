@@ -28,8 +28,12 @@ Both keep kcai's layout (`(B, H, W, C)`, channels last) and units (`[0, 1]`,
 
 ## Install
 
+Not published yet, and not part of the umbrella's extras: the package is
+available from a checkout of the repository.
+
 ```bash
-pip install "kcai-data-sampling[art]"
+uv sync --package kcai-data-sampling-art         # with uv
+pip install -e packages/kcai-data-sampling-art   # with pip
 ```
 
 ART's core needs numpy, scipy and scikit-learn only — no deep-learning

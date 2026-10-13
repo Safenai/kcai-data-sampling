@@ -398,9 +398,10 @@ The target model is the **user's**: the YAML's ``models:`` entry names the
 adapter **file** (`path:`), and the transformation references the model by
 **name** — never a Python object. Running this section needs the opt-in
 ``kcai-data-sampling-fgsm`` install in the kernel, plus ``torch`` /
-``ultralytics`` **and your own weights** for ``grad`` itself (fetched
-independently via ``ultralytics``, never by the package); without them every
-frame's ``grad`` call fails, and the YAML itself still validates.
+``ultralytics`` **and your own weights** for the target model (fetched
+independently via ``ultralytics``, never by the package); without them the job
+stops when it builds the model, before any frame, and the YAML itself still
+validates.
 """
 
 CODE9 = """# --- Adversarial, by the CLI: FGSM against the user's target model ---

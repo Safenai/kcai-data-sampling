@@ -104,6 +104,7 @@ plugins:
         "packages/kcai-data-sampling-images/src/kcai_data_sampling_images/",
         "packages/kcai-data-sampling-lama/src/kcai_data_sampling_lama/",
         "packages/kcai-data-sampling-fgsm/src/kcai_data_sampling_fgsm/",
+        "packages/kcai-data-sampling-art/src/kcai_data_sampling_art/",
         "packages/kcai-data-sampling-job/src/kcai_data_sampling_job/",
       ]
   # mkdocs-jupyter must come after api-autonav to handle generated files correctly
@@ -121,6 +122,7 @@ watch:
   - "packages/kcai-data-sampling-images/src/kcai_data_sampling_images/"
   - "packages/kcai-data-sampling-lama/src/kcai_data_sampling_lama/"
   - "packages/kcai-data-sampling-fgsm/src/kcai_data_sampling_fgsm/"
+  - "packages/kcai-data-sampling-art/src/kcai_data_sampling_art/"
   - "packages/kcai-data-sampling-job/src/kcai_data_sampling_job/"
   - "packages/kcai-data-sampling/src/kcai_data_sampling/"
   - "docs"
@@ -144,5 +146,6 @@ nav:
     - Images: packages/kcai-data-sampling-images.md
     - Images (LaMa): packages/kcai-data-sampling-lama.md
     - FGSM: packages/kcai-data-sampling-fgsm.md
+    - ART: packages/kcai-data-sampling-art.md
     - Job: packages/kcai-data-sampling-job.md
     - CLI: packages/kcai-data-sampling.md
