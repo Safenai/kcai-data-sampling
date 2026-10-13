@@ -15,6 +15,7 @@ from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry, get_tra
 from kcai_data_sampling_images.api.selection import ImageBatch
 import kcai_data_sampling_job
 from kcai_data_sampling_job.dataloaders.api.parquet import ParquetDataLoader
+from kcai_data_sampling_job.dataloaders.api.timeseries import TimeSeriesParquetDataLoader
 
 _IMPORT_RE = re.compile(r"^\s*(?:import|from)\s+kcai_data_sampling_images", re.MULTILINE)
 
@@ -37,10 +38,10 @@ def test_transformations_registry_resolves_from_plugin_packages_not_core() -> No
 
 
 def test_dataloaders_registry_resolves_parquet_from_job() -> None:
-    """The dataloaders group resolves the parquet loader from -job."""
+    """The dataloaders group resolves the image and series loaders from -job."""
     registry = PluginLoadedRegistry.get_dataloaders_registry()
-    assert registry == {"parquet": ParquetDataLoader}
-    assert registry["parquet"].__module__.startswith("kcai_data_sampling_job")
+    assert registry == {"parquet": ParquetDataLoader, "timeseries_parquet": TimeSeriesParquetDataLoader}
+    assert all(cls.__module__.startswith("kcai_data_sampling_job") for cls in registry.values())
 
 
 def test_outputwriter_registry_resolves_writers_from_job() -> None:

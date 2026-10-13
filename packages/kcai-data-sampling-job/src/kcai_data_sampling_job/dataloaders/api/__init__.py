@@ -1,7 +1,7 @@
-"""Image loader subclasses: the ``parquet`` dataloader.
+"""Loader subclasses: the ``parquet`` image and ``timeseries_parquet`` loaders.
 
-The generic loader contracts live in core; this folder holds the image
-package's dataloader subclasses and their plugin-owned config schema.
+The generic loader contracts live in core; this folder holds the job
+package's dataloader subclasses and their plugin-owned config schemas.
 """
 
 from kcai_data_sampling_job.dataloaders.api.parquet import (
@@ -9,5 +9,19 @@ from kcai_data_sampling_job.dataloaders.api.parquet import (
     ParquetDataSelection,
     ParquetImageLoaderConfig,
 )
+from kcai_data_sampling_job.dataloaders.api.timeseries import (
+    ConsecutiveTimeSeriesSamples,
+    IndependentTimeSeriesSamples,
+    TimeSeriesLoaderConfig,
+    TimeSeriesParquetDataLoader,
+)
 
-__all__ = ["ParquetDataLoader", "ParquetDataSelection", "ParquetImageLoaderConfig"]
+__all__ = [
+    "ConsecutiveTimeSeriesSamples",
+    "IndependentTimeSeriesSamples",
+    "ParquetDataLoader",
+    "ParquetDataSelection",
+    "ParquetImageLoaderConfig",
+    "TimeSeriesLoaderConfig",
+    "TimeSeriesParquetDataLoader",
+]
