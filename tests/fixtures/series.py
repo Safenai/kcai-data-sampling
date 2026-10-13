@@ -9,9 +9,12 @@ on ``KCAI_TEST_SEED``.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from kcai_data_sampling_timeseries.api.selection import TimeSeriesBatch
 import numpy as np
 import pyarrow as pa
+import pyarrow.parquet as pq
 import pytest
 
 SERIES_WINDOWS = 6
@@ -68,3 +71,35 @@ def synthetic_series_batch(test_seed: int) -> TimeSeriesBatch:
         data=windows,
         sampling_rate=100.0,
     )
+
+
+#: The series of the parquet fixture: id → number of steps. ``short`` holds
+#: no 32-step window, so it yields nothing and is not a failure.
+SERIES_LENGTHS = {"s0": 100, "s1": 70, "s2": 64, "short": 20}
+
+
+@pytest.fixture(scope="session")
+def series_parquet(test_seed: int, tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """A parquet table of four 2-channel series, one row per series.
+
+    Columns: ``series_id``, ``values`` (``list<list<float>>``, seeded noise
+    around a slow sinusoid) and ``site``, a source column for pass-through.
+
+    Returns:
+        The parquet file path.
+    """
+    rng = np.random.default_rng(test_seed)
+    values = []
+    for n in SERIES_LENGTHS.values():
+        slow = np.sin(2 * np.pi * 0.02 * np.arange(n))[:, None]
+        values.append((slow + 0.3 * rng.normal(size=(n, 2))).tolist())
+    table = pa.table(
+        {
+            "series_id": list(SERIES_LENGTHS),
+            "values": values,
+            "site": [f"site_{i % 2}" for i in range(len(SERIES_LENGTHS))],
+        }
+    )
+    path = tmp_path_factory.mktemp("series") / "series.parquet"
+    pq.write_table(table, path)
+    return path

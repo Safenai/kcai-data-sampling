@@ -37,6 +37,9 @@ only, not the series' sampling rate, so it cannot read a frequency in hertz.
 For a series sampled at `fs` Hz, `f` Hz is `f / fs` cycles per step: 5 Hz at
 100 Hz is `0.05`.
 
+A sinusoid at exactly `0.5` with `phase: 0` is zero at every step: pick a
+frequency below Nyquist, or a non-zero phase.
+
 ## Install
 
 ```bash
@@ -54,9 +57,9 @@ operations:
         range: [0.05, 0.2]
         samples: 3
         mode: even
-    - name: mains_hum
+    - name: interference
       type: add_sinusoid
-      frequency: 0.5
+      frequency: 0.25
       amplitude: 0.1
 ```
 
