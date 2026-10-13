@@ -1,0 +1,36 @@
+# Procedural transformations on time-series windows.
+# Data: python scripts/make_timeseries_sample.py (5 series, 2,000 steps, 100 Hz).
+# Frequencies are in cycles per step: at 100 Hz, 10 Hz is 0.1 and 25 Hz is 0.25.
+dataloaders:
+  loaders:
+    - name: machines
+      type: timeseries_parquet
+      path: examples/data/timeseries_sample/series.parquet
+      id_column: series_id
+      values_column: values
+      sampling_rate: 100
+      load_batch_size: 32
+      windows:
+        mode: consecutive
+        window: 256
+        stride: 128
+
+operations:
+  outputs:
+    path: examples/outputs/{selection}/ledger.parquet
+    write_samples: true
+    samples_dir: examples/outputs/{selection}/payloads
+    payload_format: npy
+    flush_batch_size: 128
+    include: [machine, window_start, window_end]
+  transformations:
+    - name: low_pass
+      type: low_pass
+      cutoff:
+        range: [0.05, 0.15]
+        samples: 3
+        mode: even
+    - name: interference_25hz
+      type: add_sinusoid
+      frequency: 0.25
+      amplitude: 0.2
