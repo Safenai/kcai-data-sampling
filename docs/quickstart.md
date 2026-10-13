@@ -2,7 +2,7 @@
 
 End-to-end in a few commands: install the package, fetch the sample data, run
 your first job, and read what it produced. The vocabulary used below —
-transformation, families, label effects — is defined in
+transformation, families, annotation states — is defined in
 [docs/terminology.md](terminology.md).
 
 ## Prerequisites
@@ -145,7 +145,7 @@ depends on it itself.
 ## Where to go next
 
 - [docs/terminology.md](terminology.md) — the vocabulary: families, regimes,
-  label effects.
+  annotation states.
 - [docs/developer.md](developer.md) — working on kcai itself: repository
   setup and the test and build sessions.
 - [README.md](index.md) — the workspace overview and package layout.
