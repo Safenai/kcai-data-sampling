@@ -159,6 +159,7 @@ def copy_package_readmes():
         "kcai-data-sampling-lama",
         "kcai-data-sampling-fgsm",
         "kcai-data-sampling-job",
+        "kcai-data-sampling-timeseries",
         "kcai-data-sampling",
     ]:
         src = packages_dir / pkg / "README.md"

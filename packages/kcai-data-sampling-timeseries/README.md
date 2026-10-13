@@ -42,9 +42,17 @@ frequency below Nyquist, or a non-zero phase.
 
 ## Install
 
+Not published yet, and not part of the umbrella's extras: the package is
+available from a checkout of the repository, where `uv sync` installs it with
+the rest of the workspace.
+
 ```bash
-pip install "kcai-data-sampling[timeseries]"
+uv run python scripts/make_timeseries_sample.py
+uv run kcai-data-sampling process -p examples/config/timeseries-procedural.yaml
 ```
+
+Cutting series into windows (the `timeseries_parquet` loader) and writing the
+`.npy` outputs belong to `kcai-data-sampling-job`.
 
 ## Example
 

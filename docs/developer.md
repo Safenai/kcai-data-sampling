@@ -42,7 +42,7 @@ uv sync --group fgsm                        # -fgsm, numpy-only, no torch
 
 ## Running things with uv
 
-Because the workspace is a uv project with six member packages, `uv run` is
+Because the workspace is a uv project with seven member packages, `uv run` is
 the normal way to execute anything in the development environment:
 
 ```bash
@@ -147,8 +147,8 @@ means your change disappears on the next build.
 ## Repository layout
 
 ```
-packages/          the six distributions, each with its own pyproject.toml
-  kcai-data-sampling{,-core,-images,-lama,-fgsm,-job}/
+packages/          the seven distributions, each with its own pyproject.toml
+  kcai-data-sampling{,-core,-images,-lama,-fgsm,-job,-timeseries}/
 tests/             unit, e2e, cli and packaging suites
 examples/          configs, adapters, notebooks and (generated) outputs
 docs/              this site

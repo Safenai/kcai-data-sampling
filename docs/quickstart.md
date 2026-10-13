@@ -130,6 +130,18 @@ of their dependencies. Each has its own umbrella extra:
   (`examples/adapters/yolo_target.py`) and expects your `yolov8n.pt` weights,
   resolved via `ultralytics` on the machine running the job.
 
+- **Time series** (workspace only: `kcai-data-sampling-timeseries` is not yet
+  published, and has no umbrella extra). From a checkout, `uv sync` installs it;
+  the example generates its own synthetic data, nothing is downloaded:
+
+  ```bash
+  uv run python scripts/make_timeseries_sample.py
+  uv run kcai-data-sampling process -p examples/config/timeseries-procedural.yaml
+  ```
+
+  Windows of 256 steps are cut from five synthetic recordings, and each output
+  is written as a `.npy` file (`payload_format: npy`).
+
 To get everything the walkthrough notebook needs in one go, install the `all`
 extra — it is the union of `notebooks`, `job`, `images`, `fgsm` and `lama`:
 

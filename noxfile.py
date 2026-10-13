@@ -51,6 +51,7 @@ def test_coverage(s: Session) -> None:
         "--cov=packages/kcai-data-sampling-lama/src",
         "--cov=packages/kcai-data-sampling-fgsm/src",
         "--cov=packages/kcai-data-sampling-job/src",
+        "--cov=packages/kcai-data-sampling-timeseries/src",
         "--cov=packages/kcai-data-sampling/src",
         "--cov-report=html:docs/reports/htmlcov",
         "--cov-report=json:docs/reports/coverage.json",
