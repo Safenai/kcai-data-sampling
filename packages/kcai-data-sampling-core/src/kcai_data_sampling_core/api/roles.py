@@ -27,8 +27,8 @@ class TargetModel(Protocol):
 
         The input is the normalized float batch in ``[0, 1]`` — an integer
         batch mapped by dividing through by its dtype maximum. The returned
-        gradient is in the same normalized units; only its sign participates
-        in the perturbation step.
+        gradient is in the same normalized units; how it is used (its sign,
+        its magnitude) is up to the adversarial transformation.
 
         Args:
             xs: Input batch ``(B, *sample)`` normalized to ``[0, 1]``.
