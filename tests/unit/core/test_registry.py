@@ -45,13 +45,13 @@ def test_dataloaders_registry_resolves_parquet_from_job() -> None:
 
 
 def test_outputwriter_registry_resolves_writers_from_job() -> None:
-    """The outputwriter group resolves the images/parquet writers from -job.
+    """The outputwriter group resolves the images/npy/parquet writers from -job.
 
-    The two writers (payload + ledger) live next to the loader in ``-job``;
-    core only ships the generic ``OutputWriter`` protocol.
+    The writers (two payload formats + the ledger) live next to the loaders in
+    ``-job``; core only ships the generic ``OutputWriter`` protocol.
     """
     registry = PluginLoadedRegistry.get_outputwriter_registry()
-    assert set(registry) == {"images", "parquet"}
+    assert set(registry) == {"images", "npy", "parquet"}
     assert all(cls.__module__.startswith("kcai_data_sampling_job") for cls in registry.values())
 
 

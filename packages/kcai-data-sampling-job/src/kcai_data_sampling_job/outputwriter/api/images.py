@@ -10,10 +10,11 @@ than that many encoded rows in memory.
 """
 
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from kcai_data_sampling_core.api.output import Output
 from kcai_data_sampling_core.api.output_writer import OutputWriter
+import numpy as np
 from typing_extensions import override
 
 from kcai_data_sampling_job.utils.images import artifact_name, png_bytes
@@ -27,9 +28,15 @@ class ImagesOutputWriter(OutputWriter):
     files only; the parquet writer owns the ledger, so this writer inherits
     the common writer protocol's no-op ``add_rows``.
 
+    The file format is two hooks, ``suffix`` and :meth:`encode`; the other
+    payload writers (``npy``) subclass this one and override only those.
+
     Attributes:
         name: Unique writer name.
+        suffix: The payload file extension, without the dot.
     """
+
+    suffix: ClassVar[str] = "png"
 
     def __init__(self, name: str, config: dict[str, Any] | None = None):
         """Build the payload writer.
@@ -48,9 +55,20 @@ class ImagesOutputWriter(OutputWriter):
         self.flush_batch_size = config.get("flush_batch_size", 5)
         self._buffer: list[tuple[Path, bytes]] = []
 
+    def encode(self, x: np.ndarray) -> bytes:
+        """Encode one sample to the payload file's bytes.
+
+        Args:
+            x: The ``(H, W, 3|4)`` uint8 image.
+
+        Returns:
+            The PNG file bytes.
+        """
+        return png_bytes(x)
+
     @override
     def add_payload(self, selection_name: str, output: Output) -> str | None:
-        """Encode one output row to PNG bytes and buffer it.
+        """Encode one output row to payload bytes and buffer it.
 
         The artifact name is content-addressed, so buffering and flush order
         cannot change the pixels on disk. No file is written until ``flush()``.
@@ -61,7 +79,7 @@ class ImagesOutputWriter(OutputWriter):
             output: The output row; its ``x`` is the ``(H, W, 4)`` uint8 array.
 
         Returns:
-            The artifact file name (``{selection}__{id}__{c6}.png``). In
+            The artifact file name (``{selection}__{id}__{c6}.<suffix>``). In
             trace-only mode the name is still returned (hash-only trace) but
             nothing is buffered.
         """
@@ -69,10 +87,11 @@ class ImagesOutputWriter(OutputWriter):
             selection_name=selection_name,
             output_id=output.id,
             x=output.x,
+            suffix=self.suffix,
         )
         if self.write_samples:
             samples_dir = Path(self.samples_dir.format(selection=selection_name))
-            self._buffer.append((samples_dir / artifact, png_bytes(output.x)))
+            self._buffer.append((samples_dir / artifact, self.encode(output.x)))
             if len(self._buffer) >= self.flush_batch_size:
                 self.flush()
         return artifact

@@ -25,6 +25,7 @@ timeseries_parquet = "kcai_data_sampling_job.dataloaders.api.timeseries:TimeSeri
 
 [project.entry-points."kcai_data_sampling.outputwriter"]
 images = "kcai_data_sampling_job.outputwriter.api.images:ImagesOutputWriter"
+npy = "kcai_data_sampling_job.outputwriter.api.npy:NpyOutputWriter"
 parquet = "kcai_data_sampling_job.outputwriter.api.parquet:ParquetOutputWriter"
 
 [build-system]
