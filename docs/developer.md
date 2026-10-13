@@ -151,7 +151,7 @@ means your change disappears on the next build.
 
 ```
 packages/          the seven distributions, each with its own pyproject.toml
-  kcai-data-sampling{,-core,-images,-albumentation,-lama,-fgsm,-job}/
+  kcai-data-sampling{,-core,-images,-albumentation,-lama,-fgsm,-job,-timeseries}/
 tests/             unit, e2e, cli and packaging suites
 examples/          configs, adapters, notebooks and (generated) outputs
 docs/              this site

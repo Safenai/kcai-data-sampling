@@ -13,8 +13,8 @@ content-addressed file.
 ## What it ships today
 
 - `SamplingJob` — the run loop.
-- The IO plugins: a `parquet` dataloader, and `images` and `parquet` output
-  writers.
+- The IO plugins: the `parquet` image dataloader, the `timeseries_parquet`
+  series dataloader, and the `images`, `npy` and `parquet` output writers.
 - The ledger writer.
 - The `process` command, driven by YAML.
 
@@ -71,11 +71,55 @@ overwrite it. With neither set, nothing is passed through — the ledger holds
 only the generated columns.
 
 **Payload files are content-addressed.** The file name is
-`{selection}__{id}__{c6}.png`, where `c6` is a short hash of the decoded payload
-bytes. Identical pixels plus the same output id therefore name the same file, so
+`{selection}__{id}__{c6}.png` (or `.npy`), where `c6` is a short hash of the
+decoded payload bytes. Identical pixels plus the same output id therefore name the same file, so
 artifact paths are invariant to buffering and flush order. The output id already
 covers the recipe — parent, algorithm, settings, seed — and the hash only guards
 content collisions.
+
+**The payload format is chosen per job.** `outputs.payload_format` names the
+writer: `images` (the default) encodes each sample as a PNG, which needs an
+8-bit image; `npy` saves any array with `np.save`, dtype and shape kept exactly,
+which is what time-series windows need.
+
+## Time series
+
+The `timeseries_parquet` loader reads **one row per series**: an id, a values
+column (`list<float>`, or `list<list<float>>` for several channels) and any other
+source columns. The sample is a **window** of `W` consecutive steps, and the
+`windows` section decides how windows are cut:
+
+| `mode` | Windows | Window id |
+| --- | --- | --- |
+| `consecutive` | every window that fits, `stride` steps apart (`stride` defaults to `W`; `1` slides) | `<series>@<last step>` |
+| `independent` | `n_windows` distinct positions per series, drawn from `seed` and the series id; `non_overlap: true` keeps them disjoint | `<series>@<start>` |
+
+Each window carries its series' source columns plus `window_start` and
+`window_end`, and a batch is `(B, W, C)` float64 with axes `(time, channel)`
+and no value range. A series that cannot be windowed as asked (null values, a
+different channel count, independent windows that do not fit) counts as a
+failed row under `errors`; a series shorter than one window simply yields
+none.
+
+```yaml
+dataloaders:
+  loaders:
+    - name: machines
+      type: timeseries_parquet
+      path: examples/data/timeseries_sample/series.parquet
+      id_column: series_id
+      values_column: values
+      sampling_rate: 100
+      windows:
+        mode: consecutive
+        window: 256
+        stride: 128
+operations:
+  outputs:
+    path: examples/outputs/{selection}/ledger.parquet
+    samples_dir: examples/outputs/{selection}/payloads
+    payload_format: npy
+```
 
 ## Example
 

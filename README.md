@@ -21,6 +21,8 @@ Install individual packages based on your needs:
 
 > **Note:** The `kcai-data-sampling` package is the CLI wrapper.
 
+`kcai-data-sampling-timeseries` (time-series windows) lives in the workspace only and is not yet published.
+
 [pypi-core-badge]: https://img.shields.io/pypi/v/kcai-data-sampling-core.svg
 [pypi-images-badge]: https://img.shields.io/pypi/v/kcai-data-sampling-images.svg
 [pypi-albumentation-badge]: https://img.shields.io/pypi/v/kcai-data-sampling-albumentation.svg
