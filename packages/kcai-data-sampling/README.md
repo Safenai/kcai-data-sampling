@@ -88,8 +88,8 @@ Methods are grouped by **the model's role**, not chosen by hand:
 
 Two more properties hold across all of them. Transformations listed together are
 applied **independently** to the same source sample, not chained. And whether an
-output is a perturbation, an augmentation or a corruption is read off the
-input/output pair *afterwards* — it is not declared by the algorithm.
+output is an augmentation or a corruption is not declared by the algorithm: it
+is judged *downstream*, against a task. The output only records `reversible`.
 
 ## Running a job
 

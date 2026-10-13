@@ -10,12 +10,12 @@ The workspace is a uv monorepo of seven member packages under `packages/`:
 - `kcai-data-sampling-images` — the procedural family: model-free image transformations (`horizontal_flip`, `crop_resize`) on a decoded image batch;
 - `kcai-data-sampling-albumentation` — the curated image-robustness catalogue: hard-pinned albumentations transforms behind one shared engine;
 - `kcai-data-sampling-lama` — generative inpainting (LaMa) transformation and tool-model plugin;
-- `kcai-data-sampling-fgsm` — adversarial perturbation (FGSM) transformation and target-model support;
+- `kcai-data-sampling-fgsm` — adversarial (FGSM) transformation and target-model support;
 - `kcai-data-sampling-job` — pipeline orchestration and all the IO plugins: the `parquet` dataloader, the `parquet` ledger writer and the `images` payload writer;
 - `kcai-data-sampling` — umbrella CLI (`version`, `list`, and `process` once the `[job]` extra is installed).
 
 The vocabulary used across the code and the configs — transformation, families,
-regimes, label effects — is defined in [docs/terminology.md](docs/terminology.md).
+regimes, annotation states — is defined in [docs/terminology.md](docs/terminology.md).
 
 To get a job running in a few minutes — install, fetch the sample data, run the
 procedural example and read its output — see

@@ -55,16 +55,17 @@ the output:
 | --- | --- | --- |
 | no model | **procedural** | computed from `x` alone |
 | **tool** | **generative** | the model produces the content that becomes the output |
-| **target** | **adversarial** | the model's response enters the computation, and the result is graded against it |
+| **target** | **adversarial** | the model's response enters the computation |
 
 The role says where the model plugs in; the family says what the map does. The
 two are not independent — the family is derived from the role, so declaring a
 role is all you do. An algorithm may declare `family` explicitly when it needs
 to; otherwise the role decides.
 
-What you must **not** declare is the regime — perturbation, augmentation or
-corruption. That is read off the input/output pair *afterwards*, by comparing
-`x` and `x'`. It is not a property you assert about your own algorithm.
+What you must **not** declare is the regime — augmentation or corruption. It
+is a statement about the information a *task* needs, so it is judged
+*downstream*, against that task, not asserted about your own algorithm. The one
+effect you do declare is `reversible`.
 
 Transformations listed together are applied **independently** to the same source
 sample, not chained.
