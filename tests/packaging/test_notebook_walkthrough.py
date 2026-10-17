@@ -12,7 +12,7 @@ a 197 MB checkpoint, real CPU inference), so it is opt-in behind
 ``nox -s test_packaging_notebook`` and never runs in the default suite.
 
 Two things are deliberate. The notebook is executed in the repository as-is, so it reads
-``examples/config/*.yaml``, ``examples/adapters/yolo_target.py`` and the comma10k sample
+``examples/config/*.yaml``, ``examples/adapters/torch_detector_target.py`` and the comma10k sample
 -- every one of which lives under a git-ignored path, so the tree stays clean. And
 nbclient is installed into the venv as test-only tooling rather than added to the
 published ``all`` extra, which means this proves the extra is sufficient *except*

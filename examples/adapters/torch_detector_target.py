@@ -16,8 +16,8 @@ Config to point at it (see ``examples/config/walkthrough-adversarial.yaml``)::
     models:
       yolo:
         type: python
-        path: examples/adapters/yolo_target.py
-        export: YoloTarget
+        path: examples/adapters/torch_detector_target.py
+        export: TorchDetectorTarget
         weights: yolov8n.pt
         params: { conf: 0.25 }
 """
@@ -25,7 +25,7 @@ Config to point at it (see ``examples/config/walkthrough-adversarial.yaml``)::
 import numpy as np
 
 
-class YoloTarget:
+class TorchDetectorTarget:
     """An ultralytics YOLO detector seen by kcai as a target.
 
     Args:

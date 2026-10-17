@@ -71,8 +71,8 @@ model supplied as your own source:
 models:
   yolo:
     type: python
-    path: adapters/yolo_target.py
-    export: YoloTarget
+    path: adapters/torch_detector_target.py
+    export: TorchDetectorTarget
     weights: yolov8n.pt
     params: { conf: 0.25 }
 operations:

@@ -127,7 +127,7 @@ of their dependencies. Each has its own umbrella extra:
   ```
 
   `walkthrough-adversarial.yaml` names the target adapter file
-  (`examples/adapters/yolo_target.py`) and expects your `yolov8n.pt` weights,
+  (`examples/adapters/torch_detector_target.py`) and expects your `yolov8n.pt` weights,
   resolved via `ultralytics` on the machine running the job.
 
 To get everything the walkthrough notebook needs in one go, install the `all`

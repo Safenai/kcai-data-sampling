@@ -4,7 +4,7 @@ Built like ``template_target.py``. Works with every Hugging Face image
 classifier that has Flax weights (ViT, BEiT, ResNet, ...), chosen by model
 id: the input size and normalization are read from the model's image
 processor. Forward pass and gradient are pure JAX. The loss is the
-cross-entropy of the model's own top-1 class, as in ``keras_target.py``.
+cross-entropy of the model's own top-1 class, as in ``keras_classifier_target.py``.
 ``predict`` returns the class probabilities, for the black-box attacks.
 
 ``jax`` and ``transformers`` 4.x (5.x dropped the Flax classes) live in your
@@ -15,15 +15,15 @@ Config to point at it::
     models:
       vit:
         type: python
-        path: examples/adapters/flax_target.py
-        export: FlaxTarget
+        path: examples/adapters/flax_classifier_target.py
+        export: FlaxClassifierTarget
         weights: google/vit-base-patch16-224
 """
 
 import numpy as np
 
 
-class FlaxTarget:
+class FlaxClassifierTarget:
     """A Hugging Face Flax image classifier seen by kcai as a target.
 
     Args:

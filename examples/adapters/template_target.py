@@ -3,9 +3,11 @@
 Copy this file and fill in ``name``, ``__init__`` and the method(s) your
 attacks need: ``grad`` for the gradient attacks (``fgsm``, ``art_fgsm``),
 ``predict`` for the black-box ones (``art_square``). Delete the one you do not
-use. See ``docs/target-models.md``. Runnable examples:
-``yolo_target.py`` (PyTorch), ``keras_target.py`` (TensorFlow) and
-``flax_target.py`` (JAX).
+use. See ``docs/target-models.md``. Runnable examples, named
+``<framework>_<task>_target.py``: ``torch_detector_target.py`` and
+``torch_classifier_target.py`` (PyTorch), ``keras_detector_target.py`` and
+``keras_classifier_target.py`` (TensorFlow), ``flax_classifier_target.py``
+(JAX).
 """
 
 import numpy as np

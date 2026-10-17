@@ -23,8 +23,8 @@ dataloaders:
 models:
   yolo:
     type: python                          # the file route: user source, not a plugin
-    path: examples/adapters/yolo_target.py
-    export: YoloTarget
+    path: examples/adapters/torch_detector_target.py
+    export: TorchDetectorTarget
     weights: yolov8n.pt                   # your weights, fetched with `ultralytics`
     params: { conf: 0.25 }
 

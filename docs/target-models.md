@@ -54,13 +54,20 @@ on the first call. A broken adapter fails at startup with a message naming it.
     `NotImplementedError`, so an unfinished adapter cannot run by mistake.
     Anything else (helper methods, extra constructor arguments) is up to you.
 
-2. **Fill it in**, starting from the example closest to your model:
-   `yolo_target.py` (PyTorch, any ultralytics detector), `keras_target.py`
-   (TensorFlow, any `keras.applications` classifier) or `flax_target.py`
-   (JAX, any Hugging Face Flax classifier), all in `examples/adapters/`. If
-   your model is one of those, you may only need to pass its name or
-   weights. See also
-   [Choosing the loss](#choosing-the-loss) and [Pitfalls](#pitfalls).
+2. **Fill it in**, starting from the example closest to your model, all in
+   `examples/adapters/` and named `<framework>_<task>_target.py`:
+
+    | Adapter | Framework | Works with |
+    |---|---|---|
+    | `torch_detector_target.py` | PyTorch | any ultralytics detector |
+    | `torch_classifier_target.py` | PyTorch | any `torchvision.models` classifier |
+    | `keras_detector_target.py` | TensorFlow | KerasHub D-FINE and RetinaNet detectors |
+    | `keras_classifier_target.py` | TensorFlow | any `keras.applications` classifier |
+    | `flax_classifier_target.py` | JAX | any Hugging Face Flax classifier |
+
+    If your model is one of those, you may only need to pass its name or
+    weights. See also
+    [Choosing the loss](#choosing-the-loss) and [Pitfalls](#pitfalls).
 
 3. **Test it** (optional, see [Testing your adapter](#testing-your-adapter)).
 
@@ -120,7 +127,7 @@ print("max change:", np.abs(attacked.astype(int) - images).max(), "grey levels")
 Then check that the attack actually affects your model: compare its
 predictions on `images` and `attacked`, ideally on real images rather than
 random ones. `examples/notebooks/adversarial-frameworks.ipynb` does this for
-the three example adapters.
+the five example adapters.
 
 ## Choosing the loss
 
@@ -129,9 +136,9 @@ measures what you want to break:
 
 | Task | Loss to return | Effect of the attack |
 |---|---|---|
-| Classification, no labels | Cross-entropy of the model's own top-1 class (the TensorFlow and JAX examples) | Pushes the prediction away from what the model currently sees |
+| Classification, no labels | Cross-entropy of the model's own top-1 class (the classifier examples) | Pushes the prediction away from what the model currently sees |
 | Classification, targeted | **Minus** the cross-entropy of a chosen class (a constructor argument, set through `params`) | Pulls the prediction toward that class |
-| Detection | **Minus** the total detection confidence (sum of best class scores) | Suppresses detections |
+| Detection | **Minus** the total detection confidence (sum of best class scores; the detector examples) | Suppresses detections |
 | Segmentation | Pixel-wise cross-entropy of the predicted mask | Corrupts the predicted mask |
 
 Detach anything computed from the model's own prediction (e.g. `top1`), so
@@ -143,9 +150,9 @@ the usual stand-in, and avoids the "label leaking" effect described in the
 FGSM literature.
 
 The notebook `examples/notebooks/adversarial-frameworks.ipynb` shows the
-three example adapters at work: the detection loss lowers YOLO's confidence,
-and the classifiers' cross-entropy loss flips their top-1 class at 8 grey
-levels.
+five example adapters at work: the detection loss lowers the detectors'
+confidence, and the classifiers' cross-entropy loss flips their top-1 class
+at 8 grey levels.
 
 ## Pitfalls
 
@@ -161,7 +168,7 @@ levels.
   (Keras), so dropout and batch-norm statistics don't change between calls.
 - **Gradient enabled.** Some libraries disable autograd at inference
   (`torch.no_grad`, ultralytics' predictor). Call the underlying network
-  yourself under `torch.enable_grad()`. `yolo_target.py` does this for
+  yourself under `torch.enable_grad()`. `torch_detector_target.py` does this for
   ultralytics (`YOLO(weights).model`).
 - **Import inside the adapter.** Import your framework inside `__init__` or
   `grad`, not at the top of the file. The framework belongs to your
@@ -188,7 +195,7 @@ framework gradient, back to numpy. The core of `grad` in each framework:
     dx = dx.permute(0, 2, 3, 1).numpy()
     ```
 
-    Full example: `examples/adapters/yolo_target.py`.
+    Full example: `examples/adapters/torch_detector_target.py`.
 
 === "TensorFlow / Keras"
 
@@ -199,7 +206,7 @@ framework gradient, back to numpy. The core of `grad` in each framework:
     dx = tape.gradient(loss, rgb).numpy()
     ```
 
-    Full example: `examples/adapters/keras_target.py`.
+    Full example: `examples/adapters/keras_classifier_target.py`.
 
 === "JAX / Flax"
 
@@ -211,7 +218,7 @@ framework gradient, back to numpy. The core of `grad` in each framework:
     ```
 
     For speed, compile it once with `jax.jit`. Full example:
-    `examples/adapters/flax_target.py`.
+    `examples/adapters/flax_classifier_target.py`.
 
 In every case, write `dx` into the RGB planes of a zero array shaped like `xs`
 and return it.

@@ -18,8 +18,8 @@ Config to point at it::
     models:
       mobilenet:
         type: python
-        path: examples/adapters/keras_target.py
-        export: KerasTarget
+        path: examples/adapters/keras_classifier_target.py
+        export: KerasClassifierTarget
         weights: imagenet
         params: { model: MobileNetV2 }
 """
@@ -29,7 +29,7 @@ import importlib
 import numpy as np
 
 
-class KerasTarget:
+class KerasClassifierTarget:
     """A Keras Applications classifier seen by kcai as a target.
 
     Args:

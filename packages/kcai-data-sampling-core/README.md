@@ -303,9 +303,9 @@ package. Three routes, from the least ceremony to shipping your own package:
    models:
      my_yolo:
        type: python
-       path: adapters/yolo_target.py   # absolute, or relative to the working directory
-       export: YoloTarget              # optional; defaults to the models: key name
-       weights: yolov8n.pt             # optional; passed to the adapter constructor
+       path: adapters/torch_detector_target.py  # absolute, or relative to the working directory
+       export: TorchDetectorTarget             # optional; defaults to the models: key name
+       weights: yolov8n.pt                     # optional; passed to the adapter constructor
    ```
 
 2. **The `register_model` route** — in-process registration makes a plain
