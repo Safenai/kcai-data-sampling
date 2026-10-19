@@ -132,6 +132,51 @@ def _outputs(root: Path) -> tuple[bytes, dict[str, bytes]]:
     return ledger, {p.name: p.read_bytes() for p in (root / "synthetic").glob("*.png")}
 
 
+def _check_row(row: dict) -> None:
+    """Assert one ledger row's facts: a unary adversarial step against ``stub``.
+
+    Args:
+        row: One ledger row, as a dict.
+    """
+    assert row["family"] == "adversarial"
+    assert row["arity"] == "unary"
+    assert row["reversible"] is False
+    assert row["tool_model"] is None
+    assert row["target_model"] == "stub"
+    assert row["seed"] == (SEED if row["algorithm"] in BLACK_BOX else None)
+    assert json.loads(row["params"]) == ATTACKS[row["algorithm"]]
+    assert re.fullmatch(r"[0-9a-f]{12}", row["id"]) is not None
+
+
+def _check_payload(png: Path, by_id: dict[str, dict], frames: list[np.ndarray]) -> None:
+    """Assert one payload file: named after its row, alpha kept, within budget.
+
+    Args:
+        png: The payload file.
+        by_id: The ledger rows, keyed by ``id``.
+        frames: The source frames, indexed by the parent id's number.
+    """
+    match = ARTIFACT_RE.fullmatch(png.name)
+    assert match is not None
+    row = by_id[match.group("id")]
+    assert row["artifact"] == png.name
+    pixels = np.asarray(Image.open(png))
+    assert pixels.dtype == np.uint8
+    assert pixels.shape == (32, 32, 4)
+    assert match.group("c6") == hashlib.sha1(pixels.tobytes()).hexdigest()[:6]
+
+    source = frames[int(row["parent_id"].split("_")[1])]
+    assert np.array_equal(pixels[..., 3], source[..., 3])
+    if row["algorithm"] in BUDGETED:
+        assert np.abs(pixels.astype(np.int16) - source.astype(np.int16)).max() <= int(np.rint(EPSILON * 255))
+    if row["algorithm"] == "art_fgsm":
+        assert pixels.tobytes() == _fgsm_expected(source).tobytes()
+    if row["algorithm"] == "art_hopskipjump":
+        stub = StubTarget()
+        before, after = (stub.predict(x[None] / 255).argmax(axis=1)[0] for x in (source, pixels))
+        assert before != after or np.array_equal(pixels, source)
+
+
 def test_art_run_ledger_and_payloads(raw_bytes_data, test_seed, registry_snapshot, tmp_path) -> None:
     """One run of the six ART attacks records the expected ledger and payloads.
 
@@ -154,42 +199,16 @@ def test_art_run_ledger_and_payloads(raw_bytes_data, test_seed, registry_snapsho
     rows = table.to_pylist()
     assert collections.Counter(row["algorithm"] for row in rows) == dict.fromkeys(ATTACKS, 8)
     for row in rows:
-        assert row["family"] == "adversarial"
-        assert row["arity"] == "unary"
-        assert row["reversible"] is False
-        assert row["tool_model"] is None
-        assert row["target_model"] == "stub"
-        assert row["seed"] == (SEED if row["algorithm"] in BLACK_BOX else None)
-        assert json.loads(row["params"]) == ATTACKS[row["algorithm"]]
-        assert re.fullmatch(r"[0-9a-f]{12}", row["id"]) is not None
+        _check_row(row)
     assert len({row["id"] for row in rows}) == 48
     assert {row["parent_id"] for row in rows} == {f"syn_{i:04d}" for i in range(8)}
 
     by_id = {row["id"]: row for row in rows}
     frames = make_frames(test_seed)
-    stub = StubTarget()
-    move = int(np.rint(EPSILON * 255))
     payloads = sorted((root / "synthetic").glob("*.png"))
     assert len(payloads) == 48
     for png in payloads:
-        match = ARTIFACT_RE.fullmatch(png.name)
-        assert match is not None
-        row = by_id[match.group("id")]
-        assert row["artifact"] == png.name
-        pixels = np.asarray(Image.open(png))
-        assert pixels.dtype == np.uint8
-        assert pixels.shape == (32, 32, 4)
-        assert match.group("c6") == hashlib.sha1(pixels.tobytes()).hexdigest()[:6]
-
-        source = frames[int(row["parent_id"].split("_")[1])]
-        assert np.array_equal(pixels[..., 3], source[..., 3])
-        if row["algorithm"] in BUDGETED:
-            assert np.abs(pixels.astype(np.int16) - source.astype(np.int16)).max() <= move
-        if row["algorithm"] == "art_fgsm":
-            assert pixels.tobytes() == _fgsm_expected(source).tobytes()
-        if row["algorithm"] == "art_hopskipjump":
-            before, after = (stub.predict(x[None] / 255).argmax(axis=1)[0] for x in (source, pixels))
-            assert before != after or np.array_equal(pixels, source)
+        _check_payload(png, by_id, frames)
 
 
 def test_art_run_is_deterministic(raw_bytes_data, registry_snapshot, tmp_path) -> None:
