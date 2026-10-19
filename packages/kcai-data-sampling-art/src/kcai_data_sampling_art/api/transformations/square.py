@@ -12,6 +12,7 @@ from kcai_data_sampling_core.api.unary import UnaryTransformation
 import numpy as np
 from typing_extensions import override
 
+from kcai_data_sampling_art.api.transformations._common import per_image_seeded, to_integer
 from kcai_data_sampling_art.configs import ArtSquareTransformationConfig
 from kcai_data_sampling_art.estimator import TargetClassifier
 
@@ -68,8 +69,7 @@ class ArtSquare(UnaryTransformation):
                 f"art_square: p_init={self.params['p_init']} gives a first square of {side} px, "
                 f"not smaller than the {height}x{width} image; lower p_init"
             )
-        top = np.iinfo(xs.dtype).max
-        normalized = xs.astype(np.float32) / top
+        normalized = xs.astype(np.float32) / np.iinfo(xs.dtype).max
         attack = SquareAttack(
             TargetClassifier(self.target_model, input_shape=xs.shape[1:]),
             norm=np.inf,
@@ -78,15 +78,5 @@ class ArtSquare(UnaryTransformation):
             p_init=self.params["p_init"],
             verbose=False,
         )
-        adversarial = np.empty_like(normalized)
-        state = np.random.get_state()
-        try:
-            for i, rng in enumerate(rngs):
-                np.random.seed(int(rng.integers(2**32)))
-                adversarial[i] = attack.generate(normalized[i : i + 1])[0]
-        finally:
-            np.random.set_state(state)
-        out = np.rint(adversarial * top).astype(xs.dtype)
-        if xs.shape[-1] == 4:
-            out[..., 3] = xs[..., 3]  # the attack is on the image, not its transparency
-        return out
+        adversarial = per_image_seeded(normalized, rngs, lambda x, _rng: attack.generate(x))
+        return to_integer(adversarial, xs)

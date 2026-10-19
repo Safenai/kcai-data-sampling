@@ -107,7 +107,8 @@ class TargetClassifier(ClassifierMixin, NeuralNetworkMixin, BaseEstimator):  # t
 
         Args:
             x: Batch normalized to ``[0, 1]``.
-            batch_size: Unused: the target receives the batch ART passes.
+            batch_size: The target receives at most this many images per
+                call (decision-based attacks query many noisy copies at once).
             **kwargs: Unused.
 
         Returns:
@@ -117,7 +118,9 @@ class TargetClassifier(ClassifierMixin, NeuralNetworkMixin, BaseEstimator):  # t
             ValueError: If the answer is not a finite ``(B, n_classes)`` array
                 with at least two classes.
         """
-        del batch_size, kwargs
+        del kwargs
+        if len(x) > batch_size:
+            return np.concatenate([self.predict(x[i : i + batch_size]) for i in range(0, len(x), batch_size)])
         scores = self.model.predict(x)
         if not isinstance(scores, np.ndarray) or scores.ndim != 2 or len(scores) != len(x) or scores.shape[1] < 2:
             raise ValueError(

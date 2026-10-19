@@ -1,8 +1,9 @@
 """Template: wrap your own model as a kcai target model.
 
 Copy this file and fill in ``name``, ``__init__`` and the method(s) your
-attacks need: ``grad`` for the gradient attacks (``fgsm``, ``art_fgsm``),
-``predict`` for the black-box ones (``art_square``). Delete the one you do not
+attacks need: ``grad`` for the gradient attacks (``fgsm``, ``art_fgsm``,
+``art_pgd``, ``art_mim``), ``predict`` for the black-box ones (``art_square``,
+``art_simba``, ``art_hopskipjump``). Delete the one you do not
 use. See ``docs/target-models.md``. Runnable examples, named
 ``<framework>_<task>_target.py``: ``torch_detector_target.py`` and
 ``torch_classifier_target.py`` (PyTorch), ``keras_detector_target.py`` and
@@ -49,7 +50,7 @@ class MyTarget:
         raise NotImplementedError("compute the gradient of your loss here")
 
     def predict(self, xs: np.ndarray) -> np.ndarray:
-        """Class scores, for the black-box attacks (``art_square``).
+        """Class scores, for the black-box attacks (``art_square``, ``art_simba``, ``art_hopskipjump``).
 
         Args:
             xs: Float images ``(B, H, W, C)`` in ``[0, 1]`` (``C = 4``: RGBA).

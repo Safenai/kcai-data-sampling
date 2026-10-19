@@ -9,7 +9,7 @@ The workspace is a uv monorepo; its member packages live under `packages/`:
 - `kcai-data-sampling-core` — transformation interface, configuration models, registries and runner;
 - `kcai-data-sampling-images` — the procedural family: model-free image transformations (`horizontal_flip`, `crop_resize`) on a decoded image batch;
 - `kcai-data-sampling-lama` — generative inpainting (LaMa) transformation and tool-model plugin;
-- `kcai-data-sampling-art` — adversarial attacks from the Adversarial Robustness Toolbox (`art_fgsm`, `art_square`) against your target model; in the workspace only, not yet published;
+- `kcai-data-sampling-art` — adversarial attacks from the Adversarial Robustness Toolbox (`art_fgsm`, `art_pgd`, `art_mim`, `art_square`, `art_simba`, `art_hopskipjump`) against your target model; in the workspace only, not yet published;
 - `kcai-data-sampling-fgsm` — adversarial perturbation (FGSM) transformation and target-model support;
 - `kcai-data-sampling-job` — pipeline orchestration and all the IO plugins: the `parquet` dataloader, the `parquet` ledger writer and the `images` payload writer;
 - `kcai-data-sampling` — umbrella CLI (`version`, `list`, and `process` once the `[job]` extra is installed).

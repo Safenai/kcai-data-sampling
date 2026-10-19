@@ -1,16 +1,18 @@
 # Bring your own target model
 
-Adversarial transformations (`fgsm`, `art_fgsm`, `art_square`) attack a **target model**: the
+Adversarial transformations (`fgsm` and the `art_*` attacks) attack a **target model**: the
 model under test, which is yours. kcai never loads it directly. You wrap it
 in a small Python class, the *adapter*, and name that class in the job
 configuration.
 
 **The framework does not matter. What matters is what the model can give:**
 
-- a **gradient** (`grad`) for the gradient attacks (`fgsm`, `art_fgsm`):
+- a **gradient** (`grad`) for the gradient attacks (`fgsm`, `art_fgsm`,
+  `art_pgd`, `art_mim`):
   PyTorch, TensorFlow/Keras and JAX models all work, through the same adapter
   shape;
-- **class scores** (`predict`) for the black-box attacks (`art_square`):
+- **class scores** (`predict`) for the black-box attacks (`art_square`,
+  `art_simba`, `art_hopskipjump`):
   any model that can run, including inference-only ones (ONNX Runtime,
   TensorRT, OpenVINO, TFLite, a remote API). See [Limits](#limits).
 
@@ -22,8 +24,8 @@ you use need:
 | Member | Needed by | What kcai expects |
 |---|---|---|
 | `name` | all | Non-empty `str`. Recorded in the ledger's `target_model` column. |
-| `grad(xs)` | `fgsm`, `art_fgsm` | Gradient of **your loss** with respect to `xs`. |
-| `predict(xs)` | `art_square` | Class scores `(B, n_classes)`, probabilities or logits, `n_classes >= 2`. |
+| `grad(xs)` | `fgsm`, `art_fgsm`, `art_pgd`, `art_mim` | Gradient of **your loss** with respect to `xs`. |
+| `predict(xs)` | `art_square`, `art_simba`, `art_hopskipjump` | Class scores `(B, n_classes)`, probabilities or logits, `n_classes >= 2` (`art_simba`: probabilities only). |
 
 Implement only what you need; implement both to use every attack. Both take
 the same input, and for `grad`:
@@ -228,19 +230,27 @@ and return it.
 - **No gradient, no gradient attack.** Inference-only formats and runtimes
   (ONNX Runtime, TensorRT, OpenVINO, TFLite, Core ML), non-differentiable
   models (decision trees, gradient boosting) and remote APIs cannot implement
-  `grad`. Give them a `predict` and use the black-box `art_square`, which
+  `grad`. Give them a `predict` and use a black-box attack (`art_square`,
+  `art_simba`, `art_hopskipjump`), which
   attacks the deployed model itself. Alternatively, write `grad` on the
   training checkpoint the deployed model came from, then check the attacked
   images on the deployed model (a *transfer* attack).
 - **Black-box attacks cost queries.** `art_square` calls `predict` up to
   `max_iter` times per image (default 100), stopping early once the top class
   changes: budget the time of one model call times the number of queries.
-  It is a random search, so success varies with the seed.
+  It is a random search, so success varies with the seed. `art_simba`
+  queries once or twice per pixel value tried (default 1000 values): on a
+  large image that the model downsizes, this changes too few pixels to
+  matter. `art_hopskipjump` holds up to `max_eval` noisy copies of the image
+  in memory at once: lower it for large images.
+- **`art_hopskipjump` has no budget.** It returns the closest misclassified
+  image it finds, however far that is: check the change on the output rows,
+  or prefer an epsilon-bounded attack.
 - **Deployed models can behave differently.** Quantized or compiled models
   round differently from their float checkpoint, so an attack computed on the
   checkpoint can be weaker on the deployed model. Measure it on the deployed
   model.
-- **Classifiers only, for the black-box attack.** `art_square` needs class
+- **Classifiers only, for the black-box attacks.** They need class
   scores; detection and segmentation models need a `predict` that reduces
   their output to scores (e.g. per-class confidence).
 
@@ -252,6 +262,8 @@ and return it.
 | `art_square needs a target model exposing predict; 'x' lacks predict` | The black-box attack needs `predict`. |
 | `x.predict returned …, expected class scores of shape (B, n_classes)` | `predict` returned one score per image, a tensor, or a single class. |
 | `art_square: p_init=… gives a first square of … px` | The first square is larger than the image's short side: lower `p_init`. |
+| `This attack requires an estimator predicting probabilities` | `art_simba` got logits: return a softmax from `predict`. |
+| Process killed (out of memory) during `art_hopskipjump` | Too many full-size noisy copies at once: lower `max_eval` (and `init_eval`). |
 | `the target model must have a non-empty name` | `name` is missing or empty. |
 | `x.grad returned …, expected an array of shape (B, H, W, 4)` | `grad` returned a tensor instead of a numpy array, dropped the alpha plane, or kept the channels-first layout. |
 | `x.grad returned non-finite values` | NaN/inf in the loss: check the preprocessing (division by zero) and the loss (log of 0). |
