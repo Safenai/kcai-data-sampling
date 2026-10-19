@@ -128,8 +128,9 @@ print("max change:", np.abs(attacked.astype(int) - images).max(), "grey levels")
 
 Then check that the attack actually affects your model: compare its
 predictions on `images` and `attacked`, ideally on real images rather than
-random ones. `examples/notebooks/adversarial-frameworks.ipynb` does this for
-the five example adapters.
+random ones. `examples/notebooks/adversarial-classification.ipynb` and
+`examples/notebooks/adversarial-detection.ipynb` do this for the five example
+adapters.
 
 ## Choosing the loss
 
@@ -138,7 +139,7 @@ measures what you want to break:
 
 | Task | Loss to return | Effect of the attack |
 |---|---|---|
-| Classification, no labels | Cross-entropy of the model's own top-1 class (the classifier examples) | Pushes the prediction away from what the model currently sees |
+| Classification, no annotation | Cross-entropy of the model's own top-1 class (the classifier examples) | Pushes the prediction away from what the model currently sees |
 | Classification, targeted | **Minus** the cross-entropy of a chosen class (a constructor argument, set through `params`) | Pulls the prediction toward that class |
 | Detection | **Minus** the total detection confidence (sum of best class scores; the detector examples) | Suppresses detections |
 | Segmentation | Pixel-wise cross-entropy of the predicted mask | Corrupts the predicted mask |
@@ -146,15 +147,16 @@ measures what you want to break:
 Detach anything computed from the model's own prediction (e.g. `top1`), so
 the gradient only flows through the loss itself.
 
-`grad` receives only the images, not the dataset's labels, so a loss on each
-image's ground-truth label is not possible yet. The model's own prediction is
+`grad` receives only the images, not their annotation, so a loss on each
+image's annotated class is not possible yet. The model's own prediction is
 the usual stand-in, and avoids the "label leaking" effect described in the
 FGSM literature.
 
-The notebook `examples/notebooks/adversarial-frameworks.ipynb` shows the
-five example adapters at work: the detection loss lowers the detectors'
-confidence, and the classifiers' cross-entropy loss flips their top-1 class
-at 8 grey levels.
+The notebooks `examples/notebooks/adversarial-classification.ipynb` and
+`examples/notebooks/adversarial-detection.ipynb` show the five example
+adapters at work: the classifiers' cross-entropy loss flips their top-1 class
+at 8 grey levels, and the detection loss removes detections, more of them
+with the iterative attacks on D-FINE.
 
 ## Pitfalls
 

@@ -36,7 +36,7 @@ ART attacks take an *estimator*; kcai gives a *target model*. Two bridges, in
 `estimator.py`:
 
 - `TargetEstimator` (gradient attacks): `loss_gradient` forwards to your
-  `grad`; the labels ART threads through are unused. Any target that works
+  `grad`; the `y` ART threads through is unused. Any target that works
   with `fgsm` works with `art_fgsm`, `art_pgd` and `art_mim` unchanged.
 - `TargetClassifier` (black-box attacks): `predict` forwards to your
   `predict`, in batches of at most the attack's batch size, checked to

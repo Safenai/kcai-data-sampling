@@ -227,14 +227,15 @@ class StubTool:
 
 
 class StubTarget:
-    """A ``TargetModel``-shaped stand-in: ``name = "stub"``, fixed-sign ``grad``.
+    """A ``TargetModel``-shaped stand-in: ``name = "stub"``, fixed-sign ``grad``, brightness ``predict``.
 
     The gradient is a fixed, content-derived sign direction: +1 on the red
     plane wherever the pixel's green-blue mean is below a constant brightness
     threshold, 0 everywhere else (alpha included). Fixed because the threshold
     and sign are constants — the gradient, and so the adversarial step, depends
     only on the batch content: byte-reproducible across runs and batch-split
-    knobs, independent of any library.
+    knobs, independent of any library. ``predict`` serves the black-box
+    attacks the same way: a two-class score read off each image's own pixels.
     """
 
     def __init__(self, name: str = "stub") -> None:
@@ -262,6 +263,20 @@ class StubTarget:
         dark = xs[..., 1:3].mean(axis=-1) < 0.5
         out[..., 0][dark] = 1.0
         return out
+
+    def predict(self, xs: np.ndarray) -> np.ndarray:
+        """Return two brightness probabilities per image, for the black-box attacks.
+
+        Args:
+            xs: The normalized batch ``(B, H, W, C)`` in ``[0, 1]``.
+
+        Returns:
+            A float64 array ``(B, 2)``, classes ``[bright, dark]``: the mean
+            RGB value, then its complement (rows sum to 1, as ``art_simba``
+            requires).
+        """
+        bright = xs[..., :3].mean(axis=(1, 2, 3)).astype(np.float64)
+        return np.stack([bright, 1 - bright], axis=1)
 
 
 def set_models_registry(
