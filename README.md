@@ -4,10 +4,11 @@ Data sampling as a reproducibility pipeline: transformations expand a real
 dataset into a sampled one, recording a metadata-only ledger and
 content-addressed payload files.
 
-The workspace is a uv monorepo of six member packages under `packages/`:
+The workspace is a uv monorepo of seven member packages under `packages/`:
 
 - `kcai-data-sampling-core` — transformation interface, configuration models, registries and runner;
 - `kcai-data-sampling-images` — the procedural family: model-free image transformations (`horizontal_flip`, `crop_resize`) on a decoded image batch;
+- `kcai-data-sampling-albumentation` — the curated image-robustness catalogue: hard-pinned albumentations transforms behind one shared engine;
 - `kcai-data-sampling-lama` — generative inpainting (LaMa) transformation and tool-model plugin;
 - `kcai-data-sampling-fgsm` — adversarial perturbation (FGSM) transformation and target-model support;
 - `kcai-data-sampling-job` — pipeline orchestration and all the IO plugins: the `parquet` dataloader, the `parquet` ledger writer and the `images` payload writer;

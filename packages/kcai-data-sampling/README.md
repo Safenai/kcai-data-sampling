@@ -44,6 +44,7 @@ job: None
 images: None
 fgsm: None
 lama: None
+albumentation: None
 ```
 
 Every member is listed whether or not it is installed, so this is also the
@@ -59,6 +60,7 @@ the matching command appears.
 | `images` | `horizontal_flip` and `crop_resize`, plus the image batch type | numpy only |
 | `fgsm` | the `fgsm` attack | numpy only, no torch |
 | `lama` | `inpaint` and the `lama_inpaint` tool model | pulls torch; the checkpoint is fetched on first use |
+| `albumentation` | the `albumentations`-backed image transforms | pinned `albumentations` from a git commit, headless OpenCV, no torch |
 | `notebooks` | pandas, `python-pptx`, ipykernel and ultralytics — for reading and plotting results | installs **no** `fgsm` and **no** `lama`; still resolves torch, because ultralytics depends on it |
 | `all` | every row above | the recipe to use if you want the whole set |
 

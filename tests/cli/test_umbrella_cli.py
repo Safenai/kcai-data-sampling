@@ -17,14 +17,14 @@ import pytest
 ALL_COMMANDS = ["version", "list", "process"]
 
 
-def test_version_prints_all_five_member_versions(capsys) -> None:
+def test_version_prints_all_six_member_versions(capsys) -> None:
     """``version`` prints a line for the umbrella and every member package.
 
-    All five members — including the optional ``fgsm`` and ``lama`` — appear,
-    so an extra that resolved is never silently missing from the report. The
-    always-present umbrella and ``core`` carry semver; an optional member that
-    is not installed reads ``None``, which this torch-free group relies on for
-    ``fgsm`` and ``lama``.
+    All six members — including the optional ``fgsm``, ``lama`` and
+    ``albumentation`` — appear, so an extra that resolved is never silently
+    missing from the report. The always-present umbrella and ``core`` carry
+    semver; an optional member that is not installed reads ``None``, which
+    this group relies on for the three opt-in members.
     """
     execute(["version"])
     out = capsys.readouterr().out
@@ -36,12 +36,13 @@ def test_version_prints_all_five_member_versions(capsys) -> None:
         "images",
         "fgsm",
         "lama",
+        "albumentation",
     }
     import re
 
     for name in ("kcai-data-sampling", "core"):
         assert re.fullmatch(r"\d+\.\d+\.\d+.*", lines[name]) is not None
-    for name in ("job", "images", "fgsm", "lama"):
+    for name in ("job", "images", "fgsm", "lama", "albumentation"):
         assert lines[name] == "None" or re.fullmatch(r"\d+\.\d+\.\d+.*", lines[name])
 
 
@@ -49,7 +50,7 @@ def test_version_lists_members_in_documented_order(capsys) -> None:
     """``version`` orders members to match the extras table in the README."""
     execute(["version"])
     names = [line.split(": ", 1)[0] for line in capsys.readouterr().out.splitlines()]
-    assert names == ["kcai-data-sampling", "core", "job", "images", "fgsm", "lama"]
+    assert names == ["kcai-data-sampling", "core", "job", "images", "fgsm", "lama", "albumentation"]
 
 
 def test_list_prints_the_registered_plugin_groups(capsys) -> None:
@@ -159,7 +160,7 @@ def test_execute_refuses_a_command_without_a_handler(monkeypatch) -> None:
         execute(["version"])
 
 
-@pytest.mark.parametrize("member", ["job", "images", "fgsm", "lama"])
+@pytest.mark.parametrize("member", ["job", "images", "fgsm", "lama", "albumentation"])
 def test_display_version_tolerates_a_missing_member_package(monkeypatch, capsys, member) -> None:
     """A package without a ``_version_`` prints ``None`` rather than crashing."""
     real_import = builtins.__import__
@@ -176,7 +177,7 @@ def test_display_version_tolerates_a_missing_member_package(monkeypatch, capsys,
     lines = dict(line.split(": ", 1) for line in out.splitlines())
     # The absent member is reported as None rather than dropped from the list.
     assert lines[member] == "None"
-    assert set(lines) == {"kcai-data-sampling", "core", "job", "images", "fgsm", "lama"}
+    assert set(lines) == {"kcai-data-sampling", "core", "job", "images", "fgsm", "lama", "albumentation"}
 
 
 @pytest.mark.parametrize("mode", ["ignore", "warn"])

@@ -1,0 +1,60 @@
+# Albumentations: image-robustness transforms from the pinned `albumentations`
+# — needs the opt-in `kcai-data-sampling-albumentation` install (pinned git
+# dependency, headless OpenCV; no torch, no model).
+#
+# Every entry names a `seed`: all albumentations-backed transformations are
+# stochastic, and each row's output is drawn from `(params, seed, row_id)` —
+# so the run replays byte-identically and is invariant to batching and row
+# order. A `[lo, hi]` pair is a per-row draw range; a scalar (as a sweep
+# expands to) is a fixed magnitude.
+dataloaders:
+  loaders:
+    - name: comma10k
+      type: parquet
+      path: examples/data/comma10k_sample/samples.parquet
+      id_column: id
+      load_batch_size: 10
+      decode: img_bytes
+      sample_path:
+        - column: path
+          prefix: examples/data/comma10k_sample
+
+operations:
+  outputs:
+    path: examples/outputs/{selection}/ledger.parquet
+    write_samples: true
+    samples_dir: examples/outputs/{selection}/payloads
+    flush_batch_size: 128
+    include: [height, width]
+  transformations:
+    - name: gaussian_blur
+      type: gaussian_blur
+      seed: 11
+      sigma_limit: [0.5, 3.0]            # [lo, hi] sigma draw range per row
+    - name: random_brightness_contrast
+      type: random_brightness_contrast
+      seed: 42
+      brightness_limit:                  # swept: one entry per fixed magnitude
+        range: [0.1, 0.5]
+        samples: 3
+        mode: even
+      contrast_limit: [-0.2, 0.2]
+      ensure_safe_range: false
+
+    # Tier-B shape restores (smoke): the crop family resizes back, the pad
+    # family center-crops back, so the unary `(H, W)` contract holds even
+    # though these transforms move pixels. No dedicated tests — they ride the
+    # engine covered by `random_brightness_contrast`; here they just have to
+    # complete and write one row per input per entry.
+    - name: random_crop
+      type: random_crop
+      seed: 21
+      height: 16                               # smaller than the input: resized back
+      width: 16
+      border_mode: reflect                     # curated enum, mapped to a cv2 code
+    - name: pad_if_needed
+      type: pad_if_needed
+      seed: 33
+      min_height: 64                           # larger than the input: padded, then cropped back
+      min_width: 64
+      position: center

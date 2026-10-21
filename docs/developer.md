@@ -42,7 +42,7 @@ uv sync --group fgsm                        # -fgsm, numpy-only, no torch
 
 ## Running things with uv
 
-Because the workspace is a uv project with six member packages, `uv run` is
+Because the workspace is a uv project with seven member packages, `uv run` is
 the normal way to execute anything in the development environment:
 
 ```bash
@@ -78,7 +78,7 @@ arguments runs exactly those.
 | `uv run nox` | The default set: `lint`, `spell`, `test`, `type_check` |
 | `uv run nox -s lint` | ruff lint + `ruff format --check` on `packages/` and `tests/`. Read-only; applies no fixes. |
 | `uv run nox -s fmt` | The same checks, but rewriting: sorts imports (dropping unused ones) and formats. This is the session that changes files. |
-| `uv run nox -s type_check` | mypy on all six packages. |
+| `uv run nox -s type_check` | mypy on all seven packages. |
 | `uv run nox -s spell` | cspell over the whole repository, documentation included. |
 | `uv run nox -s complexity` | Cyclomatic complexity of `packages/`; fails above 15. |
 | `uv run nox -s test_complexity` | The same check for `tests/`. |

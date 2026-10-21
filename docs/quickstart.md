@@ -142,6 +142,20 @@ of their dependencies. Each has its own umbrella extra:
   (`examples/adapters/yolo_target.py`) and expects your `yolov8n.pt` weights,
   resolved via `ultralytics` on the machine running the job.
 
+- **Albumentations image-robustness** (`[albumentation]`, no torch — a pinned
+  git dependency plus headless OpenCV). A curated catalogue of procedural
+  albumentations transforms, the one stochastic surface in the workspace:
+
+  ```bash
+  pip install "kcai-data-sampling[albumentation]"
+  kcai-data-sampling process -p examples/config/walkthrough-albumentation.yaml
+  ```
+
+  The walkthrough config shows a per-row draw, a sweep and the shape restores;
+  see the
+  [albumentations package page](packages/kcai-data-sampling-albumentation.md)
+  for the full catalogue.
+
 To get everything the walkthrough notebook needs in one go, install the `all`
 extra — it is the union of `notebooks`, `job`, `images`, `fgsm` and `lama`:
 

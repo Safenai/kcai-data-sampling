@@ -32,6 +32,7 @@ members = ["packages/*"]
 
 # Local packages take precedence over any published versions.
 [tool.uv.sources]
+kcai-data-sampling-albumentation = { workspace = true }
 kcai-data-sampling-core = { workspace = true }
 kcai-data-sampling-fgsm = { workspace = true }
 kcai-data-sampling-images = { workspace = true }
@@ -41,6 +42,12 @@ kcai-data-sampling = { workspace = true }
 # torch resolves from the CPU index only (mirrors dqm-ml-workspace); the root
 # never pulls it — only the opt-in -lama member depends on torch.
 torch = { index = "pytorch" }
+
+# The pinned albumentations (git commit 66212d77a) imports pkg_resources in its
+# setup.py; current setuptools no longer ships it, so its build gets an older
+# setuptools. Build-time only — the installed wheel is unaffected.
+[tool.uv.extra-build-dependencies]
+albumentations = ["setuptools<81"]
 
 # CPU-only torch wheels for the opt-in -lama member (dqm-ml-workspace
 # pattern). explicit: the index serves only packages routed to it by
@@ -98,6 +105,15 @@ test-fgsm = [
     { include-group = "test" },
 ]
 
+# opt-in albumentations test surface: the same test deps as `test`, plus the
+# albumentations-backed member (pinned git dependency). The `test-albumentation`
+# nox session runs the opt-in (importorskip-gated) tests for real; the default
+# `test` group stays albumentations-free (Q1 pin).
+test-albumentation = [
+    "kcai-data-sampling-albumentation",
+    { include-group = "test" },
+]
+
 # Lint and auto-format Python code. Backs the `lint` and `fmt` nox sessions.
 lint = [
     "ruff",
@@ -142,6 +158,7 @@ docs = [
     "pymdown-extensions",
     "kcai-data-sampling-fgsm",
     "kcai-data-sampling-lama",
+    "kcai-data-sampling-albumentation",
 ]
 
 # ruff config (dqm-ml mirror): 120 columns, full ruleset from the upstream
@@ -229,7 +246,7 @@ addopts = [
     "--timeout=300",
     "--basetemp=tmp",
     "-m",
-    "not packaging and not packaging_index and not packaging_notebook and not fgsm and not lama",
+    "not packaging and not packaging_index and not packaging_notebook and not fgsm and not lama and not albumentation",
 ]
 xfail_strict = true
 filterwarnings = [
@@ -244,6 +261,7 @@ markers = [
     "packaging_notebook: Marks the walkthrough-notebook run (run via 'nox -s test_packaging_notebook')",
     "fgsm: Opt-in adversarial surface (kcai-data-sampling-fgsm, importorskip-gated)",
     "lama: Opt-in generative surface (kcai-data-sampling-lama, importorskip-gated)",
+    "albumentation: Opt-in albumentations surface (kcai-data-sampling-albumentation, importorskip-gated)",
 ]
 
 [tool.setuptools_scm]
