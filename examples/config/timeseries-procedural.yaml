@@ -34,3 +34,7 @@ operations:
       type: add_sinusoid
       frequency: 0.25
       amplitude: 0.2
+    - name: sensor_noise
+      type: jitter
+      sigma: 0.1
+      seed: 7
