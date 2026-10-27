@@ -86,3 +86,30 @@ class AddSinusoidTransformationConfig(TransformationConfig):
         self._check_parameter_bounds("frequency", minimum=0, maximum=NYQUIST, exclusive_min=True)
         self._check_parameter_bounds("amplitude", minimum=0)
         return self
+
+
+class JitterTransformationConfig(TransformationConfig):
+    """Configuration of the ``jitter`` transformation.
+
+    Attributes:
+        sigma: Standard deviation of the added noise, in the units of the
+            signal, ``>= 0``, or a sweep.
+    """
+
+    type: Literal["jitter"] = "jitter"
+    sigma: float | SweepConfig = Field(
+        description="Noise standard deviation in signal units, >= 0; a SweepConfig expands it.",
+    )
+
+    @model_validator(mode="after")
+    def _parameter_bounds(self) -> Self:
+        """Enforce the sigma range on the value or the sweep.
+
+        Returns:
+            The validated config.
+
+        Raises:
+            ValueError: If ``sigma`` goes below ``0``.
+        """
+        self._check_parameter_bounds("sigma", minimum=0)
+        return self

@@ -4,7 +4,8 @@ Every run is the full CLI→job→writer path over the ``series_parquet`` fixtur
 (four 2-channel series of 100, 70, 64 and 20 steps), cut into 32-step windows.
 Checked: one ledger row and one ``.npy`` file per (window, transformation),
 each file equal to the algorithm applied to its parent window, sweeps, the
-independent selection, and byte-identical outputs whatever the batch knobs.
+independent selection, the seeded ``jitter``, and byte-identical outputs
+whatever the batch knobs.
 The shipped example (script + config) is run too.
 """
 
@@ -154,6 +155,31 @@ def test_batch_knobs_do_not_change_the_ledger_or_payloads(series_parquet: Path, 
         root = tmp_path / f"l{load}-t{transform}-f{flush}"
         run(_config(series_parquet, root, load=load, transform_batch_size=transform, flush_batch_size=flush))
         assert outputs(root) == baseline
+
+
+def test_jitter_is_seeded_and_batch_invariant(series_parquet: Path, tmp_path: Path) -> None:
+    """The seed is recorded and decides the noise; the batch knobs never change it.
+
+    Each payload minus its parent window is noise of the requested scale, two
+    runs with the same seed are byte-identical whatever the batch sizes, and
+    another seed gives other payloads.
+    """
+    noise = [{"type": "jitter", "sigma": 0.5, "seed": 7}]
+
+    def payloads(root: Path, seed: int = 7, **knobs: int) -> dict[str, bytes]:
+        transformations = [{**noise[0], "seed": seed}]
+        run(_config(series_parquet, root, transformations=transformations, **knobs))
+        return {p.name: p.read_bytes() for p in sorted((root / SELECTION).glob("*.npy"))}
+
+    baseline = payloads(tmp_path / "base", load=64, transform_batch_size=8)
+    assert len(baseline) == N_WINDOWS
+    rows = _ledger(tmp_path / "base")
+    assert {r["seed"] for r in rows} == {7}
+    parents = _windows_by_id(series_parquet, CONSECUTIVE)
+    deltas = np.stack([np.load(tmp_path / "base" / SELECTION / r["artifact"]) - parents[r["parent_id"]] for r in rows])
+    assert abs(deltas.std() - 0.5) < 0.05
+    assert payloads(tmp_path / "small", load=1, transform_batch_size=1) == baseline
+    assert payloads(tmp_path / "other", seed=8, load=64, transform_batch_size=8) != baseline
 
 
 def test_shipped_example_runs(tmp_path: Path) -> None:

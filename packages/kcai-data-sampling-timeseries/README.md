@@ -22,12 +22,17 @@ handled by the job package.
 - `add_sinusoid` — add `amplitude * sin(2π * frequency * t + phase)` to every
   channel, `t` counted from the window's first step. Deterministic, not
   reversible. Pointwise support.
+- `jitter` — add independent Gaussian noise of standard deviation `sigma`
+  (signal units) to every step and channel. Stochastic: requires a `seed`;
+  each window draws from its own generator, seeded by the seed, its parent id
+  and the parameters, so its output never depends on the batch. Not
+  reversible. Pointwise support.
 - `TimeSeriesBatch` — a `Batch` specialization for windows: axes
   `(time, channel)`, no value range (a signal is unbounded, so outputs are
   neither clipped nor refused on range), and the series' `sampling_rate` when
   declared.
 
-Two methods, as examples of the slot rather than a catalogue.
+Three methods, as examples of the slot rather than a catalogue.
 
 ## Frequencies are in cycles per step
 
@@ -69,6 +74,10 @@ operations:
       type: add_sinusoid
       frequency: 0.25
       amplitude: 0.1
+    - name: sensor_noise
+      type: jitter
+      sigma: 0.05
+      seed: 7
 ```
 
 Listed transformations are applied **independently** to the same source window,

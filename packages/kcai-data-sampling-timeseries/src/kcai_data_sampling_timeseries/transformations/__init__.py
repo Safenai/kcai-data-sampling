@@ -8,6 +8,7 @@ the unary contract live in ``kcai_data_sampling_timeseries.api.transformations``
 """
 
 from kcai_data_sampling_timeseries.transformations.add_sinusoid import add_sinusoid
+from kcai_data_sampling_timeseries.transformations.jitter import jitter
 from kcai_data_sampling_timeseries.transformations.low_pass import low_pass
 
-__all__ = ["add_sinusoid", "low_pass"]
+__all__ = ["add_sinusoid", "jitter", "low_pass"]
