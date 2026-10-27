@@ -89,14 +89,21 @@ column (`list<float>`, or `list<list<float>>` for several channels) and any othe
 source columns. The sample is a **window** of `W` consecutive steps, and the
 `windows` section decides how windows are cut:
 
-| `mode` | Windows | Window id |
-| --- | --- | --- |
-| `consecutive` | every window that fits, `stride` steps apart (`stride` defaults to `W`; `1` slides) | `<series>@<last step>` |
-| `independent` | `n_windows` distinct positions per series, drawn from `seed` and the series id; `non_overlap: true` keeps them disjoint | `<series>@<start>` |
+| `mode` | Windows |
+| --- | --- |
+| `consecutive` | every window that fits, `stride` steps apart (`stride` defaults to `W`; `1` slides) |
+| `independent` | `n_windows` distinct positions per series, drawn from `seed` and the series id; `non_overlap: true` keeps them disjoint |
 
-Each window carries its series' source columns plus `window_start` and
-`window_end`, and a batch is `(B, W, C)` float64 with axes `(time, channel)`
-and no value range. A series that cannot be windowed as asked (null values, a
+Each window carries its series' source columns plus `start_window` and
+`end_window` (first and last step, inclusive). `t0_column` (optional) names an
+integer column holding each series' step 0, counted in steps from the step 0
+of the earliest series (`0` for that one); it is carried as `t0_series`.
+`series_id`, `t0_series`, `start_window` and `end_window` are the window's key:
+overlap, order and lag, and simultaneity across series are computed from them,
+in steps, never stored. A window's id is opaque,
+a 12-hex hash of `(series, start, end)`: the same window has the same id in
+both modes. A batch is `(B, W, C)` float64 with axes `(time, channel)` and no
+value range. A series that cannot be windowed as asked (null values, a
 different channel count, independent windows that do not fit) counts as a
 failed row under `errors`; a series shorter than one window simply yields
 none.

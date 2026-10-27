@@ -1,7 +1,8 @@
 """The ``timeseries_parquet`` loader: series rows in, window batches out.
 
 A small table of three univariate series (20, 7 and 3 steps) is cut into
-windows by both selections. Checked: which windows exist and their ids, that
+windows by both selections. Checked: which windows exist and their key
+(``series_id``, ``t0_series``, ``start_window``, ``end_window``), that ids are opaque and stable, that
 the draw of independent windows is seeded and never depends on the batch
 size, that overlap is refused when asked, how a bad series counts, and that
 every batch declares the window space and carries the source columns.
@@ -19,6 +20,7 @@ from kcai_data_sampling_job.dataloaders.api.timeseries import (
     TimeSeriesLoaderConfig,
     TimeSeriesParquetDataLoader,
     independent_starts,
+    window_id,
 )
 import numpy as np
 import pyarrow as pa
@@ -70,6 +72,15 @@ def _ids(batches: list) -> list[str]:
     return [i for b in batches for i in b.ids]
 
 
+def _keys(batches: list) -> list[tuple[str, int]]:
+    """``(series_id, start_window)`` of every window, in order."""
+    return [
+        (sid, start)
+        for b in batches
+        for sid, start in zip(b.columns["series_id"].to_pylist(), b.columns["start_window"].to_pylist(), strict=True)
+    ]
+
+
 def test_loader_is_registered() -> None:
     """The ``timeseries_parquet`` type resolves to the plugin and its schema."""
     registry = PluginLoadedRegistry.get_dataloaders_registry()
@@ -96,14 +107,13 @@ def test_job_config_resolves_the_entry(tmp_path: Path) -> None:
     assert isinstance(entry.windows, IndependentWindowsConfig)
 
 
-def test_consecutive_windows_and_ids(tmp_path: Path) -> None:
+def test_consecutive_windows(tmp_path: Path) -> None:
     """W = 4, stride 3: starts 0, 3, …, 15 on ``a``, 0 and 3 on ``b``, none on ``c``.
 
-    A window's id is ``<series>@<last step>``, and its values are the steps it
-    covers.
+    A window's values are the steps it covers.
     """
     batches = _batches(_write_series(tmp_path / "s.parquet"), {"mode": "consecutive", "window": 4, "stride": 3})
-    assert _ids(batches) == [f"a@{s + 3}" for s in range(0, 17, 3)] + ["b@3", "b@6"]
+    assert _keys(batches) == [("a", s) for s in range(0, 17, 3)] + [("b", 0), ("b", 3)]
     data = np.concatenate([b.data for b in batches])
     assert data.shape == (8, 4, 1)
     assert np.array_equal(data[1, :, 0], [3.0, 4.0, 5.0, 6.0])
@@ -113,7 +123,24 @@ def test_consecutive_windows_and_ids(tmp_path: Path) -> None:
 def test_stride_defaults_to_the_window(tmp_path: Path) -> None:
     """Without ``stride``, windows tile the series: 5 on ``a``, 1 on ``b``."""
     batches = _batches(_write_series(tmp_path / "s.parquet"), {"mode": "consecutive", "window": 4})
-    assert _ids(batches) == ["a@3", "a@7", "a@11", "a@15", "a@19", "b@3"]
+    assert _keys(batches) == [("a", 0), ("a", 4), ("a", 8), ("a", 12), ("a", 16), ("b", 0)]
+
+
+def test_window_ids_are_opaque_and_stable(tmp_path: Path) -> None:
+    """Each id is the hash of ``(series, start, end)``: unique, the same in both modes.
+
+    An independent window drawn at a start the consecutive selection also cuts
+    gets the same id, since it is the same window.
+    """
+    path = _write_series(tmp_path / "s.parquet")
+    consecutive = _batches(path, {"mode": "consecutive", "window": 4, "stride": 1})
+    ids = _ids(consecutive)
+    assert len(set(ids)) == len(ids)
+    assert ids[0] == window_id("a", 0, 3)
+    assert all(len(i) == 12 and "@" not in i for i in ids)
+    by_key = dict(zip(_keys(consecutive), ids, strict=True))
+    independent = _batches(path, {"mode": "independent", "window": 4, "n_windows": 2, "seed": 5})
+    assert _ids(independent) == [by_key[k] for k in _keys(independent)]
 
 
 def test_batches_declare_the_window_space_and_carry_columns(tmp_path: Path) -> None:
@@ -124,9 +151,26 @@ def test_batches_declare_the_window_space_and_carry_columns(tmp_path: Path) -> N
     assert first.data.dtype == np.float64
     assert first.sample_axes == ("time", "channel")
     assert first.value_range is None
-    assert first.columns.column_names == ["series_id", "site", "window_start", "window_end"]
-    assert first.columns.column("window_start").to_pylist() == [0, 4, 8, 12]
-    assert first.columns.column("window_end").to_pylist() == [3, 7, 11, 15]
+    assert first.columns.column_names == ["series_id", "site", "start_window", "end_window"]
+    assert first.columns.column("start_window").to_pylist() == [0, 4, 8, 12]
+    assert first.columns.column("end_window").to_pylist() == [3, 7, 11, 15]
+
+
+def test_t0_column_is_carried_as_t0_series(tmp_path: Path) -> None:
+    """Each series' step 0, in steps from the earliest series, null allowed, reaches its windows."""
+    path = _write_series(tmp_path / "s.parquet")
+    table = pq.read_table(path).append_column("offset", pa.array([0, None, 30], pa.int32()))
+    pq.write_table(table, path)
+    batches = _batches(path, {"mode": "consecutive", "window": 4}, t0_column="offset")
+    assert batches[0].columns.column_names == ["series_id", "site", "t0_series", "start_window", "end_window"]
+    assert [t for b in batches for t in b.columns["t0_series"].to_pylist()] == [0] * 5 + [None]
+
+
+@pytest.mark.parametrize(("t0_column", "match"), [("missing", "not in the dataset"), ("site", "integer step count")])
+def test_bad_t0_column_is_refused(tmp_path: Path, t0_column: str, match: str) -> None:
+    """A ``t0_column`` that is absent or not an integer is refused."""
+    with pytest.raises(ValueError, match=match):
+        _batches(_write_series(tmp_path / "s.parquet"), {"mode": "consecutive", "window": 4}, t0_column=t0_column)
 
 
 def test_batch_size_never_changes_the_windows(tmp_path: Path) -> None:
@@ -141,13 +185,13 @@ def test_batch_size_never_changes_the_windows(tmp_path: Path) -> None:
 
 
 def test_independent_windows_are_seeded(tmp_path: Path) -> None:
-    """N windows per series, ``<series>@<start>`` ids, same seed → same draw."""
+    """N windows per series, same seed → same draw."""
     path = _write_series(tmp_path / "s.parquet")
     windows = {"mode": "independent", "window": 3, "n_windows": 2, "seed": 1}
-    ids = _ids(_batches(path, windows, errors={"on_decode_failure": "silent_fail"}))
-    assert ids == _ids(_batches(path, windows))
-    assert [i.split("@")[0] for i in ids] == ["a", "a", "b", "b", "c"][: len(ids)]
-    assert ids != _ids(_batches(path, {**windows, "seed": 2}))
+    keys = _keys(_batches(path, windows, errors={"on_decode_failure": "silent_fail"}))
+    assert keys == _keys(_batches(path, windows))
+    assert [k[0] for k in keys] == ["a", "a", "b", "b", "c"][: len(keys)]
+    assert keys != _keys(_batches(path, {**windows, "seed": 2}))
 
 
 def test_non_overlapping_draw_keeps_windows_apart() -> None:
@@ -174,8 +218,7 @@ def test_series_that_cannot_be_windowed_counts_as_a_failure(tmp_path: Path) -> N
     )
     (selection,) = loader.get_selections()
     selection.bootstrap(None)
-    ids = _ids(list(selection))
-    assert {i.split("@")[0] for i in ids} == {"a", "b"}
+    assert {k[0] for k in _keys(list(selection))} == {"a", "b"}
     assert selection.failures == 1
     assert selection.nb_samples == 3
 
@@ -202,7 +245,7 @@ def test_channel_count_must_not_change(tmp_path: Path) -> None:
     loader = TimeSeriesParquetDataLoader("sensors", _loader_config(path, {"mode": "consecutive", "window": 2}))
     (selection,) = loader.get_selections()
     selection.bootstrap(None)
-    assert _ids(list(selection)) == ["one@1", "one@3"]
+    assert _keys(list(selection)) == [("one", 0), ("one", 2)]
     assert selection.failures == 1
 
 
@@ -214,7 +257,7 @@ def test_null_series_is_a_failure(tmp_path: Path) -> None:
     loader = TimeSeriesParquetDataLoader("sensors", _loader_config(path, {"mode": "consecutive", "window": 2}))
     (selection,) = loader.get_selections()
     selection.bootstrap(None)
-    assert _ids(list(selection)) == ["a@1"]
+    assert _keys(list(selection)) == [("a", 0)]
     assert selection.failures == 1
 
 
@@ -222,16 +265,16 @@ def test_filters_select_series(tmp_path: Path) -> None:
     """A ``filters`` entry keeps only the matching series."""
     path = _write_series(tmp_path / "s.parquet")
     batches = _batches(path, {"mode": "consecutive", "window": 4}, filters=[{"column": "series_id", "values": ["b"]}])
-    assert _ids(batches) == ["b@3"]
+    assert _keys(batches) == [("b", 0)]
 
 
 def test_ids_fall_back_to_the_row_index(tmp_path: Path) -> None:
-    """Without ``id_column`` the series id is its row index."""
+    """Without ``id_column`` the series id, hashed into the window id, is its row index."""
     path = _write_series(tmp_path / "s.parquet")
     config = _loader_config(path, {"mode": "consecutive", "window": 7}).model_copy(update={"id_column": None})
     (selection,) = TimeSeriesParquetDataLoader("sensors", config).get_selections()
     selection.bootstrap(None)
-    assert _ids(list(selection)) == ["0@6", "0@13", "1@6"]
+    assert _ids(list(selection)) == [window_id("0", 0, 6), window_id("0", 7, 13), window_id("1", 0, 6)]
 
 
 def test_selection_class_follows_the_mode(tmp_path: Path) -> None:
