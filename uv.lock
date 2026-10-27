@@ -1540,6 +1540,15 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
+benchmark = [
+    { name = "kcai-data-sampling" },
+    { name = "kcai-data-sampling-albumentation" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "pytest-html" },
+    { name = "pytest-sugar" },
+    { name = "pytest-timeout" },
+]
 complexity = [
     { name = "complexipy" },
 ]
@@ -1618,6 +1627,15 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
+benchmark = [
+    { name = "kcai-data-sampling", editable = "packages/kcai-data-sampling" },
+    { name = "kcai-data-sampling-albumentation", editable = "packages/kcai-data-sampling-albumentation" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "pytest-html" },
+    { name = "pytest-sugar" },
+    { name = "pytest-timeout" },
+]
 complexity = [{ name = "complexipy", specifier = ">=5.5.0" }]
 docs = [
     { name = "kcai-data-sampling-albumentation", editable = "packages/kcai-data-sampling-albumentation" },

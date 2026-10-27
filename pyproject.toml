@@ -114,6 +114,14 @@ test-albumentation = [
     { include-group = "test" },
 ]
 
+# Opt-in benchmark harness (benchmark/): the albumentations-backed member
+# plus the test surface it reuses. Backs the `benchmark` nox session; the
+# default environment gains nothing from it.
+benchmark = [
+    "kcai-data-sampling",
+    { include-group = "test-albumentation" },
+]
+
 # Lint and auto-format Python code. Backs the `lint` and `fmt` nox sessions.
 lint = [
     "ruff",
@@ -166,7 +174,7 @@ docs = [
 # scope for now (see ideas/nox_sessions.md D3).
 [tool.ruff]
 line-length = 120
-src = ["src", "packages", "tests"]
+src = ["src", "packages", "tests", "benchmark"]
 extend-exclude = ["examples/", "scripts/", "ideas/", "deck/", "assets/", "*_version_.py"]
 
 [tool.ruff.lint]

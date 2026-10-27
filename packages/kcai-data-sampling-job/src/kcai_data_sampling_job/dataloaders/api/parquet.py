@@ -290,6 +290,8 @@ class ParquetDataSelection(DataSelection):
         Returns:
             The cast record batch.
         """
+        if not self.transforms:
+            return batch
         for t in self.transforms:
             col_idx = batch.schema.get_field_index(t["column"])
             if col_idx == -1:
@@ -501,19 +503,24 @@ class ParquetDataSelection(DataSelection):
         if self._parquet is None:
             return
         row_offset = 0
+        # Cache method references to avoid per-iteration attribute lookups
+        apply_transforms = self._apply_transforms
+        decode_batch = self._decode_batch
+        filter_expr = self.filter_expr
+        read_columns = self._read_columns
         for file in self._parquet.files:
             parquet_file = pq.ParquetFile(file)
             for batch in parquet_file.iter_batches(
                 batch_size=self.load_batch_size,
-                columns=self._read_columns(),
+                columns=read_columns(),
                 use_threads=self.threads,
             ):
-                if self.filter_expr is not None:
-                    batch = batch.filter(self.filter_expr)
+                if filter_expr is not None:
+                    batch = batch.filter(filter_expr)
                 if len(batch) == 0:
                     continue
-                batch = self._apply_transforms(batch)
-                yield self._decode_batch(batch, row_offset)
+                batch = apply_transforms(batch)
+                yield decode_batch(batch, row_offset)
                 row_offset += len(batch)
 
     @override

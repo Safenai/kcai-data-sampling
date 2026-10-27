@@ -265,7 +265,9 @@ def lint(s: Session) -> None:
     s.run("ruff", "check", "packages")
     s.run("ruff", "format", "--check", "packages")
     s.run("ruff", "check", "tests")
+    s.run("ruff", "check", "benchmark")
     s.run("ruff", "format", "--check", "tests")
+    s.run("ruff", "format", "--check", "benchmark")
 
 
 @session(uv_groups=["type_check"])
@@ -334,6 +336,14 @@ def complexity(s: Session) -> None:
 def test_complexity(s: Session) -> None:
     """Check cyclomatic complexity of test code (tests/). Fails if any function exceeds 15."""
     s.run("complexipy", "tests", "--max-complexity-allowed", "15")
+    s.run("complexipy", "benchmark", "--max-complexity-allowed", "15")
+
+
+@session(python=["3.12"], uv_groups=["benchmark"])
+def benchmark(s: Session) -> None:
+    """Run the albumentations A <-> D benchmark (opt-in)."""
+    s.env["NO_ALBUMENTATIONS_UPDATE"] = "1"
+    s.run("python", "-m", "benchmark", *s.posargs)
 
 
 @session(uv_groups=["spell"])
