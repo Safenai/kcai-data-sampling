@@ -186,8 +186,8 @@ def test_shipped_example_runs(tmp_path: Path) -> None:
     """``make_timeseries_sample.py`` + ``timeseries-procedural.yaml`` run as shipped.
 
     Only the data and output paths are moved under ``tmp_path``; 5 series of
-    2,000 steps give 14 windows each, and the config asks for 3 + 1 outputs per
-    window.
+    2,000 steps give 14 windows each, and the config asks for 3 + 1 + 1 outputs
+    per window (the low-pass sweep, the sinusoid, the seeded jitter).
     """
     data = tmp_path / "data"
     subprocess.run(
@@ -199,7 +199,8 @@ def test_shipped_example_runs(tmp_path: Path) -> None:
     outputs["path"] = str(tmp_path / "out" / "{selection}" / "ledger.parquet")
     outputs["samples_dir"] = str(tmp_path / "out" / "{selection}" / "payloads")
     config["compute"] = {"progress_bar": False}
-    assert run(config) == {"machines": 5 * 14 * 4}
+    assert run(config) == {"machines": 5 * 14 * 5}
     rows = pq.read_table(tmp_path / "out" / "machines" / "ledger.parquet").to_pylist()
     assert {r["series_id"] for r in rows} == {f"rec_{i:02d}" for i in range(5)}
+    assert {r["seed"] for r in rows if r["algorithm"] == "jitter"} == {7}
     assert all(r["parent_id"] == window_id(r["series_id"], r["start_window"], r["end_window"]) for r in rows)
