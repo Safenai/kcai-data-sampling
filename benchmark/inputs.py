@@ -1,4 +1,4 @@
-"""Generate/verify the 1000-image B1 set + manifests; pick the comma10k image."""
+"""Generate/verify the 1000-image S1 set + manifests; pick the comma10k image."""
 
 from __future__ import annotations
 
@@ -35,10 +35,10 @@ def _structured_image(seed: int, idx: int, size: int = 128) -> np.ndarray:
 
 
 def generate_b1(out_dir: Path, count: int = 1000, seed: int = 42) -> None:
-    """Generate the B1 set and manifest.parquet.
+    """Generate the S1 set and manifest.parquet.
 
     Args:
-        out_dir: The inputs/b1 directory.
+        out_dir: The inputs/s1 directory.
         count: Number of images.
         seed: Fixed seed.
     """
@@ -112,7 +112,7 @@ def verify_manifest(manifest_path: Path, samples_path: Path) -> bool:
 
 
 def prepare_comma10k(out_dir: Path, samples_path: Path) -> None:
-    """Prepare comma10k.parquet for B2 benchmarks.
+    """Prepare comma10k.parquet for S2/S3 benchmarks.
 
     Picks the image with the lexicographically smallest id and writes it
     as a single-row parquet with absolute path and real image dimensions.

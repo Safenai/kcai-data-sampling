@@ -8,11 +8,11 @@ from typing import Any
 import yaml
 
 
-from benchmark.scenarios import b2a_entries, b2b_entries, B1_METHOD
+from benchmark.scenarios import s2_entries, s3_entries, S1_METHOD
 
 
-def b1_config(batch_size: int, run_dir: Path) -> dict[str, Any]:
-    """Build a B1 job config dict for one cell.
+def s1_config(batch_size: int, run_dir: Path) -> dict[str, Any]:
+    """Build a S1 job config dict for one cell.
 
     Args:
         batch_size: The cell's B.
@@ -25,7 +25,7 @@ def b1_config(batch_size: int, run_dir: Path) -> dict[str, Any]:
         "dataloaders": {
             "loaders": [
                 {
-                    "name": "b1",
+                    "name": "s1",
                     "type": "parquet",
                     "path": str(run_dir / "inputs" / "manifest.parquet"),
                     "id_column": "id",
@@ -45,21 +45,21 @@ def b1_config(batch_size: int, run_dir: Path) -> dict[str, Any]:
             "transform_batch_size": batch_size,
             "transformations": [
                 {
-                    "name": B1_METHOD["type"],
-                    "type": B1_METHOD["type"],
-                    "seed": B1_METHOD["seed"],
-                    "brightness_limit": B1_METHOD["brightness_limit"],
-                    "contrast_limit": B1_METHOD["contrast_limit"],
-                    "ensure_safe_range": B1_METHOD["ensure_safe_range"],
-                    "p": B1_METHOD["p"],
+                    "name": S1_METHOD["type"],
+                    "type": S1_METHOD["type"],
+                    "seed": S1_METHOD["seed"],
+                    "brightness_limit": S1_METHOD["brightness_limit"],
+                    "contrast_limit": S1_METHOD["contrast_limit"],
+                    "ensure_safe_range": S1_METHOD["ensure_safe_range"],
+                    "p": S1_METHOD["p"],
                 }
             ],
         },
     }
 
 
-def b2a_config(run_dir: Path) -> dict[str, Any]:
-    """Build a B2-a job config dict.
+def s2_config(run_dir: Path) -> dict[str, Any]:
+    """Build a S2 job config dict.
 
     Args:
         run_dir: The run's artifact directory.
@@ -71,7 +71,7 @@ def b2a_config(run_dir: Path) -> dict[str, Any]:
         "dataloaders": {
             "loaders": [
                 {
-                    "name": "b2a",
+                    "name": "s2",
                     "type": "parquet",
                     "path": str(run_dir / "inputs" / "comma10k.parquet"),
                     "id_column": "id",
@@ -89,13 +89,13 @@ def b2a_config(run_dir: Path) -> dict[str, Any]:
                 "include": ["height", "width"],
             },
             "transform_batch_size": 1,
-            "transformations": b2a_entries(),
+            "transformations": s2_entries(),
         },
     }
 
 
-def b2b_config(run_dir: Path) -> dict[str, Any]:
-    """Build a B2-b job config dict.
+def s3_config(run_dir: Path) -> dict[str, Any]:
+    """Build a S3 job config dict.
 
     Args:
         run_dir: The run's artifact directory.
@@ -107,7 +107,7 @@ def b2b_config(run_dir: Path) -> dict[str, Any]:
         "dataloaders": {
             "loaders": [
                 {
-                    "name": "b2b",
+                    "name": "s3",
                     "type": "parquet",
                     "path": str(run_dir / "inputs" / "comma10k.parquet"),
                     "id_column": "id",
@@ -125,7 +125,7 @@ def b2b_config(run_dir: Path) -> dict[str, Any]:
                 "include": ["height", "width"],
             },
             "transform_batch_size": 1,
-            "transformations": b2b_entries(),
+            "transformations": s3_entries(),
         },
     }
 

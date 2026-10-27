@@ -15,18 +15,18 @@ def _suite_for_cell(cell: str) -> str:
     """Map a cell name to the suite the direct shim should run.
 
     Args:
-        cell: Cell name (e.g. 'b1_b5', 'b2a').
+        cell: Cell name (e.g. 'b1_b5', 's2').
 
     Returns:
-        The suite name: 'b1', 'b2a' or 'b2b'.
+        The suite name: 's1', 's2' or 's3'.
     """
-    if cell.startswith("b1") or cell in ("b5", "b10", "b20"):
-        return "b1"
-    if cell == "b2a":
-        return "b2a"
-    if cell == "b2b":
-        return "b2b"
-    return "b1"
+    if cell.startswith("s1") or cell in ("b5", "b10", "b20"):
+        return "s1"
+    if cell == "s2":
+        return "s2"
+    if cell == "s3":
+        return "s3"
+    return "s1"
 
 
 def _read_vmhwm_kb(pid: int) -> int:

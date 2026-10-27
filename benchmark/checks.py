@@ -39,7 +39,7 @@ def check_determinism(run1: dict[str, Any], run2: dict[str, Any]) -> bool:
 
 
 def check_equivalence(path: Path) -> bool:
-    """Verify B2-b equivalence: 40/40 levels match.
+    """Verify S3 equivalence: 40/40 levels match.
 
     Args:
         path: Path to equivalence.csv.

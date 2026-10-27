@@ -13,9 +13,9 @@ import pyarrow.parquet as pq
 
 from benchmark.parity import decode_batch, encode_one
 from benchmark.scenarios import (
-    B1_METHOD,
-    b2a_entries,
-    b2b_entries,
+    S1_METHOD,
+    s2_entries,
+    s3_entries,
     ksize_for_sigma,
 )
 
@@ -24,7 +24,7 @@ def run_direct(suite: str, config_path: Path, artifact_dir: Path) -> None:
     """Run the baseline side for one suite.
 
     Args:
-        suite: The suite name (b1, b2a, b2b).
+        suite: The suite name (s1, s2, s3).
         config_path: Path to the job config YAML.
         artifact_dir: Directory for artifacts.
     """
@@ -51,12 +51,12 @@ def run_direct(suite: str, config_path: Path, artifact_dir: Path) -> None:
     payloads_dir = artifact_dir / "payloads"
     payloads_dir.mkdir(parents=True, exist_ok=True)
 
-    if suite == "b1":
+    if suite == "s1":
         _run_b1(rows, config, payloads_dir, ledger_rows)
-    elif suite == "b2a":
-        _run_b2a(rows, payloads_dir, ledger_rows)
-    elif suite == "b2b":
-        _run_b2b(rows, payloads_dir, ledger_rows)
+    elif suite == "s2":
+        _run_s2(rows, payloads_dir, ledger_rows)
+    elif suite == "s3":
+        _run_s3(rows, payloads_dir, ledger_rows)
 
     # Write minimal parity parquet
     table = pa.Table.from_pylist(
@@ -72,13 +72,13 @@ def run_direct(suite: str, config_path: Path, artifact_dir: Path) -> None:
     pq.write_table(table, str(artifact_dir / "ledger.parquet"))
 
 
-def _run_b1(
+def _run_s1(
     rows: list[dict],
     config: dict,
     payloads_dir: Path,
     ledger_rows: list[dict],
 ) -> None:
-    """Run B1: random_brightness_contrast at each batch size.
+    """Run S1: random_brightness_contrast at each batch size.
 
     Args:
         rows: Manifest rows.
@@ -92,9 +92,9 @@ def _run_b1(
         ids, batch = decode_batch(chunk)
         # Create transform with fixed seed
         t = albumentations.RandomBrightnessContrast(
-            brightness_limit=B1_METHOD["brightness_limit"],
-            contrast_limit=B1_METHOD["contrast_limit"],
-            p=B1_METHOD["p"],
+            brightness_limit=S1_METHOD["brightness_limit"],
+            contrast_limit=S1_METHOD["contrast_limit"],
+            p=S1_METHOD["p"],
         )
         # Apply per row
         for j, row_id in enumerate(ids):
@@ -107,15 +107,15 @@ def _run_b1(
             ledger_rows.append({"id": row_id, "artifact": artifact, "sha256": sha})
 
 
-def _run_b2a(
+def _run_s2(
     rows: list[dict],
     payloads_dir: Path,
     ledger_rows: list[dict],
 ) -> None:
-    """Run B2-a: 40 transform types, one per image.
+    """Run S2: 40 transform types, one per image.
 
     Args:
-        rows: Manifest rows (single image for B2).
+        rows: Manifest rows (single image for S2/S3).
         payloads_dir: Directory for output PNGs.
         ledger_rows: Accumulator for ledger rows.
     """
@@ -125,7 +125,7 @@ def _run_b2a(
         _, batch = decode_batch([row])
         decoded[row["id"]] = batch[0]
 
-    for entry in b2a_entries():
+    for entry in s2_entries():
         for row in rows:
             img = decoded[row["id"]]
             # Build transform from entry
@@ -137,21 +137,21 @@ def _run_b2a(
             else:
                 result = t(image=img)
                 out = result["image"]
-            artifact = f"b2a__{row['id']}__{entry['name']}__{hashlib.sha1(out.tobytes()).hexdigest()[:6]}.png"
+            artifact = f"s2__{row['id']}__{entry['name']}__{hashlib.sha1(out.tobytes()).hexdigest()[:6]}.png"
             encode_one(str(payloads_dir / artifact), out)
             sha = hashlib.sha256((payloads_dir / artifact).read_bytes()).hexdigest()
             ledger_rows.append({"id": row["id"], "artifact": artifact, "sha256": sha})
 
 
-def _run_b2b(
+def _run_s3(
     rows: list[dict],
     payloads_dir: Path,
     ledger_rows: list[dict],
 ) -> None:
-    """Run B2-b: gaussian_blur at 40 sigma levels.
+    """Run S3: gaussian_blur at 40 sigma levels.
 
     Args:
-        rows: Manifest rows (single image for B2).
+        rows: Manifest rows (single image for S2/S3).
         payloads_dir: Directory for output PNGs.
         ledger_rows: Accumulator for ledger rows.
     """
@@ -161,7 +161,7 @@ def _run_b2b(
         _, batch = decode_batch([row])
         decoded[row["id"]] = batch[0]
 
-    for entry in b2b_entries():
+    for entry in s3_entries():
         sigma = entry["sigma_limit"][0]
         ksize = ksize_for_sigma(sigma)
         for row in rows:
@@ -174,7 +174,7 @@ def _run_b2b(
             else:
                 result = t(image=img)
                 out = result["image"]
-            artifact = f"b2b__{row['id']}__{entry['name']}__{hashlib.sha1(out.tobytes()).hexdigest()[:6]}.png"
+            artifact = f"s3__{row['id']}__{entry['name']}__{hashlib.sha1(out.tobytes()).hexdigest()[:6]}.png"
             encode_one(str(payloads_dir / artifact), out)
             sha = hashlib.sha256((payloads_dir / artifact).read_bytes()).hexdigest()
             ledger_rows.append({"id": row["id"], "artifact": artifact, "sha256": sha})

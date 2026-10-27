@@ -23,8 +23,8 @@ def generate_run_id() -> str:
     return f"{ts}-{short}"
 
 
-def _run_b1_suite(suite_dir: Path, warmups: int, repeats: int) -> list[dict[str, Any]]:
-    """Run the B1 suite with 4 cells (B=1,5,10,20).
+def _run_s1_suite(suite_dir: Path, warmups: int, repeats: int) -> list[dict[str, Any]]:
+    """Run the S1 suite with 4 cells (B=1,5,10,20).
 
     Args:
         suite_dir: Suite artifact directory.
@@ -40,7 +40,7 @@ def _run_b1_suite(suite_dir: Path, warmups: int, repeats: int) -> list[dict[str,
     for cell in scenarios.b1_cells():
         batch_size = cell["batch_size"]
         cell_name = cell["cell"]
-        cfg = config.b1_config(batch_size, suite_dir.parent)
+        cfg = config.s1_config(batch_size, suite_dir.parent)
         cfg_path = suite_dir / "configs" / f"{cell_name}.yaml"
         config.write_yaml(cfg_path, cfg)
 
@@ -76,8 +76,8 @@ def _run_b1_suite(suite_dir: Path, warmups: int, repeats: int) -> list[dict[str,
     return records
 
 
-def _run_b2a_suite(suite_dir: Path, warmups: int, repeats: int) -> list[dict[str, Any]]:
-    """Run the B2-a suite (40 transform types).
+def _run_s2_suite(suite_dir: Path, warmups: int, repeats: int) -> list[dict[str, Any]]:
+    """Run the S2 suite (40 transform types).
 
     Args:
         suite_dir: Suite artifact directory.
@@ -89,42 +89,42 @@ def _run_b2a_suite(suite_dir: Path, warmups: int, repeats: int) -> list[dict[str
     """
     records: list[dict[str, Any]] = []
     raw_log = suite_dir / "raw_runs.jsonl"
-    cfg = config.b2a_config(suite_dir.parent)
-    cfg_path = suite_dir / "configs" / "b2a.yaml"
+    cfg = config.s2_config(suite_dir.parent)
+    cfg_path = suite_dir / "configs" / "s2.yaml"
     config.write_yaml(cfg_path, cfg)
 
     # Warmups
     for rep in range(warmups):
-        art = suite_dir / "artifacts" / "b2a" / "ours" / f"warmup_{rep}"
+        art = suite_dir / "artifacts" / "s2" / "ours" / f"warmup_{rep}"
         tel = art / "telemetry.json"
-        record = runner.run_cell("b2a", "ours", rep, cfg_path, art, tel)
+        record = runner.run_cell("s2", "ours", rep, cfg_path, art, tel)
         record["warmup"] = True
         runner.append_raw_log(raw_log, record)
         records.append(record)
 
     # Timed runs
     for rep in range(repeats):
-        art_a = suite_dir / "artifacts" / "b2a" / "ours" / f"run_{rep}"
+        art_a = suite_dir / "artifacts" / "s2" / "ours" / f"run_{rep}"
         tel_a = art_a / "telemetry.json"
-        record_a = runner.run_cell("b2a", "ours", rep, cfg_path, art_a, tel_a)
+        record_a = runner.run_cell("s2", "ours", rep, cfg_path, art_a, tel_a)
         runner.append_raw_log(raw_log, record_a)
         records.append(record_a)
         if not checks.check_row_count(art_a, 40):
-            raise RuntimeError(f"Row count mismatch: b2a ours run_{rep}")
+            raise RuntimeError(f"Row count mismatch: s2 ours run_{rep}")
 
-        art_d = suite_dir / "artifacts" / "b2a" / "direct" / f"run_{rep}"
+        art_d = suite_dir / "artifacts" / "s2" / "direct" / f"run_{rep}"
         tel_d = art_d / "telemetry.json"
-        record_d = runner.run_cell("b2a", "direct", rep, cfg_path, art_d, tel_d)
+        record_d = runner.run_cell("s2", "direct", rep, cfg_path, art_d, tel_d)
         runner.append_raw_log(raw_log, record_d)
         records.append(record_d)
         if not checks.check_row_count(art_d, 40):
-            raise RuntimeError(f"Row count mismatch: b2a direct run_{rep}")
+            raise RuntimeError(f"Row count mismatch: s2 direct run_{rep}")
 
     return records
 
 
-def _run_b2b_suite(suite_dir: Path, warmups: int, repeats: int) -> list[dict[str, Any]]:
-    """Run the B2-b suite (40 sigma levels).
+def _run_s3_suite(suite_dir: Path, warmups: int, repeats: int) -> list[dict[str, Any]]:
+    """Run the S3 suite (40 sigma levels).
 
     Args:
         suite_dir: Suite artifact directory.
@@ -136,36 +136,36 @@ def _run_b2b_suite(suite_dir: Path, warmups: int, repeats: int) -> list[dict[str
     """
     records: list[dict[str, Any]] = []
     raw_log = suite_dir / "raw_runs.jsonl"
-    cfg = config.b2b_config(suite_dir.parent)
-    cfg_path = suite_dir / "configs" / "b2b.yaml"
+    cfg = config.s3_config(suite_dir.parent)
+    cfg_path = suite_dir / "configs" / "s3.yaml"
     config.write_yaml(cfg_path, cfg)
 
     # Warmups
     for rep in range(warmups):
-        art = suite_dir / "artifacts" / "b2b" / "ours" / f"warmup_{rep}"
+        art = suite_dir / "artifacts" / "s3" / "ours" / f"warmup_{rep}"
         tel = art / "telemetry.json"
-        record = runner.run_cell("b2b", "ours", rep, cfg_path, art, tel)
+        record = runner.run_cell("s3", "ours", rep, cfg_path, art, tel)
         record["warmup"] = True
         runner.append_raw_log(raw_log, record)
         records.append(record)
 
     # Timed runs
     for rep in range(repeats):
-        art_a = suite_dir / "artifacts" / "b2b" / "ours" / f"run_{rep}"
+        art_a = suite_dir / "artifacts" / "s3" / "ours" / f"run_{rep}"
         tel_a = art_a / "telemetry.json"
-        record_a = runner.run_cell("b2b", "ours", rep, cfg_path, art_a, tel_a)
+        record_a = runner.run_cell("s3", "ours", rep, cfg_path, art_a, tel_a)
         runner.append_raw_log(raw_log, record_a)
         records.append(record_a)
         if not checks.check_row_count(art_a, 40):
-            raise RuntimeError(f"Row count mismatch: b2b ours run_{rep}")
+            raise RuntimeError(f"Row count mismatch: s3 ours run_{rep}")
 
-        art_d = suite_dir / "artifacts" / "b2b" / "direct" / f"run_{rep}"
+        art_d = suite_dir / "artifacts" / "s3" / "direct" / f"run_{rep}"
         tel_d = art_d / "telemetry.json"
-        record_d = runner.run_cell("b2b", "direct", rep, cfg_path, art_d, tel_d)
+        record_d = runner.run_cell("s3", "direct", rep, cfg_path, art_d, tel_d)
         runner.append_raw_log(raw_log, record_d)
         records.append(record_d)
         if not checks.check_row_count(art_d, 40):
-            raise RuntimeError(f"Row count mismatch: b2b direct run_{rep}")
+            raise RuntimeError(f"Row count mismatch: s3 direct run_{rep}")
 
     return records
 
@@ -185,15 +185,15 @@ def _write_timing_csvs(
     timing_summary = timing.aggregate_timing(all_records)
     timing_fields = ["cell", "side", "n_timed", "median_s", "iqr_s", "min_s", "max_s"]
 
-    if "b1" in suites:
+    if "s1" in suites:
         b1_rows = [r for r in timing_summary if r["cell"].startswith("b")]
         timing.write_csv(run_dir / "b1_timing.csv", b1_rows, timing_fields)
-    if "b2a" in suites:
-        b2a_rows = [r for r in timing_summary if r["cell"] == "b2a"]
-        timing.write_csv(run_dir / "b2a_timing.csv", b2a_rows, timing_fields)
-    if "b2b" in suites:
-        b2b_rows = [r for r in timing_summary if r["cell"] == "b2b"]
-        timing.write_csv(run_dir / "b2b_timing.csv", b2b_rows, timing_fields)
+    if "s2" in suites:
+        s2_rows = [r for r in timing_summary if r["cell"] == "s2"]
+        timing.write_csv(run_dir / "s2_timing.csv", s2_rows, timing_fields)
+    if "s3" in suites:
+        s3_rows = [r for r in timing_summary if r["cell"] == "s3"]
+        timing.write_csv(run_dir / "s3_timing.csv", s3_rows, timing_fields)
 
 
 def _write_memory_csvs(
@@ -211,15 +211,15 @@ def _write_memory_csvs(
     memory_summary = memory.aggregate_memory(all_records)
     mem_fields = ["cell", "side", "n_timed", "peak_rss_mib_median", "peak_rss_mib_iqr"]
 
-    if "b1" in suites:
+    if "s1" in suites:
         b1_mem = [r for r in memory_summary if r["cell"].startswith("b")]
         timing.write_csv(run_dir / "b1_memory.csv", b1_mem, mem_fields)
-    if "b2a" in suites:
-        b2a_mem = [r for r in memory_summary if r["cell"] == "b2a"]
-        timing.write_csv(run_dir / "b2a_memory.csv", b2a_mem, mem_fields)
-    if "b2b" in suites:
-        b2b_mem = [r for r in memory_summary if r["cell"] == "b2b"]
-        timing.write_csv(run_dir / "b2b_memory.csv", b2b_mem, mem_fields)
+    if "s2" in suites:
+        s2_mem = [r for r in memory_summary if r["cell"] == "s2"]
+        timing.write_csv(run_dir / "s2_memory.csv", s2_mem, mem_fields)
+    if "s3" in suites:
+        s3_mem = [r for r in memory_summary if r["cell"] == "s3"]
+        timing.write_csv(run_dir / "s3_memory.csv", s3_mem, mem_fields)
 
 
 def _setup_run_dir(
@@ -254,7 +254,7 @@ def _setup_run_dir(
     if not (inputs_dir / "manifest.parquet").exists():
         inputs.generate_b1(inputs_dir, count=1000, seed=42)
 
-    # Prepare comma10k input for B2 suites (or use cache)
+    # Prepare comma10k input for S2/S3 suites (or use cache)
     if not (inputs_dir / "comma10k.parquet").exists():
         # outputs_root is benchmark/outputs, so .parent.parent.parent = repo root
         samples_path = outputs_root.parent.parent.parent / "examples" / "data" / "comma10k_sample" / "samples.parquet"
@@ -263,12 +263,12 @@ def _setup_run_dir(
 
     # Determine suites to run
     suites = []
-    if only is None or only == "b1":
-        suites.append("b1")
-    if only is None or only == "b2a":
-        suites.append("b2a")
-    if only is None or only == "b2b":
-        suites.append("b2b")
+    if only is None or only == "s1":
+        suites.append("s1")
+    if only is None or only == "s2":
+        suites.append("s2")
+    if only is None or only == "s3":
+        suites.append("s3")
 
     # Determine repeats and warmups
     warmups = 1 if quick else 3
@@ -277,8 +277,8 @@ def _setup_run_dir(
     return run_dir, artifacts_dir, suites, warmups, repeats
 
 
-def _write_b2b_files(run_dir: Path, artifacts_dir: Path) -> None:
-    """Generate b2b_levels.csv and equivalence.csv from B2b run ledgers.
+def _write_s3_files(run_dir: Path, artifacts_dir: Path) -> None:
+    """Generate s3_levels.csv and equivalence.csv from S3 run ledgers.
 
     Args:
         run_dir: Run results directory.
@@ -289,8 +289,8 @@ def _write_b2b_files(run_dir: Path, artifacts_dir: Path) -> None:
 
     import pyarrow.parquet as pq
 
-    ours_ledger_path = artifacts_dir / "b2b" / "artifacts" / "b2b" / "ours" / "run_0" / "ledger.parquet"
-    direct_ledger_path = artifacts_dir / "b2b" / "artifacts" / "b2b" / "direct" / "run_0" / "ledger.parquet"
+    ours_ledger_path = artifacts_dir / "s3" / "artifacts" / "s3" / "ours" / "run_0" / "ledger.parquet"
+    direct_ledger_path = artifacts_dir / "s3" / "artifacts" / "s3" / "direct" / "run_0" / "ledger.parquet"
 
     if not ours_ledger_path.exists() or not direct_ledger_path.exists():
         return
@@ -304,8 +304,8 @@ def _write_b2b_files(run_dir: Path, artifacts_dir: Path) -> None:
     # Direct rows are aligned by position (one per sigma level)
     direct_shas = direct_rows["sha256"]
 
-    # Write b2b_levels.csv
-    levels_path = run_dir / "b2b_levels.csv"
+    # Write s3_levels.csv
+    levels_path = run_dir / "s3_levels.csv"
     with levels_path.open("w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["level", "sigma", "ksize", "output_id", "artifact"])
@@ -333,7 +333,7 @@ def _write_b2b_files(run_dir: Path, artifacts_dir: Path) -> None:
             ksize = int(3.5 * sigma) * 2 + 1
             artifact = ours_rows["artifact"][i]
             # Compute sha256 of ours payload
-            payloads_dir = artifacts_dir / "b2b" / "artifacts" / "b2b" / "ours" / "run_0" / "payloads"
+            payloads_dir = artifacts_dir / "s3" / "artifacts" / "s3" / "ours" / "run_0" / "payloads"
             ours_hash = hashlib.sha256((payloads_dir / artifact).read_bytes()).hexdigest()
             d_sha = direct_shas[i] if i < len(direct_shas) else ""
             equal = "true" if ours_hash == d_sha else "false"
@@ -341,7 +341,7 @@ def _write_b2b_files(run_dir: Path, artifacts_dir: Path) -> None:
 
 
 def _load_b1_attr_rows(artifacts_dir: Path, limit: int = 100) -> list[dict[str, Any]] | None:
-    """Load a small B1 subset with resolved image paths.
+    """Load a small S1 subset with resolved image paths.
 
     Args:
         artifacts_dir: Run artifacts directory.
@@ -367,7 +367,7 @@ def _load_b2_attr_rows(artifacts_dir: Path, suites: list[str], limit: int = 1) -
 
     Args:
         artifacts_dir: Run artifacts directory.
-        suites: Suites that ran (b2a or b2b carries the resolved prefix).
+        suites: Suites that ran (s2 or s3 carries the resolved prefix).
         limit: Maximum number of rows to load.
 
     Returns:
@@ -382,7 +382,7 @@ def _load_b2_attr_rows(artifacts_dir: Path, suites: list[str], limit: int = 1) -
     rows = pq.read_table(comma_path).to_pylist()[:limit]
 
     prefix = "examples/data/comma10k_sample/imgs"
-    for suite in ("b2a", "b2b"):
+    for suite in ("s2", "s3"):
         config_path = artifacts_dir / suite / "configs" / f"{suite}.yaml"
         if suite not in suites or not config_path.exists():
             continue
@@ -559,7 +559,7 @@ def _attr_safe(store: dict[str, Any], key: str, func) -> None:
 
 
 def _attr_b1_full_job(attr: dict[str, Any], artifacts_dir: Path) -> None:
-    """Profile the full ours-side B1 job at every batch size (not just transform path).
+    """Profile the full ours-side S1 job at every batch size (not just transform path).
 
     Args:
         attr: The attribution document, with 'm3' section.
@@ -567,7 +567,7 @@ def _attr_b1_full_job(attr: dict[str, Any], artifacts_dir: Path) -> None:
     """
     from benchmark.attribution import run_m3_full_job
 
-    suite_dir = artifacts_dir / "b1"
+    suite_dir = artifacts_dir / "s1"
     configs_dir = suite_dir / "configs"
     if not configs_dir.exists():
         return
@@ -575,7 +575,7 @@ def _attr_b1_full_job(attr: dict[str, Any], artifacts_dir: Path) -> None:
     run_level = artifact_dir_for_b1_suite(suite_dir)
 
     for cfg_path in sorted(configs_dir.glob("b*.yaml")):
-        cell_name = cfg_path.stem  # e.g. "b1", "b5", "b10", "b20"
+        cell_name = cfg_path.stem  # e.g. "s1", "b5", "b10", "b20"
         key = f"ours_b1_full_job_{cell_name}"
 
         _clean_job_outputs(run_level)
@@ -595,7 +595,7 @@ def artifact_dir_for_b1_suite(suite_dir: Path) -> Path:
     Returns:
         Run-level directory.
     """
-    # artifacts_dir / b1 -> parents[0] is b1, parents[1] is artifacts_dir
+    # artifacts_dir / s1 -> parents[0] is s1, parents[1] is artifacts_dir
     return suite_dir.parent
 
 
@@ -617,7 +617,7 @@ def _clean_job_outputs(run_level: Path) -> None:
 
 
 def _attribution_b1(attr: dict[str, Any], artifacts_dir: Path, payloads_dir: Path) -> None:
-    """Run B1 attribution (direct profile plus workspace/native microbench).
+    """Run S1 attribution (direct profile plus workspace/native microbench).
 
     Args:
         attr: The attribution document, with 'm3' and 'm5' sections.
@@ -628,7 +628,7 @@ def _attribution_b1(attr: dict[str, Any], artifacts_dir: Path, payloads_dir: Pat
 
     from benchmark.direct import _run_b1
     from benchmark.parity import decode_batch
-    from benchmark.scenarios import B1_METHOD
+    from benchmark.scenarios import S1_METHOD
 
     rows = _load_b1_attr_rows(artifacts_dir)
     if rows is None:
@@ -640,20 +640,20 @@ def _attribution_b1(attr: dict[str, Any], artifacts_dir: Path, payloads_dir: Pat
     _, batch = decode_batch(rows[:1])
     image = batch[0]
     row_id = str(rows[0]["id"])
-    entry = {"name": B1_METHOD["type"], **B1_METHOD}
+    entry = {"name": S1_METHOD["type"], **S1_METHOD}
     _attr_safe(attr["m5"], "b1_random_brightness_contrast", lambda: _attr_m5_ours(entry, image, row_id))
     _attr_safe(attr["m3"], "ours_b1", lambda: _attr_m3_ours(entry, image, row_id))
 
     direct = albumentations.RandomBrightnessContrast(
-        brightness_limit=B1_METHOD["brightness_limit"],
-        contrast_limit=B1_METHOD["contrast_limit"],
-        p=B1_METHOD["p"],
+        brightness_limit=S1_METHOD["brightness_limit"],
+        contrast_limit=S1_METHOD["contrast_limit"],
+        p=S1_METHOD["p"],
     )
     _attr_safe(attr["m5"], "b1_random_brightness_contrast_direct", lambda: _attr_m5_direct(direct, image[..., :3]))
 
 
 def _attribution_b2(attr: dict[str, Any], artifacts_dir: Path, suites: list[str], payloads_dir: Path) -> None:
-    """Run B2 attribution (direct profiles plus workspace/native microbench).
+    """Run S2/S3 attribution (direct profiles plus workspace/native microbench).
 
     Args:
         attr: The attribution document, with 'm3' and 'm5' sections.
@@ -663,23 +663,23 @@ def _attribution_b2(attr: dict[str, Any], artifacts_dir: Path, suites: list[str]
     """
     import albumentations
 
-    from benchmark.direct import _run_b2a, _run_b2b
+    from benchmark.direct import _run_s2, _run_s3
     from benchmark.parity import decode_batch
-    from benchmark.scenarios import b2b_entries
+    from benchmark.scenarios import s3_entries
 
     rows = _load_b2_attr_rows(artifacts_dir, suites)
     if rows is None:
         return
 
-    if "b2a" in suites:
-        _attr_safe(attr["m3"], "direct_b2a", lambda: _attr_m3(_run_b2a, rows, payloads_dir, []))
-    if "b2b" in suites:
-        _attr_safe(attr["m3"], "direct_b2b", lambda: _attr_m3(_run_b2b, rows, payloads_dir, []))
+    if "s2" in suites:
+        _attr_safe(attr["m3"], "direct_b2a", lambda: _attr_m3(_run_s2, rows, payloads_dir, []))
+    if "s3" in suites:
+        _attr_safe(attr["m3"], "direct_b2b", lambda: _attr_m3(_run_s3, rows, payloads_dir, []))
 
     _, batch = decode_batch(rows[:1])
     image = batch[0]
     row_id = str(rows[0]["id"])
-    entry = b2b_entries()[0]
+    entry = s3_entries()[0]
     sigma = entry["sigma_limit"][0]
 
     def measure_ours() -> dict[str, float]:
@@ -687,11 +687,11 @@ def _attribution_b2(attr: dict[str, Any], artifacts_dir: Path, suites: list[str]
         result["sigma"] = sigma
         return result
 
-    _attr_safe(attr["m5"], "b2b_gaussian_blur", measure_ours)
+    _attr_safe(attr["m5"], "s3_gaussian_blur", measure_ours)
     _attr_safe(attr["m3"], "ours_b2b", lambda: _attr_m3_ours(entry, image, row_id))
 
     direct = albumentations.GaussianBlur(sigma_limit=(sigma, sigma), p=1.0)
-    _attr_safe(attr["m5"], "b2b_gaussian_blur_direct", lambda: _attr_m5_direct(direct, image[..., :3]))
+    _attr_safe(attr["m5"], "s3_gaussian_blur_direct", lambda: _attr_m5_direct(direct, image[..., :3]))
 
 
 def _run_attribution(run_dir: Path, artifacts_dir: Path, suites: list[str]) -> None:
@@ -708,10 +708,10 @@ def _run_attribution(run_dir: Path, artifacts_dir: Path, suites: list[str]) -> N
     payloads_dir = run_dir / "attr_payloads"
     payloads_dir.mkdir(parents=True, exist_ok=True)
 
-    if "b1" in suites:
+    if "s1" in suites:
         _attribution_b1(attr, artifacts_dir, payloads_dir)
         _attr_b1_full_job(attr, artifacts_dir)
-    if "b2a" in suites or "b2b" in suites:
+    if "s2" in suites or "s3" in suites:
         _attribution_b2(attr, artifacts_dir, suites, payloads_dir)
 
     write_attribution(run_dir / "attribution.json", attr)
@@ -737,8 +737,8 @@ def _finalize_run(
     _write_timing_csvs(run_dir, suites, all_records)
     _write_memory_csvs(run_dir, suites, all_records)
 
-    if "b2b" in suites:
-        _write_b2b_files(run_dir, artifacts_dir)
+    if "s3" in suites:
+        _write_s3_files(run_dir, artifacts_dir)
 
     # Write report
     report.write_report(run_dir, mode=report_mode)
@@ -767,7 +767,7 @@ def orchestrate(
     Args:
         outputs_root: Root directory for outputs (e.g., benchmark/outputs).
         quick: If True, use fewer repeats/warmups for dev mode.
-        only: If set, run only this suite ('b1', 'b2a', 'b2b').
+        only: If set, run only this suite ('s1', 's2', 's3').
         report_mode: 'timing' or 'all'.
         with_attribution: If True, run M3/M5 attribution.
 
@@ -782,12 +782,12 @@ def orchestrate(
         suite_dir = artifacts_dir / suite
         suite_dir.mkdir(parents=True, exist_ok=True)
 
-        if suite == "b1":
-            records = _run_b1_suite(suite_dir, warmups, repeats)
-        elif suite == "b2a":
-            records = _run_b2a_suite(suite_dir, warmups, repeats)
-        elif suite == "b2b":
-            records = _run_b2b_suite(suite_dir, warmups, repeats)
+        if suite == "s1":
+            records = _run_s1_suite(suite_dir, warmups, repeats)
+        elif suite == "s2":
+            records = _run_s2_suite(suite_dir, warmups, repeats)
+        elif suite == "s3":
+            records = _run_s3_suite(suite_dir, warmups, repeats)
         else:
             continue
 

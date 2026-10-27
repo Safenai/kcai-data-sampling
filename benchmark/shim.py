@@ -65,7 +65,7 @@ def run_side_direct(suite: str, config_path: Path, telemetry_path: Path, artifac
     """Run side D (baseline) via direct.py.
 
     Args:
-        suite: The suite name (b1, b2a, b2b).
+        suite: The suite name (s1, s2, s3).
         config_path: Path to the YAML config.
         telemetry_path: Path to write telemetry.json.
         artifact_dir: Directory for artifacts.
@@ -161,7 +161,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="shim")
     parser.add_argument("--side", choices=["ours", "direct"], required=True)
     parser.add_argument("--config", type=Path, required=True)
-    parser.add_argument("--suite", choices=["b1", "b2a", "b2b"], default="b1")
+    parser.add_argument("--suite", choices=["s1", "s2", "s3"], default="s1")
     parser.add_argument("--artifacts", type=Path, required=True)
     parser.add_argument("--telemetry", type=Path, required=True)
     args = parser.parse_args(argv)
