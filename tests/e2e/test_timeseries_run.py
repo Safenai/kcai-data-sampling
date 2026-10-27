@@ -182,6 +182,18 @@ def test_jitter_is_seeded_and_batch_invariant(series_parquet: Path, tmp_path: Pa
     assert payloads(tmp_path / "other", seed=8, load=64, transform_batch_size=8) != baseline
 
 
+def test_selected_channel_is_the_whole_sample(series_parquet: Path, tmp_path: Path) -> None:
+    """``channels: [1]`` on the loader: each payload is ``(W, 1)``, the filtered channel 1."""
+    config = _config(series_parquet, tmp_path, transformations=[{"type": "low_pass", "cutoff": 0.1}])
+    config["dataloaders"]["loaders"][0]["channels"] = [1]
+    assert run(config) == {SELECTION: N_WINDOWS}
+    parents = _windows_by_id(series_parquet, CONSECUTIVE)
+    for row in _ledger(tmp_path):
+        payload = np.load(tmp_path / SELECTION / row["artifact"])
+        assert payload.shape == (32, 1)
+        assert np.array_equal(payload, low_pass(parents[row["parent_id"]][None, :, [1]], 0.1)[0])
+
+
 def test_shipped_example_runs(tmp_path: Path) -> None:
     """``make_timeseries_sample.py`` + ``timeseries-procedural.yaml`` run as shipped.
 

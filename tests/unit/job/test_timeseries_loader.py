@@ -238,6 +238,39 @@ def test_multichannel_series(tmp_path: Path) -> None:
     assert np.array_equal(batches[0].data[1, :, 1], [-3.0, -4.0, -5.0])
 
 
+def test_channels_select_the_sample(tmp_path: Path) -> None:
+    """``channels: [2, 0]`` keeps those channels, in that order: the window is ``(W, 2)``."""
+    rows = {"m": [[float(t), -float(t), 10.0 * t] for t in range(6)]}
+    batches = _batches(
+        _write_series(tmp_path / "s.parquet", rows), {"mode": "consecutive", "window": 3}, channels=[2, 0]
+    )
+    assert batches[0].data.shape == (2, 3, 2)
+    assert np.array_equal(batches[0].data[1, :, 0], [30.0, 40.0, 50.0])
+    assert np.array_equal(batches[0].data[1, :, 1], [3.0, 4.0, 5.0])
+
+
+def test_series_without_a_selected_channel_is_a_failure(tmp_path: Path) -> None:
+    """A series that lacks a selected channel is skipped and counted; the others are cut."""
+    rows = {"three": [[0.0, 1.0, 2.0]] * 4, "two": [[0.0, 1.0]] * 4}
+    path = _write_series(tmp_path / "s.parquet", rows)
+    loader = TimeSeriesParquetDataLoader(
+        "sensors", _loader_config(path, {"mode": "consecutive", "window": 2}, channels=[2])
+    )
+    (selection,) = loader.get_selections()
+    selection.bootstrap(None)
+    assert _keys(list(selection)) == [("three", 0), ("three", 2)]
+    assert selection.failures == 1
+
+
+def test_selected_channels_make_channel_counts_comparable(tmp_path: Path) -> None:
+    """Series of 2 and 3 channels stack once both keep channels 0 and 1."""
+    rows = {"two": [[0.0, 1.0]] * 4, "three": [[0.0, 1.0, 2.0]] * 4}
+    batches = _batches(
+        _write_series(tmp_path / "s.parquet", rows), {"mode": "consecutive", "window": 2}, channels=[0, 1]
+    )
+    assert np.concatenate([b.data for b in batches]).shape == (4, 2, 2)
+
+
 def test_channel_count_must_not_change(tmp_path: Path) -> None:
     """A series with another channel count than the first is a failure."""
     rows = {"one": [[0.0, 1.0]] * 4, "two": [[0.0, 1.0, 2.0]] * 4}
@@ -333,10 +366,13 @@ def test_invalid_windows_are_refused(tmp_path: Path, windows: dict) -> None:
         {"sample_path": [{"column": "values"}]},
         {"transform": [{"column": "site", "to_type": "str"}]},
         {"sampling_rate": 0},
+        {"channels": []},
+        {"channels": [-1]},
+        {"channels": [0, 0]},
     ],
 )
 def test_unsupported_keys_are_refused(tmp_path: Path, extra: dict) -> None:
-    """Image-only keys and a non-positive sampling rate are refused."""
+    """Image-only keys, a non-positive sampling rate and bad channel lists are refused."""
     with pytest.raises(pydantic.ValidationError):
         _loader_config(tmp_path / "s.parquet", {"mode": "consecutive", "window": 2}, **extra)
 
