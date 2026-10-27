@@ -22,6 +22,7 @@ classifiers = [
 [project.entry-points."kcai_data_sampling.transformations"]
 low_pass = "kcai_data_sampling_timeseries.api.transformations.low_pass:LowPass"
 add_sinusoid = "kcai_data_sampling_timeseries.api.transformations.add_sinusoid:AddSinusoid"
+jitter = "kcai_data_sampling_timeseries.api.transformations.jitter:Jitter"
 
 [build-system]
 requires = ["setuptools>=80", "setuptools-scm[simple]>=8"]
