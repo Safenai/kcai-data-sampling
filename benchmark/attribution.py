@@ -99,13 +99,15 @@ def run_m3_full_job(config_path: Path) -> dict[str, Any]:
             continue
         if tt < 0.0005:
             continue
-        batch_scaling.append({
-            "function": f"{filename.split('/')[-1]}:{lineno}({funcname})",
-            "ncalls": nc,
-            "tottime": round(tt, 6),
-            "cumtime": round(ct, 6),
-            "per_call_ms": round(tt / nc * 1000, 4),
-        })
+        batch_scaling.append(
+            {
+                "function": f"{filename.split('/')[-1]}:{lineno}({funcname})",
+                "ncalls": nc,
+                "tottime": round(tt, 6),
+                "cumtime": round(ct, 6),
+                "per_call_ms": round(tt / nc * 1000, 4),
+            }
+        )
     batch_scaling.sort(key=lambda x: -x["tottime"])
 
     # Also produce a condensed text (top 20 by cumtime for context)

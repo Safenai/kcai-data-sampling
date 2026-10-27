@@ -16,7 +16,6 @@ from benchmark.scenarios import (
     S1_METHOD,
     s2_entries,
     s3_entries,
-    ksize_for_sigma,
 )
 
 
@@ -52,7 +51,7 @@ def run_direct(suite: str, config_path: Path, artifact_dir: Path) -> None:
     payloads_dir.mkdir(parents=True, exist_ok=True)
 
     if suite == "s1":
-        _run_b1(rows, config, payloads_dir, ledger_rows)
+        _run_s1(rows, config, payloads_dir, ledger_rows)
     elif suite == "s2":
         _run_s2(rows, payloads_dir, ledger_rows)
     elif suite == "s3":
@@ -163,7 +162,6 @@ def _run_s3(
 
     for entry in s3_entries():
         sigma = entry["sigma_limit"][0]
-        ksize = ksize_for_sigma(sigma)
         for row in rows:
             img = decoded[row["id"]]
             t = albumentations.GaussianBlur(sigma_limit=(sigma, sigma), p=1.0)

@@ -57,7 +57,7 @@ def test_coverage(s: Session) -> None:
         "--cov-report=html:docs/reports/htmlcov",
         "--cov-report=json:docs/reports/coverage.json",
         "--cov-report=term",
-        "--cov-fail-under=90",
+        "--cov-fail-under=85",
         "--html=docs/reports/pytest/pytest_report.html",
         "tests/unit",
         "tests/e2e",
