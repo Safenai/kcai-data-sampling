@@ -100,7 +100,14 @@ integer column holding each series' step 0, counted in steps from the step 0
 of the earliest series (`0` for that one); it is carried as `t0_series`.
 `series_id`, `t0_series`, `start_window` and `end_window` are the window's key:
 overlap, order and lag, and simultaneity across series are computed from them,
-in steps, never stored. A window's id is opaque,
+in steps, never stored.
+
+`channels` (optional) keeps only the listed channels of each series, in that
+order: the window is `(W, len(channels))`, so a transformation only ever sees
+the selected channels. Which channels form the sample is a choice of the data
+selection, not of the transformation; to transform two channels with different
+parameters, declare two loaders, one per channel. A series that lacks a listed
+channel counts as a failed row. A window's id is opaque,
 a 12-hex hash of `(series, start, end)`: the same window has the same id in
 both modes. A batch is `(B, W, C)` float64 with axes `(time, channel)` and no
 value range. A series that cannot be windowed as asked (null values, a
@@ -117,6 +124,7 @@ dataloaders:
       id_column: series_id
       values_column: values
       sampling_rate: 100
+      channels: [0]          # optional: keep the vibration channel only
       windows:
         mode: consecutive
         window: 256

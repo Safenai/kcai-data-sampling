@@ -13,8 +13,10 @@ steps cut from it, and the selection decides how windows are cut:
   ``seed`` and the series id, so the selection is the same whatever the read
   order or the batch size.
 
-Each ``load_batch_size`` windows become one generic core :class:`Batch`
-``(B, W, C)`` float64, with the time-series space declared inline
+``channels`` (optional) keeps only the listed channels of each series, in
+that order: the sample is ``(W, len(channels))``, and a transformation only
+ever sees the selected channels. Each ``load_batch_size`` windows become one
+generic core :class:`Batch` ``(B, W, C)`` float64, with the time-series space declared inline
 (``("time", "channel")``, no value range) — ``-job`` depends on core only.
 The source columns of the series are repeated on each of its windows, plus
 ``start_window`` and ``end_window`` (first and last step, inclusive). The
@@ -104,6 +106,8 @@ class TimeSeriesLoaderConfig(DataLoaderConfig):
             from the step 0 of the earliest series; carried as ``t0_series``.
             ``None`` when the series share no clock.
         sampling_rate: Steps per second of the series, in Hz; informative.
+        channels: Indices of the channels each window keeps, in that order,
+            distinct and ``>= 0``; ``None`` keeps them all.
         windows: How windows are cut from each series.
     """
 
@@ -111,6 +115,9 @@ class TimeSeriesLoaderConfig(DataLoaderConfig):
     values_column: str = Field(description="Column holding each series: list<float> or list<list<float>>.")
     t0_column: str | None = Field(default=None, description="Integer column holding step 0, in steps; optional.")
     sampling_rate: float | None = Field(default=None, gt=0, description="Sampling rate in Hz; informative.")
+    channels: list[Annotated[int, Field(ge=0)]] | None = Field(
+        default=None, min_length=1, description="Indices of the channels each window keeps; all of them when unset."
+    )
     windows: WindowsConfig = Field(description="How windows are cut from each series.")
 
     @model_validator(mode="after")
@@ -121,11 +128,14 @@ class TimeSeriesLoaderConfig(DataLoaderConfig):
             The validated config.
 
         Raises:
-            ValueError: If ``sample_path`` or ``transform`` is set.
+            ValueError: If ``sample_path`` or ``transform`` is set, or if
+                ``channels`` lists a channel twice.
         """
         for key in ("sample_path", "transform"):
             if getattr(self, key) is not None:
                 raise ValueError(f"timeseries_parquet: {key!r} is not supported")
+        if self.channels is not None and len(set(self.channels)) != len(self.channels):
+            raise ValueError(f"timeseries_parquet: channels must be distinct, got {self.channels}")
         return self
 
 
@@ -380,15 +390,16 @@ class TimeSeriesDataSelection(DataSelection):
             values: The row's raw values.
 
         A series shorter than one window yields no window and is not a
-        failure; a series with another channel count than the first one is
-        (the batch stacks windows of one shape).
+        failure; a series without one of the selected ``channels``, or with
+        another channel count than the first one, is (the batch stacks
+        windows of one shape).
 
         Returns:
             The windows ``(n, W, C)`` and their starts, or ``None`` when the
             series yields no window.
         """
         try:
-            series = as_series(values)
+            series = self._select_channels(as_series(values), series_id)
             if self._channels is not None and series.shape[1] != self._channels:
                 raise ValueError(f"series {series_id!r} has {series.shape[1]} channels, expected {self._channels}")
             starts = self._starts(len(series), series_id)
@@ -400,6 +411,28 @@ class TimeSeriesDataSelection(DataSelection):
             return None
         window = self.windows.window
         return np.stack([series[s : s + window] for s in starts]), starts
+
+    def _select_channels(self, series: np.ndarray, series_id: str) -> np.ndarray:
+        """Keep the selected channels of one series, in the listed order.
+
+        Args:
+            series: The series, ``(T, C)``.
+            series_id: The series identifier, for the error message.
+
+        Returns:
+            ``(T, len(channels))``, or the series itself when no channel is
+            selected.
+
+        Raises:
+            ValueError: If a selected channel does not exist in the series.
+        """
+        channels = self.config.channels
+        if channels is None:
+            return series
+        missing = [c for c in channels if c >= series.shape[1]]
+        if missing:
+            raise ValueError(f"series {series_id!r} has {series.shape[1]} channels, no channel {missing}")
+        return series[:, channels]
 
     def _windows_of(self, record: pa.RecordBatch, row_offset: int) -> Iterator[tuple[np.ndarray, pa.Table]]:
         """Window every series of one record batch.

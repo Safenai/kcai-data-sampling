@@ -34,6 +34,12 @@ handled by the job package.
 
 Three methods, as examples of the slot rather than a catalogue.
 
+Every method transforms **every channel** of the windows it receives, with the
+same parameters. Which channels a window holds is decided upstream, by the data
+selection: the `timeseries_parquet` loader's `channels` keeps the listed ones.
+Parameters are in the units of the signal, so select the channels whose units
+fit them.
+
 ## Frequencies are in cycles per step
 
 `cutoff` and `frequency` are given in **cycles per step**, in `(0, 0.5]`, where
