@@ -17,7 +17,11 @@ import subprocess
 import sys
 
 from kcai_data_sampling_job.cli import run
-from kcai_data_sampling_job.dataloaders.api.timeseries import TimeSeriesLoaderConfig, TimeSeriesParquetDataLoader
+from kcai_data_sampling_job.dataloaders.api.timeseries import (
+    TimeSeriesLoaderConfig,
+    TimeSeriesParquetDataLoader,
+    window_id,
+)
 from kcai_data_sampling_job.job import GENERATOR_COLUMNS
 from kcai_data_sampling_timeseries.transformations import add_sinusoid, low_pass
 import numpy as np
@@ -77,11 +81,12 @@ def _windows_by_id(path: Path, windows: dict) -> dict[str, np.ndarray]:
 
 def test_full_run_writes_one_row_and_one_npy_per_output(series_parquet: Path, tmp_path: Path) -> None:
     """Each ``.npy`` file is its algorithm applied to its parent window."""
-    summary = run(_config(series_parquet, tmp_path, include=["site", "window_start"]))
+    include = ["site", "series_id", "start_window", "end_window"]
+    summary = run(_config(series_parquet, tmp_path, include=include))
     assert summary == {SELECTION: 2 * N_WINDOWS}
 
     rows = _ledger(tmp_path)
-    assert list(rows[0]) == [*GENERATOR_COLUMNS, "site", "window_start"]
+    assert list(rows[0]) == [*GENERATOR_COLUMNS, *include]
     parents = _windows_by_id(series_parquet, CONSECUTIVE)
     assert {r["parent_id"] for r in rows} == set(parents)
     for row in rows:
@@ -97,7 +102,8 @@ def test_full_run_writes_one_row_and_one_npy_per_output(series_parquet: Path, tm
         assert np.array_equal(payload, expected)
         assert row["family"] == "procedural"
         assert row["seed"] is None
-        assert row["window_start"] == int(row["parent_id"].split("@")[1]) - 31
+        assert row["parent_id"] == window_id(row["series_id"], row["start_window"], row["end_window"])
+        assert row["end_window"] - row["start_window"] == 31
 
 
 def test_cutoff_sweep_expands_into_one_transformation_per_value(series_parquet: Path, tmp_path: Path) -> None:
@@ -124,7 +130,7 @@ def test_independent_selection_is_reproducible(series_parquet: Path, tmp_path: P
     ids = [r["parent_id"] for r in _ledger(tmp_path / "a")]
     assert ids == [r["parent_id"] for r in _ledger(tmp_path / "b")]
     # ``s2`` (64 steps) holds exactly two disjoint 32-step windows.
-    assert {"s2@0", "s2@32"} <= set(ids)
+    assert {window_id("s2", 0, 31), window_id("s2", 32, 63)} <= set(ids)
 
 
 def test_series_that_cannot_be_windowed_abort_above_the_failure_rate(series_parquet: Path, tmp_path: Path) -> None:
@@ -169,4 +175,5 @@ def test_shipped_example_runs(tmp_path: Path) -> None:
     config["compute"] = {"progress_bar": False}
     assert run(config) == {"machines": 5 * 14 * 4}
     rows = pq.read_table(tmp_path / "out" / "machines" / "ledger.parquet").to_pylist()
-    assert {r["machine"] for r in rows} == {"m0", "m1"}
+    assert {r["series_id"] for r in rows} == {f"rec_{i:02d}" for i in range(5)}
+    assert all(r["parent_id"] == window_id(r["series_id"], r["start_window"], r["end_window"]) for r in rows)

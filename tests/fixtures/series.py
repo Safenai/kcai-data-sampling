@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from kcai_data_sampling_job.dataloaders.api.timeseries import window_id
 from kcai_data_sampling_timeseries.api.selection import TimeSeriesBatch
 import numpy as np
 import pyarrow as pa
@@ -66,7 +67,7 @@ def synthetic_series_batch(test_seed: int) -> TimeSeriesBatch:
     return TimeSeriesBatch(
         name=SERIES_SELECTION,
         dataset=SERIES_DATASET,
-        ids=[f"series_{i}@{SERIES_WIDTH - 1}" for i in range(n)],
+        ids=[window_id(f"series_{i}", 0, SERIES_WIDTH - 1) for i in range(n)],
         columns=pa.table({"series_id": [f"series_{i}" for i in range(n)], "start": [0] * n}),
         data=windows,
         sampling_rate=100.0,

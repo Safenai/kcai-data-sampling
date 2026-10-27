@@ -22,7 +22,7 @@ operations:
     samples_dir: examples/outputs/{selection}/payloads
     payload_format: npy
     flush_batch_size: 128
-    include: [machine, window_start, window_end]
+    include: [series_id, start_window, end_window]
   transformations:
     - name: low_pass
       type: low_pass

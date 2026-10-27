@@ -8,25 +8,31 @@ steps cut from it, and the selection decides how windows are cut:
 
 - ``consecutive`` (:class:`ConsecutiveTimeSeriesSamples`): every window that
   fits, ``stride`` steps apart (``stride = 1`` slides, ``stride = W`` tiles);
-  a window's id is ``<series>@<t>``, ``t`` its last step (the lookback ending
-  at ``t``);
 - ``independent`` (:class:`IndependentTimeSeriesSamples`): ``n_windows``
-  positions drawn per series, overlapping or not; a window's id is
-  ``<series>@<start>``. The draw is seeded by ``seed`` and the series id, so
-  the selection is the same whatever the read order or the batch size.
+  positions drawn per series, overlapping or not. The draw is seeded by
+  ``seed`` and the series id, so the selection is the same whatever the read
+  order or the batch size.
 
 Each ``load_batch_size`` windows become one generic core :class:`Batch`
 ``(B, W, C)`` float64, with the time-series space declared inline
 (``("time", "channel")``, no value range) — ``-job`` depends on core only.
 The source columns of the series are repeated on each of its windows, plus
-``window_start`` and ``window_end`` (first and last step, inclusive). Overlap
-is a property of the selection: overlapping windows are correlated samples,
-and the transformation never knows.
+``start_window`` and ``end_window`` (first and last step, inclusive). The
+column named by ``t0_column``, when set, is carried as ``t0_series``: the
+series' step 0, counted in steps from the step 0 of the earliest series (which
+has ``t0_series = 0``). ``series_id``, ``t0_series``, ``start_window`` and
+``end_window`` are the window's key: every relation between two windows (same
+series, overlap, order and lag, simultaneity) is computed from it, in steps,
+never stored. A window's id is opaque, a hash of ``(series, start, end)``:
+nothing reads relations from it. Overlap is a
+property of the selection: overlapping windows are correlated samples, and
+the transformation never knows.
 """
 
 from collections.abc import Iterator
 import hashlib
 import logging
+import json
 from typing import Annotated, Any, Literal, Self
 
 from kcai_data_sampling_core.api.dataloaders import DataLoader, DataSelection
@@ -94,12 +100,16 @@ class TimeSeriesLoaderConfig(DataLoaderConfig):
     Attributes:
         type: Pinned to ``timeseries_parquet``.
         values_column: The column holding each series' values.
+        t0_column: The integer column holding each series' step 0, in steps
+            from the step 0 of the earliest series; carried as ``t0_series``.
+            ``None`` when the series share no clock.
         sampling_rate: Steps per second of the series, in Hz; informative.
         windows: How windows are cut from each series.
     """
 
     type: Literal["timeseries_parquet"] = "timeseries_parquet"
     values_column: str = Field(description="Column holding each series: list<float> or list<list<float>>.")
+    t0_column: str | None = Field(default=None, description="Integer column holding step 0, in steps; optional.")
     sampling_rate: float | None = Field(default=None, gt=0, description="Sampling rate in Hz; informative.")
     windows: WindowsConfig = Field(description="How windows are cut from each series.")
 
@@ -130,6 +140,21 @@ def _series_seed(seed: int, series_id: str) -> list[int]:
         The seed sequence for ``np.random.default_rng``.
     """
     return [seed, int.from_bytes(hashlib.sha1(series_id.encode()).digest()[:8], "big")]
+
+
+def window_id(series_id: str, start: int, end: int) -> str:
+    """The opaque id of one window: a 12-hex sha1 of its key.
+
+    Args:
+        series_id: The series identifier.
+        start: The window's first step.
+        end: The window's last step (inclusive).
+
+    Returns:
+        The id, the same for the same window in every run and mode.
+    """
+    key = json.dumps([series_id, start, end])
+    return hashlib.sha1(key.encode("utf-8")).hexdigest()[:12]
 
 
 def consecutive_starts(length: int, window: int, stride: int) -> list[int]:
@@ -285,8 +310,27 @@ class TimeSeriesDataSelection(DataSelection):
         del columns_list
         self.filter_expr = self._build_filter_expr()
         self._parquet = pq.ParquetDataset(self.config.path, filters=self.filter_expr)
+        self._check_t0_column(self._parquet.schema)
         lengths = pc.list_value_length(self._parquet.read([self.config.values_column]).column(0))
         self._lengths = [int(n or 0) for n in lengths.to_pylist()]
+
+    def _check_t0_column(self, schema: pa.Schema) -> None:
+        """Check that ``t0_column``, when set, is an integer column.
+
+        Args:
+            schema: The dataset schema.
+
+        Raises:
+            ValueError: If the column is missing or of another type.
+        """
+        name = self.config.t0_column
+        if name is None:
+            return
+        if name not in schema.names:
+            raise ValueError(f"timeseries_parquet: t0_column {name!r} is not in the dataset")
+        kind = schema.field(name).type
+        if not pa.types.is_integer(kind):
+            raise ValueError(f"timeseries_parquet: t0_column {name!r} must be an integer step count, got {kind}")
 
     def _starts(self, length: int, series_id: str) -> list[int]:
         """The window starts of one series, per the selection's mode.
@@ -301,20 +345,6 @@ class TimeSeriesDataSelection(DataSelection):
         if isinstance(self.windows, IndependentWindowsConfig):
             return independent_starts(length, self.windows, series_id)
         return consecutive_starts(length, self.windows.window, self.windows.stride or self.windows.window)
-
-    def _window_id(self, series_id: str, start: int) -> str:
-        """The id of one window: ``<series>@<last step>`` or ``<series>@<start>``.
-
-        Args:
-            series_id: The series identifier.
-            start: The window's first step.
-
-        Returns:
-            The window id.
-        """
-        if isinstance(self.windows, IndependentWindowsConfig):
-            return f"{series_id}@{start}"
-        return f"{series_id}@{start + self.windows.window - 1}"
 
     @override
     def get_nb_batches(self) -> int:
@@ -385,17 +415,20 @@ class TimeSeriesDataSelection(DataSelection):
         ids = record.column(id_column).to_pylist() if id_column else range(row_offset, row_offset + len(record))
         values = record.column(self.config.values_column).to_pylist()
         sources = pa.Table.from_batches([record]).drop([self.config.values_column])
+        if self.config.t0_column is not None:
+            t0_series = sources.column(self.config.t0_column).cast(pa.int64())
+            sources = sources.drop([self.config.t0_column]).append_column("t0_series", t0_series)
         for i, (series_id, row_values) in enumerate(zip(ids, values, strict=True)):
             cut = self._cut(str(series_id), row_values)
             if cut is None:
                 continue
             windows, starts = cut
+            ends = [s + self.windows.window - 1 for s in starts]
             columns = sources.slice(i, 1).take([0] * len(starts))
-            columns = columns.append_column("window_start", pa.array(starts, pa.int64()))
-            columns = columns.append_column(
-                "window_end", pa.array([s + self.windows.window - 1 for s in starts], pa.int64())
-            )
-            columns = columns.append_column("window_id", pa.array([self._window_id(str(series_id), s) for s in starts]))
+            columns = columns.append_column("start_window", pa.array(starts, pa.int64()))
+            columns = columns.append_column("end_window", pa.array(ends, pa.int64()))
+            ids = [window_id(str(series_id), s, e) for s, e in zip(starts, ends, strict=True)]
+            columns = columns.append_column("window_id", pa.array(ids))
             yield windows, columns
 
     def _batch(self, data: np.ndarray, columns: pa.Table) -> Batch:
