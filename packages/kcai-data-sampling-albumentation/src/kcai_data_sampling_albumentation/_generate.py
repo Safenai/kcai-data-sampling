@@ -260,12 +260,28 @@ def _render_class_doc(type_name: str, spec: AlbuSpec) -> str:
         The docstring source.
     """
     params = ", ".join(spec.params) or "none"
+    # Wrap the exposed-parameters line so generated modules stay ruff-clean
+    # (E501, 120 cols). Break after a comma when the line would overflow.
+    prefix = "    Exposed parameters: "
+    limit = 120
+    chunks = []
+    current = prefix
+    for part in params.split(", "):
+        token = part
+        if len(current) + len(token) + 2 > limit and current != prefix:
+            chunks.append(current.rstrip().rstrip(",") + ",")
+            current = "    " + token + ", "
+        else:
+            current += token + ", "
+    if current.strip():
+        chunks.append(current.rstrip().rstrip(","))
+    exposed_line = "\n".join(chunks) + "."
     return (
         f'    """The ``{type_name}`` transformation ({spec.family} family).\n'
         f"\n"
         f"    Wraps upstream ``{spec.source}`` via the shared engine: per-row re-seeding,\n"
         f"    alpha-split for image-only transforms, uint8 shape contract.\n"
-        f"    Exposed parameters: {params}.\n"
+        f"{exposed_line}\n"
         f'    """\n'
     )
 
