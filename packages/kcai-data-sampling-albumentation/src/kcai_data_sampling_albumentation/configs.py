@@ -61,6 +61,14 @@ class ShiftScaleRotateTransformationConfig(AlbumentationsConfig):
         default=[-0.0625, 0.0625],
         description="shift_limit (range_pair_float); a SweepConfig expands it.",
     )
+    shift_limit_x: list[float] | float | SweepConfig | None = Field(
+        default=None,
+        description="shift_limit_x (range_pair_float); a SweepConfig expands it.",
+    )
+    shift_limit_y: list[float] | float | SweepConfig | None = Field(
+        default=None,
+        description="shift_limit_y (range_pair_float); a SweepConfig expands it.",
+    )
     scale_limit: list[float] | float | SweepConfig = Field(
         default=[-0.1, 0.1],
         description="scale_limit (range_pair_float); a SweepConfig expands it.",
@@ -86,6 +94,8 @@ class ShiftScaleRotateTransformationConfig(AlbumentationsConfig):
     def _parameter_bounds(self) -> Self:
         """Enforce the algorithm bounds on shift_scale_rotate parameters, value or sweep."""
         self._check_range_pair("shift_limit", minimum=-1.0, maximum=1.0)
+        self._check_range_pair("shift_limit_x", minimum=-1.0, maximum=1.0)
+        self._check_range_pair("shift_limit_y", minimum=-1.0, maximum=1.0)
         self._check_range_pair("scale_limit", minimum=-1.0)
         self._check_range_pair("rotate_limit", minimum=-360.0, maximum=360.0)
         self._check_p()
@@ -507,6 +517,14 @@ class PadIfNeededTransformationConfig(AlbumentationsConfig):
         default=1024,
         description="min_width (size); a SweepConfig expands it.",
     )
+    pad_height_divisor: int | SweepConfig | None = Field(
+        default=None,
+        description="pad_height_divisor (size); a SweepConfig expands it.",
+    )
+    pad_width_divisor: int | SweepConfig | None = Field(
+        default=None,
+        description="pad_width_divisor (size); a SweepConfig expands it.",
+    )
     position: Literal["center", "top_left", "top_right", "bottom_left", "bottom_right", "random"] = Field(
         default="center",
         description="position (enum); a SweepConfig expands it.",
@@ -525,6 +543,8 @@ class PadIfNeededTransformationConfig(AlbumentationsConfig):
         """Enforce the algorithm bounds on pad_if_needed parameters, value or sweep."""
         self._check_parameter_bounds("min_height", minimum=1)
         self._check_parameter_bounds("min_width", minimum=1)
+        self._check_parameter_bounds("pad_height_divisor", minimum=1)
+        self._check_parameter_bounds("pad_width_divisor", minimum=1)
         self._check_p()
         return self
 
@@ -641,6 +661,14 @@ class AffineTransformationConfig(AlbumentationsConfig):
         default=[0.0, 0.0],
         description="shear (range_pair_float); a SweepConfig expands it.",
     )
+    translate_percent: list[float] | float | SweepConfig | None = Field(
+        default=None,
+        description="translate_percent (range_pair_float); a SweepConfig expands it.",
+    )
+    translate_px: list[int] | int | SweepConfig | None = Field(
+        default=None,
+        description="translate_px (range_pair_int); a SweepConfig expands it.",
+    )
     interpolation: Literal["nearest", "bilinear", "bicubic", "area", "lanczos"] = Field(
         default="bilinear",
         description="interpolation (enum); a SweepConfig expands it.",
@@ -660,6 +688,8 @@ class AffineTransformationConfig(AlbumentationsConfig):
         self._check_range_pair("scale", minimum=0.0)
         self._check_range_pair("rotate", minimum=-360.0, maximum=360.0)
         self._check_range_pair("shear", minimum=-360.0, maximum=360.0)
+        self._check_range_pair("translate_percent", minimum=-1.0, maximum=1.0)
+        self._check_range_pair("translate_px")
         self._check_p()
         return self
 
@@ -1224,10 +1254,15 @@ class PlanckianJitterTransformationConfig(AlbumentationsConfig):
         default="uniform",
         description="sampling_method (enum); a SweepConfig expands it.",
     )
+    temperature_limit: list[int] | int | SweepConfig | None = Field(
+        default=None,
+        description="temperature_limit (range_pair_int); a SweepConfig expands it.",
+    )
 
     @model_validator(mode="after")
     def _parameter_bounds(self) -> Self:
         """Enforce the algorithm bounds on planckian_jitter parameters, value or sweep."""
+        self._check_range_pair("temperature_limit", minimum=1000, maximum=15000)
         self._check_p()
         return self
 
@@ -1418,6 +1453,14 @@ class GridDropoutTransformationConfig(AlbumentationsConfig):
         default=0.5,
         description="ratio (scalar); a SweepConfig expands it.",
     )
+    unit_size_range: list[int] | int | SweepConfig | None = Field(
+        default=None,
+        description="unit_size_range (range_pair_int); a SweepConfig expands it.",
+    )
+    holes_number_xy: list[int] | int | SweepConfig | None = Field(
+        default=None,
+        description="holes_number_xy (range_pair_int); a SweepConfig expands it.",
+    )
     random_offset: bool = Field(
         default=True,
         description="random_offset (bool); a SweepConfig expands it.",
@@ -1431,6 +1474,8 @@ class GridDropoutTransformationConfig(AlbumentationsConfig):
     def _parameter_bounds(self) -> Self:
         """Enforce the algorithm bounds on grid_dropout parameters, value or sweep."""
         self._check_parameter_bounds("ratio", minimum=0.0, maximum=1.0)
+        self._check_range_pair("unit_size_range", minimum=2)
+        self._check_range_pair("holes_number_xy", minimum=1)
         self._check_p()
         return self
 
@@ -1561,6 +1606,10 @@ class RandomRainTransformationConfig(AlbumentationsConfig):
         default=[-10, 10],
         description="slant_range (range_pair_int); a SweepConfig expands it.",
     )
+    drop_length: float | int | SweepConfig | None = Field(
+        default=None,
+        description="drop_length (scalar); a SweepConfig expands it.",
+    )
     drop_width: float | int | SweepConfig = Field(
         default=1,
         description="drop_width (scalar); a SweepConfig expands it.",
@@ -1582,6 +1631,7 @@ class RandomRainTransformationConfig(AlbumentationsConfig):
     def _parameter_bounds(self) -> Self:
         """Enforce the algorithm bounds on random_rain parameters, value or sweep."""
         self._check_range_pair("slant_range", minimum=-45, maximum=45)
+        self._check_parameter_bounds("drop_length", minimum=1)
         self._check_parameter_bounds("drop_width", minimum=1)
         self._check_parameter_bounds("blur_value", minimum=0)
         self._check_parameter_bounds("brightness_coefficient", minimum=0.0)
@@ -1830,6 +1880,10 @@ class RandomScaleTransformationConfig(AlbumentationsConfig):
         default=[-0.1, 0.1],
         description="scale_limit (range_pair_float); a SweepConfig expands it.",
     )
+    area_for_downscale: Literal["none", "image", "image_mask"] = Field(
+        default="none",
+        description="area_for_downscale (enum); a SweepConfig expands it.",
+    )
     interpolation: Literal["nearest", "bilinear", "bicubic", "area", "lanczos"] = Field(
         default="bilinear",
         description="interpolation (enum); a SweepConfig expands it.",
@@ -1857,6 +1911,10 @@ class RandomResizedCropTransformationConfig(AlbumentationsConfig):
     ratio: list[float] | float | SweepConfig = Field(
         default=[0.75, 1.3333333333333333],
         description="ratio (range_pair_float); a SweepConfig expands it.",
+    )
+    area_for_downscale: Literal["none", "image", "image_mask"] = Field(
+        default="none",
+        description="area_for_downscale (enum); a SweepConfig expands it.",
     )
     interpolation: Literal["nearest", "bilinear", "bicubic", "area", "lanczos"] = Field(
         default="bilinear",
@@ -1886,6 +1944,10 @@ class RandomSizedCropTransformationConfig(AlbumentationsConfig):
     w2h_ratio: float | int | SweepConfig = Field(
         default=1.0,
         description="w2h_ratio (scalar); a SweepConfig expands it.",
+    )
+    area_for_downscale: Literal["none", "image", "image_mask"] = Field(
+        default="none",
+        description="area_for_downscale (enum); a SweepConfig expands it.",
     )
     interpolation: Literal["nearest", "bilinear", "bicubic", "area", "lanczos"] = Field(
         default="bilinear",

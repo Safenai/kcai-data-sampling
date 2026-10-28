@@ -33,7 +33,7 @@ three families, and they behave very differently:
 | --- | --- | --- |
 | **Procedural** | Classic edits, no model involved | crop, flip, blur, noise |
 | **Generative** | A model invents the content | inpainting a removed object |
-| **Adversarial** | Crafted *against* a model to stress it | a perturbation that fools a detector |
+| **Adversarial** | Crafted *against* a model to stress it | an adversarial sample that fools a detector |
 
 The first is cheap and safe to run anywhere. The second needs real compute. The
 third needs a model to attack. Rather than hide that behind three different
@@ -56,7 +56,7 @@ deliberately.
 - **Six packages, one repository**, each installable on its own or together:
   the shared core, the procedural image methods, the job runner that owns
   image and ledger IO, the umbrella CLI, and two optional model-backed packages
-  (generative inpainting and adversarial perturbation).
+  (generative inpainting and adversarial example).
 - **A provenance ledger.** One row per generated sample; the generated images
   themselves are stored separately, addressed by content. Inspect the result
   with any Parquet reader.
@@ -66,7 +66,7 @@ deliberately.
 - **Parameter sweeps** — ask for "crop to 10%, 20%, 30%" in one line rather
   than writing three jobs.
 - **Procedural transformations** included: horizontal flip and crop-and-resize.
-- **Generative inpainting** (LaMa) and **adversarial perturbation** (FGSM)
+- **Generative inpainting** (LaMa) and **adversarial example** (FGSM)
   available as opt-in extras.
 - **A documentation site** with API reference, a quick start, and a glossary of
   the vocabulary.

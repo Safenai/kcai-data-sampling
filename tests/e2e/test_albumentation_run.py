@@ -10,13 +10,10 @@ test tmp dir, then drives the real ``cli.run`` path.
 The automated assertions target the ``random_brightness_contrast`` entry: one
 ledger row per input per entry, exact ``params``/``seed`` rows, and payload
 bytes reproducible from the ledger facts alone (alpha byte-identical, RGB
-replayed from ``(params, seed, row_id)``). The other entries are smoke: the
-job completes and writes one row per input per entry — ``gaussian_blur`` (the
-second image-only entry) also exercises the alpha-split payload shape, and the
-two Tier-B entries (``random_crop``, ``pad_if_needed``) exercise the
-resize-back / crop-back shape restores. A second run with different batch knobs
-replays the first byte-for-byte — batch invariance for a stochastic
-transformation.
+replayed from ``(params, seed, row_id)``). The other entry is smoke: the job completes and writes one row per input per
+entry — ``blur`` (the second image-only entry) also exercises the alpha-split
+payload shape. A second run with different batch knobs replays the first
+byte-for-byte — batch invariance for a stochastic transformation.
 """
 
 from collections import Counter
@@ -48,7 +45,7 @@ WALKTHROUGH = Path(__file__).resolve().parents[2] / "examples" / "config" / "wal
 #: The two entries the walkthrough declares: type name → (seed, row count per
 #: input). ``random_brightness_contrast`` sweeps into three entries, so its
 #: per-input count is 3.
-SEEDS = {"gaussian_blur": 11, "random_brightness_contrast": 42}
+SEEDS = {"gaussian_blur": 11, "random_brightness_contrast": 42}  # class algorithm attrs (unchanged)
 SWEEP_VALUES = [0.1, 0.3, 0.5]
 
 
@@ -150,7 +147,7 @@ def walkthrough(raw_bytes_data, test_seed, tmp_path_factory):
         pixels`` and the eight source frames in parent-id order.
     """
     root = tmp_path_factory.mktemp("albumentation_walkthrough")
-    assert run(_walkthrough_config(root, raw_bytes_data)) == {"synthetic": 48}
+    assert run(_walkthrough_config(root, raw_bytes_data)) == {"synthetic": 32}
     table, payloads = _read_outputs(root)
     return table, payloads, make_frames(test_seed)
 
@@ -158,24 +155,21 @@ def walkthrough(raw_bytes_data, test_seed, tmp_path_factory):
 def test_walkthrough_writes_one_row_per_input_per_entry(walkthrough) -> None:
     """The published walkthrough config runs end to end: 8 inputs x 4 entries.
 
-    The config declares one ``gaussian_blur``, one ``random_brightness_contrast``
-    swept into three values, and the two Tier-B smoke entries (``random_crop``,
-    ``pad_if_needed``), so the ledger must hold exactly 48 rows under the 13
+    The config declares one ``blur`` and one ``brightness`` entry swept into
+    three values, so the ledger must hold exactly 32 rows under the 13
     generator columns plus the two passthroughs, and every input row must
     descend from each concrete entry exactly once.
     """
     table, payloads, _ = walkthrough
 
     assert table.column_names == list(GENERATOR_COLUMNS) + ["height", "width"]
-    assert table.num_rows == 48
+    assert table.num_rows == 32
     assert Counter(row[0] for row in _rows(table)) == {
         "gaussian_blur": 8,
         "random_brightness_contrast": 24,
-        "random_crop": 8,
-        "pad_if_needed": 8,
     }
     assert set(table.column("parent_id").to_pylist()) == {f"syn_{i:04d}" for i in range(8)}
-    assert len(payloads) == 48
+    assert len(payloads) == 32
 
 
 def test_walkthrough_rows_carry_the_procedural_declarations_and_seeds(walkthrough) -> None:
@@ -188,17 +182,15 @@ def test_walkthrough_rows_carry_the_procedural_declarations_and_seeds(walkthroug
     """
     table, _, _ = walkthrough
 
-    assert table.column("family").to_pylist() == ["procedural"] * 48
-    assert table.column("arity").to_pylist() == ["unary"] * 48
-    assert table.column("reversible").to_pylist() == [False] * 48
-    assert table.column("tool_model").to_pylist() == [None] * 48
-    assert table.column("target_model").to_pylist() == [None] * 48
+    assert table.column("family").to_pylist() == ["procedural"] * 32
+    assert table.column("arity").to_pylist() == ["unary"] * 32
+    assert table.column("reversible").to_pylist() == [False] * 32
+    assert table.column("tool_model").to_pylist() == [None] * 32
+    assert table.column("target_model").to_pylist() == [None] * 32
     seeds = set(zip(table.column("algorithm").to_pylist(), table.column("seed").to_pylist(), strict=True))
     assert seeds == {
         ("gaussian_blur", 11),
         ("random_brightness_contrast", 42),
-        ("random_crop", 21),
-        ("pad_if_needed", 33),
     }
 
 
@@ -228,7 +220,7 @@ def test_walkthrough_payloads_keep_alpha_and_replay_from_the_ledger(walkthrough)
 
     Every payload is a 4-channel uint8 image of the input's shape, and its
     alpha plane is byte-identical to its source frame. For the two image-only
-    entries (``gaussian_blur``, ``random_brightness_contrast``) that holds
+    entries (``blur``, ``brightness``) that holds
     because the engine splits the alpha off and re-attaches it untouched; the
     two Tier-B entries are dual transforms, which receive the full 4-channel
     row so the alpha plane moves with the pixels — after the shape restore
@@ -271,11 +263,11 @@ def test_walkthrough_replays_byte_identically_across_batch_knobs(raw_bytes_data,
     leak into the outputs.
     """
     baseline_root = tmp_path / "_baseline"
-    assert run(_walkthrough_config(baseline_root, raw_bytes_data, load=8, flush=100)) == {"synthetic": 48}
+    assert run(_walkthrough_config(baseline_root, raw_bytes_data, load=8, flush=100)) == {"synthetic": 32}
     baseline_ledger = (baseline_root / "ledger" / "synthetic.parquet").read_bytes()
     baseline_payloads = {p.name: p.read_bytes() for p in (baseline_root / "synthetic").glob("*.png")}
 
     root = tmp_path / "knobs"
-    assert run(_walkthrough_config(root, raw_bytes_data, load=4, flush=1)) == {"synthetic": 48}
+    assert run(_walkthrough_config(root, raw_bytes_data, load=4, flush=1)) == {"synthetic": 32}
     assert (root / "ledger" / "synthetic.parquet").read_bytes() == baseline_ledger
     assert {p.name: p.read_bytes() for p in (root / "synthetic").glob("*.png")} == baseline_payloads

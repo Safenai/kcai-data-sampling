@@ -15,7 +15,8 @@ class ShiftScaleRotate(AlbumentationsUnary):
 
     Wraps upstream ``ShiftScaleRotate`` via the shared engine: per-row re-seeding,
     alpha-split for image-only transforms, uint8 shape contract.
-    Exposed parameters: shift_limit, scale_limit, rotate_limit, interpolation, border_mode, fill.
+    Exposed parameters: shift_limit, shift_limit_x, shift_limit_y, scale_limit,
+    rotate_limit, interpolation, border_mode, fill.
     """
 
     algorithm = "shift_scale_rotate"

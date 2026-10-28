@@ -15,7 +15,7 @@ class PlanckianJitter(AlbumentationsUnary):
 
     Wraps upstream ``PlanckianJitter`` via the shared engine: per-row re-seeding,
     alpha-split for image-only transforms, uint8 shape contract.
-    Exposed parameters: mode, sampling_method.
+    Exposed parameters: mode, sampling_method, temperature_limit.
     """
 
     algorithm = "planckian_jitter"

@@ -15,7 +15,7 @@ class PadIfNeeded(AlbumentationsUnary):
 
     Wraps upstream ``PadIfNeeded`` via the shared engine: per-row re-seeding,
     alpha-split for image-only transforms, uint8 shape contract.
-    Exposed parameters: min_height, min_width, position, border_mode, fill.
+    Exposed parameters: min_height, min_width, pad_height_divisor, pad_width_divisor, position, border_mode, fill.
     """
 
     algorithm = "pad_if_needed"

@@ -5,16 +5,7 @@ package against calling albumentations directly. Same upstream version (2.0.8),
 same inputs, same machine. The only difference is the loader → transform → clip →
 `Output` → ledger/payload pipeline.
 
-## User scenarios
-
-### Robustness augmentation
-
-Data scientist wants to augment his dataset with a list of transformations and random parameters.
-
-### Controlled context
-
-Data scientist wants to create a dataset with controlled context for contextual validation or test.
-For instance: A dataset with high levels of blur.
+See [Usage scenarios](../usages.md#procedural-scenarios) for the user scenarios this benchmark targets.
 
 ## Benchmark scenarios
 
@@ -26,7 +17,7 @@ Three benchmark scenarios:
   (1928×1208, from the comma10k dataset).
 - **S3 (blur sweep):** 40 Gaussian blur levels on one large image.
 
-S1 and S2 covers the robustness augmentation user scenario.
+S1 and S2 covers the robustness user scenario.
 S3 covers the controlled context user scenario.
 
 ## S1: one transform, 1000 images, batch-size sweep

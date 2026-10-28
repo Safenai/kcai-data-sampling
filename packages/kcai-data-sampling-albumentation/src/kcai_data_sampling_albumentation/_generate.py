@@ -101,6 +101,8 @@ def _default_literal(value: Any, kind: str) -> str:
     Returns:
         The literal source (tuples become lists, per the schema annotation).
     """
+    if value is None:
+        return "None"
     if kind.startswith("range_pair") and isinstance(value, (list, tuple)):
         # Coerce the pair to the annotation's element type: a `range_pair_float`
         # whose spec default is written as ints (`(-90, 90)`) must render as
@@ -126,19 +128,24 @@ def _field_annotation(param: Param) -> str:
         expands to scalars, and albumentations broadcasts them symmetrically).
     """
     if param.kind == "range_pair_float":
-        return "list[float] | float | SweepConfig"
-    if param.kind == "range_pair_int":
-        return "list[int] | int | SweepConfig"
-    if param.kind == "enum":
+        base = "list[float] | float | SweepConfig"
+    elif param.kind == "range_pair_int":
+        base = "list[int] | int | SweepConfig"
+    elif param.kind == "enum":
         choices = ", ".join(_literal(c) for c in (param.choices or {}))
-        return f"Literal[{choices}]"
-    if param.kind == "bool":
-        return "bool"
-    if param.kind == "fill":
-        return "int"
-    if param.kind == "size":
-        return "int | SweepConfig"
-    return "float | int | SweepConfig"  # scalar
+        base = f"Literal[{choices}]"
+    elif param.kind == "bool":
+        base = "bool"
+    elif param.kind == "fill":
+        base = "int"
+    elif param.kind == "size":
+        base = "int | SweepConfig"
+    else:
+        base = "float | int | SweepConfig"  # scalar
+    # Allow None for params whose upstream default is None ("auto-calculate").
+    if param.default is None:
+        base = f"{base} | None"
+    return base
 
 
 def _bounds_kwargs(param: Param) -> str:

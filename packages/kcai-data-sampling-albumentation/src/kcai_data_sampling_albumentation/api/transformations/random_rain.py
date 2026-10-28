@@ -15,7 +15,7 @@ class RandomRain(AlbumentationsUnary):
 
     Wraps upstream ``RandomRain`` via the shared engine: per-row re-seeding,
     alpha-split for image-only transforms, uint8 shape contract.
-    Exposed parameters: slant_range, drop_width, blur_value, brightness_coefficient, rain_type.
+    Exposed parameters: slant_range, drop_length, drop_width, blur_value, brightness_coefficient, rain_type.
     """
 
     algorithm = "random_rain"

@@ -15,7 +15,7 @@ class Affine(AlbumentationsUnary):
 
     Wraps upstream ``Affine`` via the shared engine: per-row re-seeding,
     alpha-split for image-only transforms, uint8 shape contract.
-    Exposed parameters: scale, rotate, shear, interpolation, border_mode, fill.
+    Exposed parameters: scale, rotate, shear, translate_percent, translate_px, interpolation, border_mode, fill.
     """
 
     algorithm = "affine"

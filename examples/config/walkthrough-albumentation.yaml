@@ -27,11 +27,11 @@ operations:
     flush_batch_size: 128
     include: [height, width]
   transformations:
-    - name: gaussian_blur
+    - name: blur
       type: gaussian_blur
       seed: 11
       sigma_limit: [0.5, 3.0]            # [lo, hi] sigma draw range per row
-    - name: random_brightness_contrast
+    - name: brightness
       type: random_brightness_contrast
       seed: 42
       brightness_limit:                  # swept: one entry per fixed magnitude
@@ -40,21 +40,3 @@ operations:
         mode: even
       contrast_limit: [-0.2, 0.2]
       ensure_safe_range: false
-
-    # Tier-B shape restores (smoke): the crop family resizes back, the pad
-    # family center-crops back, so the unary `(H, W)` contract holds even
-    # though these transforms move pixels. No dedicated tests — they ride the
-    # engine covered by `random_brightness_contrast`; here they just have to
-    # complete and write one row per input per entry.
-    - name: random_crop
-      type: random_crop
-      seed: 21
-      height: 16                               # smaller than the input: resized back
-      width: 16
-      border_mode: reflect                     # curated enum, mapped to a cv2 code
-    - name: pad_if_needed
-      type: pad_if_needed
-      seed: 33
-      min_height: 64                           # larger than the input: padded, then cropped back
-      min_width: 64
-      position: center

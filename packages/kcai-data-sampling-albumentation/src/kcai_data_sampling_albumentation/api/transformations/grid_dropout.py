@@ -15,7 +15,7 @@ class GridDropout(AlbumentationsUnary):
 
     Wraps upstream ``GridDropout`` via the shared engine: per-row re-seeding,
     alpha-split for image-only transforms, uint8 shape contract.
-    Exposed parameters: ratio, random_offset, fill.
+    Exposed parameters: ratio, unit_size_range, holes_number_xy, random_offset, fill.
     """
 
     algorithm = "grid_dropout"

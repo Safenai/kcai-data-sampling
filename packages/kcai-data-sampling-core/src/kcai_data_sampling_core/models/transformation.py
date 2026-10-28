@@ -157,6 +157,8 @@ class TransformationConfig(BaseModel):
                 the range.
         """
         value = getattr(self, name)
+        if value is None:
+            return
         if isinstance(value, SweepConfig):
             lo, hi = value.bounds
             if self._at_or_below(lo, minimum, exclusive_min):

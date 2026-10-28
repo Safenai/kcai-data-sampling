@@ -84,6 +84,8 @@ TRANSFORM_SPECS: dict[str, AlbuSpec] = {
         family="geometric",
         params={
             "shift_limit": Param(kind="range_pair_float", default=(-0.0625, 0.0625), bounds=(-1.0, 1.0)),
+            "shift_limit_x": Param(kind="range_pair_float", default=None, bounds=(-1.0, 1.0)),
+            "shift_limit_y": Param(kind="range_pair_float", default=None, bounds=(-1.0, 1.0)),
             "scale_limit": Param(kind="range_pair_float", default=(-0.1, 0.1), bounds=(-1.0, None)),
             "rotate_limit": Param(kind="range_pair_float", default=(-45, 45), bounds=(-360.0, 360.0)),
             "interpolation": Param(kind="enum", default="bilinear", choices=_INTERPOLATION),
@@ -246,6 +248,8 @@ TRANSFORM_SPECS: dict[str, AlbuSpec] = {
         params={
             "min_height": Param(kind="size", default=1024, bounds=(1, None)),
             "min_width": Param(kind="size", default=1024, bounds=(1, None)),
+            "pad_height_divisor": Param(kind="size", default=None, bounds=(1, None)),
+            "pad_width_divisor": Param(kind="size", default=None, bounds=(1, None)),
             "position": Param(
                 kind="enum",
                 default="center",
@@ -302,6 +306,8 @@ TRANSFORM_SPECS: dict[str, AlbuSpec] = {
             "scale": Param(kind="range_pair_float", default=(1.0, 1.0), bounds=(0.0, None)),
             "rotate": Param(kind="range_pair_float", default=0.0, bounds=(-360.0, 360.0)),
             "shear": Param(kind="range_pair_float", default=(0.0, 0.0), bounds=(-360.0, 360.0)),
+            "translate_percent": Param(kind="range_pair_float", default=None, bounds=(-1.0, 1.0)),
+            "translate_px": Param(kind="range_pair_int", default=None, bounds=(None, None)),
             "interpolation": Param(kind="enum", default="bilinear", choices=_INTERPOLATION),
             "border_mode": Param(kind="enum", default="constant", choices=_BORDER_MODE),
             "fill": Param(kind="fill", default=0),
@@ -517,6 +523,7 @@ TRANSFORM_SPECS: dict[str, AlbuSpec] = {
             "sampling_method": Param(
                 kind="enum", default="uniform", choices={"uniform": "uniform", "gaussian": "gaussian"}
             ),
+            "temperature_limit": Param(kind="range_pair_int", default=None, bounds=(1000, 15000)),
         },
     ),
     "illumination": AlbuSpec(
@@ -598,6 +605,8 @@ TRANSFORM_SPECS: dict[str, AlbuSpec] = {
         family="dropout",
         params={
             "ratio": Param(kind="scalar", default=0.5, bounds=(0.0, 1.0)),
+            "unit_size_range": Param(kind="range_pair_int", default=None, bounds=(2, None)),
+            "holes_number_xy": Param(kind="range_pair_int", default=None, bounds=(1, None)),
             "random_offset": Param(kind="bool", default=True),
             "fill": Param(kind="fill", default=0),
         },
@@ -650,6 +659,7 @@ TRANSFORM_SPECS: dict[str, AlbuSpec] = {
         family="weather",
         params={
             "slant_range": Param(kind="range_pair_int", default=(-10, 10), bounds=(-45, 45)),
+            "drop_length": Param(kind="scalar", default=None, bounds=(1, None)),
             "drop_width": Param(kind="scalar", default=1, bounds=(1, None)),
             "blur_value": Param(kind="scalar", default=7, bounds=(0, None)),
             "brightness_coefficient": Param(kind="scalar", default=0.7, bounds=(0.0, None)),
@@ -750,6 +760,11 @@ TRANSFORM_SPECS: dict[str, AlbuSpec] = {
         geometry="resize_back",
         params={
             "scale_limit": Param(kind="range_pair_float", default=(-0.1, 0.1), bounds=(-1.0, None)),
+            "area_for_downscale": Param(
+                kind="enum",
+                default="none",
+                choices={"none": None, "image": "image", "image_mask": "image_mask"},
+            ),
             "interpolation": Param(kind="enum", default="bilinear", choices=_INTERPOLATION),
         },
     ),
@@ -761,6 +776,11 @@ TRANSFORM_SPECS: dict[str, AlbuSpec] = {
             "size": Param(kind="size", default=..., bounds=(1, None)),
             "scale": Param(kind="range_pair_float", default=(0.08, 1.0), bounds=(0.0, 1.0)),
             "ratio": Param(kind="range_pair_float", default=(0.75, 1.3333333333333333), bounds=(0.0, None)),
+            "area_for_downscale": Param(
+                kind="enum",
+                default="none",
+                choices={"none": None, "image": "image", "image_mask": "image_mask"},
+            ),
             "interpolation": Param(kind="enum", default="bilinear", choices=_INTERPOLATION),
         },
     ),
@@ -772,6 +792,11 @@ TRANSFORM_SPECS: dict[str, AlbuSpec] = {
             "min_max_height": Param(kind="range_pair_int", default=..., bounds=(1, None)),
             "size": Param(kind="size", default=..., bounds=(1, None)),
             "w2h_ratio": Param(kind="scalar", default=1.0, bounds=(0.0, None)),
+            "area_for_downscale": Param(
+                kind="enum",
+                default="none",
+                choices={"none": None, "image": "image", "image_mask": "image_mask"},
+            ),
             "interpolation": Param(kind="enum", default="bilinear", choices=_INTERPOLATION),
         },
     ),

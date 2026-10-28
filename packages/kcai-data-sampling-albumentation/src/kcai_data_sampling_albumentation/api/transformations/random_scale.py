@@ -15,7 +15,7 @@ class RandomScale(AlbumentationsUnary):
 
     Wraps upstream ``RandomScale`` via the shared engine: per-row re-seeding,
     alpha-split for image-only transforms, uint8 shape contract.
-    Exposed parameters: scale_limit, interpolation.
+    Exposed parameters: scale_limit, area_for_downscale, interpolation.
     """
 
     algorithm = "random_scale"
@@ -27,5 +27,6 @@ class RandomScale(AlbumentationsUnary):
     geometry = "resize_back"
 
     enum_maps = {
+        "area_for_downscale": {"none": None, "image": "image", "image_mask": "image_mask"},
         "interpolation": {"nearest": 0, "bilinear": 1, "bicubic": 2, "area": 3, "lanczos": 4},
     }
