@@ -17,7 +17,7 @@ Three benchmark scenarios:
   (1928×1208, from the comma10k dataset).
 - **S3 (blur sweep):** 40 Gaussian blur levels on one large image.
 
-S1 and S2 covers the robustness user scenario.
+S1 and S2 cover the robustness user scenario.
 S3 covers the controlled context user scenario.
 
 ## S1: one transform, 1000 images, batch-size sweep

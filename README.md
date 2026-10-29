@@ -1,7 +1,7 @@
 # kcai-data-sampling
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://opensource.org/license/apache-2-0)
-![Python](https://img.shields.io/badge/python-3.12%20|%203.13-blue.svg)
+![Python](https://img.shields.io/badge/python-3.11%20|%203.12%20|%203.13%20|%203.14-blue.svg)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://docs.astral.sh/ruff/)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://docs.astral.sh/uv/)
 [![Nox](https://img.shields.io/badge/%F0%9F%A6%8A-Nox-D85E00.svg)](https://nox.thea.codes/en/stable/)
@@ -14,7 +14,7 @@ Install individual packages based on your needs:
 |---------|-------------|------|
 | **kcai-data-sampling-core** | Transformation interface, configuration models, registries and runner | [![][pypi-core-badge]](https://pypi.org/project/kcai-data-sampling-core/) |
 | **kcai-data-sampling-images** | Procedural family: model-free image transformations | [![][pypi-images-badge]](https://pypi.org/project/kcai-data-sampling-images/) |
-| **kcai-data-sampling-albumentation** | Curated image-robustness catalogue (albumentations) | [![][pypi-albumentation-badge]](https://pypi.org/project/kcai-data-sampling-albumentations/) |
+| **kcai-data-sampling-albumentation** | Curated image-robustness catalogue (albumentations) | [![][pypi-albumentation-badge]](https://pypi.org/project/kcai-data-sampling-albumentation/) |
 | **kcai-data-sampling-lama** | Generative inpainting (LaMa) transformation and tool-model plugin | [![][pypi-lama-badge]](https://pypi.org/project/kcai-data-sampling-lama/) |
 | **kcai-data-sampling-fgsm** | Adversarial (FGSM) transformation and target-model support | [![][pypi-fgsm-badge]](https://pypi.org/project/kcai-data-sampling-fgsm/) |
 | **kcai-data-sampling-job** | Pipeline orchestration and IO plugins | [![][pypi-job-badge]](https://pypi.org/project/kcai-data-sampling-job/) |

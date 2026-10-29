@@ -56,7 +56,7 @@ deliberately.
 - **Seven packages, one repository**, each installable on its own or together:
   the shared core, the procedural image methods, the job runner that owns
   image and ledger IO, the CLI wrapper, and three optional model-backed packages
-  (generative inpainting and adversarial example, albumentations wrapper).
+  (generative inpainting, adversarial examples and the albumentations wrapper).
 - **A provenance ledger.** One row per generated sample; the generated images
   themselves are stored separately, addressed by content. Inspect the result
   with any Parquet reader.
@@ -73,8 +73,8 @@ deliberately.
 - **Quality gates in continuous integration** — automated tests, formatting,
   linting, and type checking run on every change across Python 3.11 to 3.14.
 - **An albumentations-backed procedural package** (`kcai-data-sampling-albumentation`)
-  exposing 76 robustness transforms across six families — color/tone, blur/sharpen,
-  noise, geometric, occlusion/dropout, and weather — each configurable from YAML
+  exposing 76 robustness transforms across eight families — color/tone, blur/sharpen,
+  noise, geometric, dihedral, occlusion/dropout, compression and weather — each configurable from YAML
   with seeded, replayable application and parameter sweeps. Includes per-transform
   documentation and a walkthrough config.
 

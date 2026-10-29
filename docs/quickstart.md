@@ -151,13 +151,14 @@ of their dependencies. Each has its own umbrella extra:
   kcai-data-sampling process -p examples/config/walkthrough-albumentation.yaml
   ```
 
-  The walkthrough config shows a per-row draw, a sweep and the shape restores;
+  The walkthrough config shows a per-row draw and a sweep;
   see the
   [albumentations package page](packages/kcai-data-sampling-albumentation.md)
   for the full catalogue.
 
 To get everything the walkthrough notebook needs in one go, install the `all`
-extra — it is the union of `notebooks`, `job`, `images`, `fgsm` and `lama`:
+extra — it is the union of `notebooks`, `job`, `images`, `fgsm`, `lama` and
+`albumentation`:
 
 ```bash
 pip install "kcai-data-sampling[all]"
