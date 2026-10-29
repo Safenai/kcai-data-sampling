@@ -107,8 +107,8 @@ it works from any launch directory.
 
 ## Optional surfaces (opt-in)
 
-Two transformations need an extra install; the environment above stays free
-of their dependencies. Each has its own umbrella extra:
+Three transformation packages need an extra install; the environment above
+stays free of their dependencies. Each has its own umbrella extra:
 
 - **Generative inpainting** (`[lama]`, weights fetched into `.cache/` on first
   use). This is the extra that pulls torch. On Linux the default install gets a

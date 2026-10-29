@@ -15,8 +15,8 @@ separate package you add yourself.
 
 ## What it ships today
 
-- `version` — the installed versions of the umbrella, the core, and the
-  `job` / `images` members when present.
+- `version` — the installed versions of the umbrella, the core, and every
+  member package (`None` when absent).
 - `list` — every registered plugin, grouped into transformations, models,
   dataloaders and output writers.
 - `process` — run a sampling job from a YAML configuration. **Available only
