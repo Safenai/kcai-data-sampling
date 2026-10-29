@@ -2,8 +2,8 @@
 
 Hand-written (not generated): the generated ``configs.py`` subclasses
 :class:`AlbumentationsConfig` and pins ``type`` plus one field per exposed
-parameter. Carries the two shared validators — probability bounds and the
-range-pair-or-scalar-or-sweep bounds check, which the core
+parameter. Carries the three shared validators — probability bounds, the seed
+requirement, and the range-pair-or-scalar-or-sweep bounds check, which the core
 ``_check_parameter_bounds`` cannot express because a pair is a two-element
 list.
 """
@@ -86,6 +86,9 @@ class AlbumentationsConfig(TransformationConfig):
 
         Returns:
             The validated config.
+
+        Raises:
+            ValueError: If ``seed`` is not set.
         """
         if self.seed is None:
             raise ValueError(

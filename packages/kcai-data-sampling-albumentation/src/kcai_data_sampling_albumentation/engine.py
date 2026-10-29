@@ -1,6 +1,6 @@
 """The shared engine behind every albumentations-backed transformation.
 
-One class carries all runtime behaviour (integration plan §7): it wraps a
+One class carries all runtime behaviour: it wraps a
 single bare upstream ``BasicTransform`` — constructed at init from the
 resolved parameters — into the unary contract. The generated transformation
 classes under ``api/transformations/`` are shells that only name the upstream
