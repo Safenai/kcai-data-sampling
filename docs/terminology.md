@@ -31,7 +31,7 @@ specified operation.
 | Level | What it is |
 | --- | --- |
 | algorithm | code, independent of any setting |
-| declaration | an algorithm, parameter ranges (sweeps), a number of seeds |
+| declaration | an algorithm, parameter ranges (sweeps), a number of seeds (not implemented yet: one seed per entry) |
 | transformation | one resolved point: algorithm, parameters, seed, model |
 
 ## Independent, by default
@@ -44,8 +44,9 @@ by the consumers of this engine, in code or across jobs.
 - independent: applied to the same source sample, without feeding another
   transformation's output; that is what a list of transformations means
 - output `id`: the derived, deterministic handle of one generated sample, a hash
-  of the other fields of the output (parent, algorithm, resolved parameters,
-  seed, models); lineage joins on it
+  of the other fields of the output except the sample itself (parent,
+  algorithm, family, arity, reversible, resolved parameters, seed, models);
+  lineage joins on it
 
 ## What separates the three families is the role of the model in computing the output
 
@@ -183,10 +184,14 @@ nothing else:
 | algorithm (declared, frozen) | `algorithm`, `family`, `arity`, `reversible` |
 | replay | `params`, `seed` |
 | models | `tool_model`, `target_model` (name, or `NULL`) |
-| identity | `id`: a hash of the fields above, derived |
+| identity | `id`: a hash of the fields above except `x`, derived |
 
 Every `NULL` is an assertion: no seed, nothing was drawn; no `target_model`, not
 adversarial.
+
+This is the output in memory. The ledger row the job writes for it adds where it
+was run and stored (`selection`, `dataloader`, `artifact`, the payload file name)
+and any source columns passed through with `include`.
 
 The rule is subtraction, not accumulation. A field earns its place only if it
 cannot be recovered later:
