@@ -86,6 +86,7 @@ jobs:
         run: |
           uv build packages/kcai-data-sampling-core
           uv build packages/kcai-data-sampling-images
+          uv build packages/kcai-data-sampling-albumentation
           uv build packages/kcai-data-sampling-lama
           uv build packages/kcai-data-sampling-fgsm
           uv build packages/kcai-data-sampling-job
@@ -96,6 +97,9 @@ jobs:
 
       - name: Publish kcai-data-sampling-images
         run: bash .github/scripts/publish-tolerantly.sh 'dist/kcai_data_sampling_images-*'
+
+      - name: Publish kcai-data-sampling-albumentation
+        run: bash .github/scripts/publish-tolerantly.sh 'dist/kcai_data_sampling_albumentation-*'
 
       - name: Publish kcai-data-sampling-lama
         run: bash .github/scripts/publish-tolerantly.sh 'dist/kcai_data_sampling_lama-*'
