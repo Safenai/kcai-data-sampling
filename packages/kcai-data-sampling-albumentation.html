@@ -1,0 +1,1901 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="kcai-data-sampling-fgsm.html">
+      
+      
+        <link rel="next" href="kcai-data-sampling-job.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Albumentations - KCAI Data-Sampling</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../static/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#kcai-data-sampling-albumentation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="KCAI Data-Sampling" class="md-header__button md-logo" aria-label="KCAI Data-Sampling" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            KCAI Data-Sampling
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Albumentations
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Safenai/kcai-data-sampling" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kcai-data-sampling
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../index.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../quickstart.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quick Start
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../examples/notebooks/walkthrough.html" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../terminology.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Terminology
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../usages.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Usages
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../benchmark/albumentations.html" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Benchmark
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../RELEASE.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Release Notes
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../developer.html" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Developer
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="kcai-data-sampling-core.html" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Packages
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../reference/kcai_data_sampling_core/index.html" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="KCAI Data-Sampling" class="md-nav__button md-logo" aria-label="KCAI Data-Sampling" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    KCAI Data-Sampling
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Safenai/kcai-data-sampling" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kcai-data-sampling
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../examples/notebooks/walkthrough.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terminology.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Terminology
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usages.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usages
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../benchmark/albumentations.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RELEASE.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../developer.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Packages
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Packages
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="kcai-data-sampling-core.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="kcai-data-sampling-images.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Images
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="kcai-data-sampling-lama.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Images (LaMa)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="kcai-data-sampling-fgsm.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FGSM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Albumentations
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="kcai-data-sampling-albumentation.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Albumentations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick start">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-the-walkthrough" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the walkthrough
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-this-package-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this package does
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#application-probability-p" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Application probability (p)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#catalogue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Catalogue
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="kcai-data-sampling-job.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Job
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="kcai-data-sampling.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    
+  
+  
+  
+    <a href="../reference/kcai_data_sampling_core/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../index.html" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="kcai-data-sampling-core.html" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Packages
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="kcai-data-sampling-albumentation">kcai-data-sampling-albumentation</h1>
+<p>Albumentations adapters for the data-sampling pipeline. The package provides a
+unary image transformation catalogue (aliased under
+<code>kcai_data_sampling_albumentations.transforms</code>) built from a curated allowlist of
+Albumentations classes, with automatic schema extraction, dataclass-based
+configs, clipping/backpressure, and integration with the <code>Output</code> contract.</p>
+<h2 id="quick-start">Quick start</h2>
+<h3 id="install">Install</h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>kcai-data-sampling-albumentation
+</span></code></pre></div>
+<h3 id="run-the-walkthrough">Run the walkthrough</h3>
+<p>From the repository root, use the walkthrough configuration (examples live in the
+repo):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python<span class="w"> </span>-m<span class="w"> </span>kcai_data_sampling.cli<span class="w"> </span>run<span class="w"> </span>examples/configs/walkthrough_albumentations.yaml
+</span></code></pre></div>
+<p>Or via the published index flow (if using the packaging test helpers), ensure
+the package is installed in the environment. The walkthrough reads the sample
+data under <code>examples/data/woodscape_sample/</code> and writes outputs under
+<code>examples/out/walkthrough_albumentations/</code> with a recipe and ledger.</p>
+<h2 id="what-this-package-does">What this package does</h2>
+<ul>
+<li><strong>Curated catalogue</strong>: A fixed allowlist of Albumentations transforms exposed
+  as unary image transforms with consistent naming and config schemas.</li>
+<li><strong>Schema-driven configs</strong>: Dataclasses and JSON-schema generation for
+  transform parameters; unknown or disallowed parameters are rejected.</li>
+<li><strong>Geometry-safe handling</strong>: Transforms that change geometry are tagged
+  (<code>resize_back</code>, <code>crop_back</code>) so the pipeline can track size semantics; the
+  contract remains unary image-only (no batch-wise structural assumptions).</li>
+<li><strong>Robust execution</strong>: Clipping to valid ranges, dtype handling, and
+  integration with the pipeline's <code>Output</code> (deterministic ids, recipe
+  emission).</li>
+<li><strong>Discoverable</strong>: Transforms are registered under
+  <code>kcai_data_sampling_albumentations.transforms</code> and surfaced by the plugin
+  system.</li>
+</ul>
+<h2 id="scope">Scope</h2>
+<ul>
+<li>The filters are based on the main usage scenarios</li>
+<li>In this version, only classification is integrated. detection and segmentation (bbox, mask, ... supports) will be added in a future release.</li>
+</ul>
+<h2 id="application-probability-p">Application probability (<code>p</code>)</h2>
+<p>Every catalogue entry inherits a shared <code>p</code> parameter: the probability the
+transform is actually applied to a given sample. Default is <code>1.0</code> (always
+apply) — deliberately not upstream's <code>0.5</code>, so a sampling entry never silently
+emits identity outputs mislabeled as transformed. <code>p</code> can be fixed or swept
+like any other parameter.</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">transformations</span><span class="p">:</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">blur</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gaussian_blur</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="nt">seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">11</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="nt">p</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span><span class="w">                      </span><span class="c1"># apply to half the samples</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="nt">sigma_limit</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.5</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3.0</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">contrast</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">random_brightness_contrast</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="nt">seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span><span class="nt">p</span><span class="p">:</span><span class="w">                          </span><span class="c1"># sweep probability across variants</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">      </span><span class="nt">range</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.25</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.0</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">      </span><span class="nt">samples</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">      </span><span class="nt">mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">even</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">    </span><span class="nt">brightness_limit</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.5</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">    </span><span class="nt">contrast_limit</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">-0.2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.2</span><span class="p p-Indicator">]</span>
+</span></code></pre></div>
+<p><code>p</code> is part of the resolved parameters, so it feeds the sample <code>id</code> and the
+replay contract. All entries also accept <code>p</code>; it is omitted from the
+per-entry parameter lists below for brevity.</p>
+<h2 id="catalogue">Catalogue</h2>
+<p>The catalogue is the allowlist (see <em>Scope</em> above). Each family is represented:
+geometry/dihedral, blur, noise, color/tone, occlusion/dropout, weather and
+compression.</p>
+<p>The package ships the catalogue, not the examples: the walkthrough config and
+the sample data live in the repository (see <em>Run the walkthrough</em> above).</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Upstream class</th>
+<th>Family</th>
+<th>Exposed parameters</th>
+<th>Geometry</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vertical_flip</code></td>
+<td><code>VerticalFlip</code></td>
+<td>dihedral</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>rotate</code></td>
+<td><code>Rotate</code></td>
+<td>geometric</td>
+<td><code>limit</code>, <code>interpolation</code>, <code>border_mode</code>, <code>fill</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>shift_scale_rotate</code></td>
+<td><code>ShiftScaleRotate</code></td>
+<td>geometric</td>
+<td><code>shift_limit</code>, <code>scale_limit</code>, <code>rotate_limit</code>, <code>interpolation</code>, <code>border_mode</code>, <code>fill</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>elastic_transform</code></td>
+<td><code>ElasticTransform</code></td>
+<td>geometric</td>
+<td><code>alpha</code>, <code>sigma</code>, <code>interpolation</code>, <code>border_mode</code>, <code>fill</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>median_blur</code></td>
+<td><code>MedianBlur</code></td>
+<td>blur</td>
+<td><code>blur_limit</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>motion_blur</code></td>
+<td><code>MotionBlur</code></td>
+<td>blur</td>
+<td><code>blur_limit</code>, <code>allow_shifted</code>, <code>angle_range</code>, <code>direction_range</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>unsharp_mask</code></td>
+<td><code>UnsharpMask</code></td>
+<td>blur</td>
+<td><code>blur_limit</code>, <code>sigma_limit</code>, <code>alpha</code>, <code>threshold</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>gauss_noise</code></td>
+<td><code>GaussNoise</code></td>
+<td>noise</td>
+<td><code>std_range</code>, <code>mean_range</code>, <code>per_channel</code>, <code>noise_scale_factor</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>salt_and_pepper</code></td>
+<td><code>SaltAndPepper</code></td>
+<td>noise</td>
+<td><code>amount</code>, <code>salt_vs_pepper</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>color_jitter</code></td>
+<td><code>ColorJitter</code></td>
+<td>color</td>
+<td><code>brightness</code>, <code>contrast</code>, <code>saturation</code>, <code>hue</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>hue_saturation_value</code></td>
+<td><code>HueSaturationValue</code></td>
+<td>color</td>
+<td><code>hue_shift_limit</code>, <code>sat_shift_limit</code>, <code>val_shift_limit</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>random_gamma</code></td>
+<td><code>RandomGamma</code></td>
+<td>color</td>
+<td><code>gamma_limit</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>solarize</code></td>
+<td><code>Solarize</code></td>
+<td>color</td>
+<td><code>threshold_range</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>equalize</code></td>
+<td><code>Equalize</code></td>
+<td>color</td>
+<td><code>mode</code>, <code>by_channels</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>coarse_dropout</code></td>
+<td><code>CoarseDropout</code></td>
+<td>dropout</td>
+<td><code>num_holes_range</code>, <code>hole_height_range</code>, <code>hole_width_range</code>, <code>fill</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>erasing</code></td>
+<td><code>Erasing</code></td>
+<td>dropout</td>
+<td><code>scale</code>, <code>ratio</code>, <code>fill</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>image_compression</code></td>
+<td><code>ImageCompression</code></td>
+<td>compression</td>
+<td><code>compression_type</code>, <code>quality_range</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>downscale</code></td>
+<td><code>Downscale</code></td>
+<td>compression</td>
+<td><code>scale_range</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>random_crop</code></td>
+<td><code>RandomCrop</code></td>
+<td>geometric</td>
+<td><code>height</code>, <code>width</code>, <code>border_mode</code>, <code>fill</code></td>
+<td><code>resize_back</code></td>
+</tr>
+<tr>
+<td><code>pad_if_needed</code></td>
+<td><code>PadIfNeeded</code></td>
+<td>geometric</td>
+<td><code>min_height</code>, <code>min_width</code>, <code>position</code>, <code>border_mode</code>, <code>fill</code></td>
+<td><code>crop_back</code></td>
+</tr>
+<tr>
+<td><code>gaussian_blur</code></td>
+<td><code>GaussianBlur</code></td>
+<td>blur</td>
+<td><code>sigma_limit</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>random_brightness_contrast</code></td>
+<td><code>RandomBrightnessContrast</code></td>
+<td>color</td>
+<td><code>brightness_limit</code>, <code>contrast_limit</code>, <code>ensure_safe_range</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>random_rain</code></td>
+<td><code>RandomRain</code></td>
+<td>weather</td>
+<td><code>slant_range</code>, <code>drop_length</code> (omit for auto), <code>drop_width</code>, <code>blur_value</code>, <code>brightness_coefficient</code>, <code>rain_type</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>d4</code></td>
+<td><code>D4</code></td>
+<td>dihedral</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>square_symmetry</code></td>
+<td><code>SquareSymmetry</code></td>
+<td>dihedral</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>safe_rotate</code></td>
+<td><code>SafeRotate</code></td>
+<td>geometric</td>
+<td><code>limit</code>, <code>interpolation</code>, <code>border_mode</code>, <code>fill</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>affine</code></td>
+<td><code>Affine</code></td>
+<td>geometric</td>
+<td><code>scale</code>, <code>rotate</code>, <code>shear</code>, <code>interpolation</code>, <code>border_mode</code>, <code>fill</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>perspective</code></td>
+<td><code>Perspective</code></td>
+<td>geometric</td>
+<td><code>scale</code>, <code>interpolation</code>, <code>border_mode</code>, <code>fill</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>grid_distortion</code></td>
+<td><code>GridDistortion</code></td>
+<td>geometric</td>
+<td><code>num_steps</code>, <code>distort_limit</code>, <code>interpolation</code>, <code>border_mode</code>, <code>fill</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>optical_distortion</code></td>
+<td><code>OpticalDistortion</code></td>
+<td>geometric</td>
+<td><code>distort_limit</code>, <code>interpolation</code>, <code>border_mode</code>, <code>fill</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>piecewise_affine</code></td>
+<td><code>PiecewiseAffine</code></td>
+<td>geometric</td>
+<td><code>scale</code>, <code>nb_rows</code>, <code>nb_cols</code>, <code>interpolation</code>, <code>border_mode</code>, <code>fill</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>thin_plate_spline</code></td>
+<td><code>ThinPlateSpline</code></td>
+<td>geometric</td>
+<td><code>scale_range</code>, <code>num_control_points</code>, <code>interpolation</code>, <code>border_mode</code>, <code>fill</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>grid_elastic_deform</code></td>
+<td><code>GridElasticDeform</code></td>
+<td>geometric</td>
+<td><code>num_grid_xy</code>, <code>magnitude</code>, <code>interpolation</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>blur</code></td>
+<td><code>Blur</code></td>
+<td>blur</td>
+<td><code>blur_limit</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>advanced_blur</code></td>
+<td><code>AdvancedBlur</code></td>
+<td>blur</td>
+<td><code>blur_limit</code>, <code>sigma_x_limit</code>, <code>sigma_y_limit</code>, <code>rotate_limit</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>defocus</code></td>
+<td><code>Defocus</code></td>
+<td>blur</td>
+<td><code>radius</code>, <code>alias_blur</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>zoom_blur</code></td>
+<td><code>ZoomBlur</code></td>
+<td>blur</td>
+<td><code>max_factor</code>, <code>step_factor</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>sharpen</code></td>
+<td><code>Sharpen</code></td>
+<td>blur</td>
+<td><code>alpha</code>, <code>lightness</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>ringing_overshoot</code></td>
+<td><code>RingingOvershoot</code></td>
+<td>blur</td>
+<td><code>blur_limit</code>, <code>cutoff</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>additive_noise</code></td>
+<td><code>AdditiveNoise</code></td>
+<td>noise</td>
+<td><code>noise_type</code>, <code>approximation</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>multiplicative_noise</code></td>
+<td><code>MultiplicativeNoise</code></td>
+<td>noise</td>
+<td><code>multiplier</code>, <code>per_channel</code>, <code>elementwise</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>shot_noise</code></td>
+<td><code>ShotNoise</code></td>
+<td>noise</td>
+<td><code>scale_range</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>isonoise</code></td>
+<td><code>ISONoise</code></td>
+<td>noise</td>
+<td><code>color_shift</code>, <code>intensity</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>auto_contrast</code></td>
+<td><code>AutoContrast</code></td>
+<td>color</td>
+<td><code>cutoff</code>, <code>method</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>clahe</code></td>
+<td><code>CLAHE</code></td>
+<td>color</td>
+<td><code>clip_limit</code>, <code>tile_grid_size</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>fancy_pca</code></td>
+<td><code>FancyPCA</code></td>
+<td>color</td>
+<td><code>alpha</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>invert_img</code></td>
+<td><code>InvertImg</code></td>
+<td>color</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>posterize</code></td>
+<td><code>Posterize</code></td>
+<td>color</td>
+<td><code>num_bits</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>rgb_shift</code></td>
+<td><code>RGBShift</code></td>
+<td>color</td>
+<td><code>r_shift_limit</code>, <code>g_shift_limit</code>, <code>b_shift_limit</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>random_tone_curve</code></td>
+<td><code>RandomToneCurve</code></td>
+<td>color</td>
+<td><code>scale</code>, <code>per_channel</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>planckian_jitter</code></td>
+<td><code>PlanckianJitter</code></td>
+<td>color</td>
+<td><code>mode</code>, <code>sampling_method</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>illumination</code></td>
+<td><code>Illumination</code></td>
+<td>color</td>
+<td><code>mode</code>, <code>intensity_range</code>, <code>effect_type</code>, <code>angle_range</code>, <code>sigma_range</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>plasma_brightness_contrast</code></td>
+<td><code>PlasmaBrightnessContrast</code></td>
+<td>color</td>
+<td><code>brightness_range</code>, <code>contrast_range</code>, <code>plasma_size</code>, <code>roughness</code></td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="kcai-data-sampling-fgsm.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: FGSM">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                FGSM
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="kcai-data-sampling-job.html" class="md-footer__link md-footer__link--next" aria-label="Next: Job">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Job
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; SafenAI
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "navigation.indexes", "navigation.footer", "navigation.instant", "navigation.instant.progress", "navigation.top", "search.highlight", "search.share", "search.suggest", "toc.follow", "toc.integrate", "navigation.tabs", "navigation.tabs.sticky", "navigation.path", "navigation.prune"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

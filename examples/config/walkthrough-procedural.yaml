@@ -1,0 +1,34 @@
+# Procedural: model-free image transformations (no model, no randomness).
+# These transforms change pixels deterministically and are useful for
+# robustness augmentation and controlled-context generation.
+#
+# Each entry's `name` is an arbitrary label you choose; `type` is the
+# registered transformation. A `[lo, hi]` range with `step` expands into one
+# entry per value (a sweep); a scalar is a fixed magnitude.
+dataloaders:
+  loaders:
+    - name: comma10k
+      type: parquet
+      path: examples/data/comma10k_sample/samples.parquet
+      id_column: id
+      load_batch_size: 10          # rows read per batch
+      decode: img_bytes            # column holding raw image bytes
+      sample_path:
+        - column: path
+          prefix: examples/data/comma10k_sample
+
+operations:
+  outputs:
+    path: examples/outputs/{selection}/ledger.parquet
+    write_samples: true            # write transformed images to disk
+    samples_dir: examples/outputs/{selection}/payloads
+    flush_batch_size: 128         # rows per output flush
+    include: [height, width]      # extra columns kept in the ledger
+  transformations:
+    - name: horizontal_flip
+      type: horizontal_flip        # flips the image horizontally (deterministic)
+    - name: crop_resize
+      type: crop_resize
+      fraction:
+        range: [0.3, 0.5]         # crop a fraction of the image, then resize back
+        step: 0.1                 # one entry per step value
