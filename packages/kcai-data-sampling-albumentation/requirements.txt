@@ -1,0 +1,4 @@
+kcai-data-sampling-core
+albumentations @ git+https://github.com/albumentations-team/albumentations@66212d77a
+albucore==0.0.28
+opencv-python-headless>=4.9.0.80

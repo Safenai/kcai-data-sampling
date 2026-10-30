@@ -33,7 +33,7 @@ three families, and they behave very differently:
 | --- | --- | --- |
 | **Procedural** | Classic edits, no model involved | crop, flip, blur, noise |
 | **Generative** | A model invents the content | inpainting a removed object |
-| **Adversarial** | Crafted *against* a model to stress it | a perturbation that fools a detector |
+| **Adversarial** | Crafted *against* a model to stress it | an adversarial sample that fools a detector |
 
 The first is cheap and safe to run anywhere. The second needs real compute. The
 third needs a model to attack. Rather than hide that behind three different
@@ -53,10 +53,10 @@ deliberately.
 - **A simple command line.** Describe a job in a YAML file, run one command.
   A working example ships with the repository, and there is a guided
   walkthrough notebook if you would rather read than script.
-- **Six packages, one repository**, each installable on its own or together:
+- **Seven packages, one repository**, each installable on its own or together:
   the shared core, the procedural image methods, the job runner that owns
-  image and ledger IO, the umbrella CLI, and two optional model-backed packages
-  (generative inpainting and adversarial perturbation).
+  image and ledger IO, the CLI wrapper, and three optional model-backed packages
+  (generative inpainting, adversarial examples and the albumentations wrapper).
 - **A provenance ledger.** One row per generated sample; the generated images
   themselves are stored separately, addressed by content. Inspect the result
   with any Parquet reader.
@@ -66,12 +66,17 @@ deliberately.
 - **Parameter sweeps** — ask for "crop to 10%, 20%, 30%" in one line rather
   than writing three jobs.
 - **Procedural transformations** included: horizontal flip and crop-and-resize.
-- **Generative inpainting** (LaMa) and **adversarial perturbation** (FGSM)
+- **Generative inpainting** (LaMa) and **adversarial example** (FGSM)
   available as opt-in extras.
 - **A documentation site** with API reference, a quick start, and a glossary of
   the vocabulary.
 - **Quality gates in continuous integration** — automated tests, formatting,
   linting, and type checking run on every change across Python 3.11 to 3.14.
+- **An albumentations-backed procedural package** (`kcai-data-sampling-albumentation`)
+  exposing 76 robustness transforms across eight families — color/tone, blur/sharpen,
+  noise, geometric, dihedral, occlusion/dropout, compression and weather — each configurable from YAML
+  with seeded, replayable application and parameter sweeps. Includes per-transform
+  documentation and a walkthrough config.
 
 ## Try it
 
@@ -109,7 +114,3 @@ knowing:
   October 2026 and is no longer supported.
 - **The API is still settling.** Treat configuration files you write now as
   something to expect to adjust.
-
-## What comes next
-
-TODO

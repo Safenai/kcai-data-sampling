@@ -30,6 +30,7 @@ MEMBERS = {
     "images": "kcai-data-sampling-images",
     "fgsm": "kcai-data-sampling-fgsm",
     "lama": "kcai-data-sampling-lama",
+    "albumentation": "kcai-data-sampling-albumentation",
 }
 
 #: extra -> (distributions it must install, kcai members it must not).
@@ -42,12 +43,13 @@ MEMBERS = {
 EXTRAS: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
     "notebooks": (
         ("ipykernel", "pandas", "python-pptx", "ultralytics"),
-        ("fgsm", "lama"),
+        ("fgsm", "lama", "albumentation"),
     ),
-    "job": ((MEMBERS["job"],), ("images", "fgsm", "lama")),
-    "images": ((MEMBERS["images"],), ("job", "fgsm", "lama")),
-    "fgsm": ((MEMBERS["fgsm"],), ("job", "images", "lama")),
-    "lama": ((MEMBERS["lama"],), ("job", "images", "fgsm")),
+    "job": ((MEMBERS["job"],), ("images", "fgsm", "lama", "albumentation")),
+    "images": ((MEMBERS["images"],), ("job", "fgsm", "lama", "albumentation")),
+    "fgsm": ((MEMBERS["fgsm"],), ("job", "images", "lama", "albumentation")),
+    "lama": ((MEMBERS["lama"],), ("job", "images", "fgsm", "albumentation")),
+    "albumentation": ((MEMBERS["albumentation"],), ("job", "images", "fgsm", "lama")),
     "all": ((*MEMBERS.values(),), ()),
 }
 
@@ -59,6 +61,7 @@ MEMBER_PLUGINS: dict[str, tuple[str, str]] = {
     "images": ("kcai_data_sampling.transformations", "horizontal_flip"),
     "fgsm": ("kcai_data_sampling.transformations", "fgsm"),
     "lama": ("kcai_data_sampling.models", "lama_inpaint"),
+    "albumentation": ("kcai_data_sampling.transformations", "random_brightness_contrast"),
 }
 
 

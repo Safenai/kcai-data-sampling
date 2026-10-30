@@ -21,7 +21,7 @@ content-addressed file.
 **This is where the IO plugins live, and where image files are handled.** It is
 also the only part of the workspace that depends on Pillow, and it needs it
 because it is the only part that encodes a decoded array to PNG. The
-transformation packages themselves stay pure numpy.
+transformation packages themselves never touch image files.
 
 ## Install
 

@@ -19,7 +19,7 @@ cd kcai-data-sampling
 uv sync
 ```
 
-`uv sync` creates `.venv/` with all six workspace packages installed in
+`uv sync` creates `.venv/` with all seven workspace packages installed in
 editable mode. It is deliberately torch-free: neither the CPU torch wheel nor
 the ~200 MB LaMa checkpoint is downloaded unless you ask for the opt-in
 surfaces below.
@@ -32,17 +32,18 @@ uv run kcai-data-sampling version
 
 ### Opt-in surfaces
 
-The two model-backed surfaces are separate installs so the default environment
-stays small:
+The two model-backed surfaces and the albumentations catalogue are separate
+installs so the default environment stays small:
 
 ```bash
 uv sync --package kcai-data-sampling-lama   # CPU torch + LaMa
 uv sync --group fgsm                        # -fgsm, numpy-only, no torch
+uv sync --group test-albumentation          # -albumentation, pinned albumentations + headless OpenCV
 ```
 
 ## Running things with uv
 
-Because the workspace is a uv project with six member packages, `uv run` is
+Because the workspace is a uv project with seven member packages, `uv run` is
 the normal way to execute anything in the development environment:
 
 ```bash
@@ -78,7 +79,7 @@ arguments runs exactly those.
 | `uv run nox` | The default set: `lint`, `spell`, `test`, `type_check` |
 | `uv run nox -s lint` | ruff lint + `ruff format --check` on `packages/` and `tests/`. Read-only; applies no fixes. |
 | `uv run nox -s fmt` | The same checks, but rewriting: sorts imports (dropping unused ones) and formats. This is the session that changes files. |
-| `uv run nox -s type_check` | mypy on all six packages. |
+| `uv run nox -s type_check` | mypy on all seven packages. |
 | `uv run nox -s spell` | cspell over the whole repository, documentation included. |
 | `uv run nox -s complexity` | Cyclomatic complexity of `packages/`; fails above 15. |
 | `uv run nox -s test_complexity` | The same check for `tests/`. |
@@ -87,10 +88,12 @@ arguments runs exactly those.
 
 | Command | What it does |
 |---|---|
-| `uv run nox -s test` | Unit, e2e and CLI tests in the default (torch-free, fgsm-free) environment. |
+| `uv run nox -s test` | Unit, e2e and CLI tests in the default (torch-free, fgsm-free, albumentations-free) environment. |
 | `uv run nox -s test_coverage` | Every test including the opt-in surfaces, with coverage. Fails under 90%. Writes an HTML report to `docs/reports/htmlcov/` and a pytest report to `docs/reports/pytest/`. |
-| `uv run nox -s test_lama` | Only the torch-gated llama tests, in the `-lama` environment. |
+| `uv run nox -s test_lama` | Only the torch-gated lama tests, in the `-lama` environment. |
 | `uv run nox -s test_fgsm` | Only the importorskip-gated fgsm tests, in the `-fgsm` environment. |
+| `uv run nox -s test_albumentation` | Only the importorskip-gated albumentation tests, in the `-albumentation` environment. |
+| `uv run nox -s benchmark` | The albumentations benchmark (ours vs. direct), see `benchmark/README.md`. Python 3.12. |
 | `uv run nox -s compatibility` | Unit and CLI tests on each of Python 3.11, 3.12, 3.13 and 3.14 in turn. |
 
 Every test session seeds `KCAI_TEST_SEED=42`, so runs are reproducible. Pass
@@ -108,10 +111,10 @@ for the full procedure.
 
 | Command | What it does |
 |---|---|
-| `uv run nox -s test_packaging` | Package isolation: fresh venvs, four wheel subsets, smoke scripts. Fast, no network. |
+| `uv run nox -s test_packaging` | Package isolation: fresh venvs, seven wheel subsets, smoke scripts. Fast, no network. |
 | `uv run nox -s test_packaging_testpypi` | Installs each scenario from test.pypi.org and smoke-tests it. |
 | `uv run nox -s test_packaging_pypi` | The same against pypi.org — what a user actually gets. |
-| `uv run nox -s test_packaging_notebook` | Installs the `notebook` extra from test.pypi.org and executes the real walkthrough notebook in it. Several hundred MB and minutes of CPU. |
+| `uv run nox -s test_packaging_notebook` | Installs the `all` extra from test.pypi.org and executes the real walkthrough notebook in it. Several hundred MB and minutes of CPU. |
 
 ### Documentation
 
@@ -134,7 +137,7 @@ whatever the workspace interpreter is.
 
 `docs_build` and `docs_serve` run the hooks in `docs/hooks.py`, which generate
 files inside `docs/` before the build: `index.md` from `README.md`,
-`CHANGELOG.md` and `RELEASE.md` from the repository root, the six package
+`RELEASE.md` (and `CHANGELOG.md` when one exists) from the repository root, the seven package
 READMEs under `docs/packages/`, and the example notebooks under
 `docs/examples/`. All of them are git-ignored, so `git status` stays clean —
 but do not edit the generated copies, edit the sources.
@@ -147,8 +150,8 @@ means your change disappears on the next build.
 ## Repository layout
 
 ```
-packages/          the six distributions, each with its own pyproject.toml
-  kcai-data-sampling{,-core,-images,-lama,-fgsm,-job}/
+packages/          the seven distributions, each with its own pyproject.toml
+  kcai-data-sampling{,-core,-images,-albumentation,-lama,-fgsm,-job}/
 tests/             unit, e2e, cli and packaging suites
 examples/          configs, adapters, notebooks and (generated) outputs
 docs/              this site

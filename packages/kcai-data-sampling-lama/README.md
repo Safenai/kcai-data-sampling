@@ -94,7 +94,7 @@ class MyModel:
         ...  # fill every masked pixel; leave the rest unchanged
 
 
-def plugin() -> MyModel:
+def plugin() -> type[MyModel]:
     return MyModel
 ```
 

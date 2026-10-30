@@ -105,6 +105,7 @@ plugins:
         "packages/kcai-data-sampling-lama/src/kcai_data_sampling_lama/",
         "packages/kcai-data-sampling-fgsm/src/kcai_data_sampling_fgsm/",
         "packages/kcai-data-sampling-job/src/kcai_data_sampling_job/",
+        "packages/kcai-data-sampling-albumentation/src/kcai_data_sampling_albumentation/",
       ]
   # mkdocs-jupyter must come after api-autonav to handle generated files correctly
   - mkdocs-jupyter
@@ -122,6 +123,7 @@ watch:
   - "packages/kcai-data-sampling-lama/src/kcai_data_sampling_lama/"
   - "packages/kcai-data-sampling-fgsm/src/kcai_data_sampling_fgsm/"
   - "packages/kcai-data-sampling-job/src/kcai_data_sampling_job/"
+  - "packages/kcai-data-sampling-albumentation/src/kcai_data_sampling_albumentation/"
   - "packages/kcai-data-sampling/src/kcai_data_sampling/"
   - "docs"
 site_name: KCAI Data-Sampling
@@ -133,16 +135,22 @@ edit_uri: edit/main/docs/
 nav:
   - Home: index.md
   - Quick Start: quickstart.md
-  - Release Notes: RELEASE.md
-  - Terminology: terminology.md
-  - Packaging Tests: packaging-tests.md
-  - Developer Guide: developer.md
   - Examples:
     - Walkthrough Notebook: examples/notebooks/walkthrough.ipynb
+  - Terminology: terminology.md
+  - Usages: usages.md
+  - Benchmark:
+    - Albumentations: benchmark/albumentations.md
+  - Release Notes: RELEASE.md
+  - Developer:
+    - Guide: developer.md
+    - Changelog: CHANGELOG.md
+    - Packaging Tests: packaging-tests.md
   - Packages:
     - Core: packages/kcai-data-sampling-core.md
     - Images: packages/kcai-data-sampling-images.md
     - Images (LaMa): packages/kcai-data-sampling-lama.md
     - FGSM: packages/kcai-data-sampling-fgsm.md
+    - Albumentations: packages/kcai-data-sampling-albumentation.md
     - Job: packages/kcai-data-sampling-job.md
     - CLI: packages/kcai-data-sampling.md

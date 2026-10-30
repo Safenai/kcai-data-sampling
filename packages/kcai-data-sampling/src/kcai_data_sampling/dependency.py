@@ -42,6 +42,7 @@ _MEMBER_VERSION_MODULES = {
     "images": "kcai_data_sampling_images._version_",
     "fgsm": "kcai_data_sampling_fgsm._version_",
     "lama": "kcai_data_sampling_lama._version_",
+    "albumentation": "kcai_data_sampling_albumentation._version_",
 }
 
 
