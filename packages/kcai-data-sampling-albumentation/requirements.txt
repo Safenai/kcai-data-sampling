@@ -1,4 +1,7 @@
 kcai-data-sampling-core
-albumentations @ git+https://github.com/albumentations-team/albumentations@66212d77a
-albucore==0.0.28
+# Pypi complains: Can't have direct dependency
+#albumentations @ git+https://github.com/albumentations-team/albumentations@66212d77a
+#albucore==0.0.28
+# Choose 2.0.8 for pypi, but we miss some commits containing various fixes
+albumentations==2.0.8
 opencv-python-headless>=4.9.0.80

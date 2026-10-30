@@ -60,6 +60,7 @@ explicit = true
 
 [tool.uv]
 default-groups = ["nox", "lint", "type_check"]
+override-dependencies = ["albucore==0.0.24"]
 
 # Dependency groups, installed by uv/nox when running the corresponding task
 # (mirrors dqm-ml-workspace; the association with a session lives in noxfile.py).
