@@ -21,10 +21,8 @@ pytestmark = pytest.mark.albumentation
 import albumentations as A  # noqa: E402, N812
 from kcai_data_sampling_albumentation.specs import TRANSFORM_SPECS  # noqa: E402
 
-#: The hard eligibility filter from the integration plan: classes whose
-#: parameter surface or contract breaks the unary image-only, uint8, fixed-shape
-#: payload model. Re-checked here so the allowlist cannot silently grow one of
-#: these back in.
+#: The eligibility filter: classes whose parameter surface or contract breaks
+#: the unary image-only, uint8, fixed-shape payload model.
 _INELIGIBLE = {
     # abstract bases
     "DualTransform",
@@ -99,7 +97,13 @@ import kcai_data_sampling_albumentation.engine  # noqa: F401
 print(os.environ.get("NO_ALBUMENTATIONS_UPDATE"))
 """
     env = {key: value for key, value in os.environ.items() if key != "NO_ALBUMENTATIONS_UPDATE"}
-    result = subprocess.run([sys.executable, "-c", probe], capture_output=True, text=True, env=env, timeout=300)
+    result = subprocess.run(
+        [sys.executable, "-c", probe],
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=300,
+    )
 
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip().splitlines()[-1] == "1"

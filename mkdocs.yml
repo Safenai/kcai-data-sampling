@@ -144,6 +144,7 @@ nav:
   - Release Notes: RELEASE.md
   - Developer:
     - Guide: developer.md
+    - Changelog: CHANGELOG.md
     - Packaging Tests: packaging-tests.md
   - Packages:
     - Core: packages/kcai-data-sampling-core.md
