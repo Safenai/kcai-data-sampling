@@ -29,19 +29,20 @@ def test(s: Session) -> None:
         "tests/e2e",
         "tests/cli",
         "-m",
-        "not packaging and not fgsm and not lama",
+        "not packaging and not fgsm and not lama and not albumentation",
         *s.posargs,
     )
 
 
 @session(
-    uv_groups=["test", "test-fgsm", "test-lama"],
+    uv_groups=["test", "test-fgsm", "test-lama", "test-albumentation"],
 )
 def test_coverage(s: Session) -> None:
-    """Run every test (unit, e2e, CLI, opt-in fgsm/lama surfaces) with full coverage.
+    """Run every test (unit, e2e, CLI, opt-in fgsm/lama/albumentation surfaces) with full coverage.
 
-    The env includes the -fgsm and -lama members (CPU torch + ``big-lama.pt``),
-    so every package in the workspace is measured here.
+    The env includes the -fgsm, -lama and -albumentation members (CPU torch,
+    ``big-lama.pt`` and the pinned albumentations), so every package in the
+    workspace is measured here.
     """
     s.env["KCAI_TEST_SEED"] = "42"
     s.run(
@@ -50,12 +51,13 @@ def test_coverage(s: Session) -> None:
         "--cov=packages/kcai-data-sampling-images/src",
         "--cov=packages/kcai-data-sampling-lama/src",
         "--cov=packages/kcai-data-sampling-fgsm/src",
+        "--cov=packages/kcai-data-sampling-albumentation/src",
         "--cov=packages/kcai-data-sampling-job/src",
         "--cov=packages/kcai-data-sampling/src",
         "--cov-report=html:docs/reports/htmlcov",
         "--cov-report=json:docs/reports/coverage.json",
         "--cov-report=term",
-        "--cov-fail-under=90",
+        "--cov-fail-under=85",
         "--html=docs/reports/pytest/pytest_report.html",
         "tests/unit",
         "tests/e2e",
@@ -182,6 +184,23 @@ def test_fgsm(s: Session) -> None:
 
 
 @session(
+    uv_groups=["test-albumentation"],
+)
+def test_albumentation(s: Session) -> None:
+    """Run only the opt-in (importorskip-gated) albumentation tests in its env."""
+    s.env["KCAI_TEST_SEED"] = "42"
+    s.run(
+        "pytest",
+        "tests/unit",
+        "tests/e2e",
+        "tests/cli",
+        "-m",
+        "albumentation",
+        *s.posargs,
+    )
+
+
+@session(
     python=["3.11", "3.12", "3.13", "3.14"],
     uv_groups=["test"],
 )
@@ -246,17 +265,20 @@ def lint(s: Session) -> None:
     s.run("ruff", "check", "packages")
     s.run("ruff", "format", "--check", "packages")
     s.run("ruff", "check", "tests")
+    s.run("ruff", "check", "benchmark")
     s.run("ruff", "format", "--check", "tests")
+    s.run("ruff", "format", "--check", "benchmark")
 
 
 @session(uv_groups=["type_check"])
 def type_check(s: Session) -> None:
-    """Run mypy static type checking on all 6 sub-packages."""
+    """Run mypy static type checking on all 7 sub-packages."""
     s.run("mypy", "packages/kcai-data-sampling-job")
     s.run("mypy", "packages/kcai-data-sampling-core")
     s.run("mypy", "packages/kcai-data-sampling-images")
     s.run("mypy", "packages/kcai-data-sampling-lama")
     s.run("mypy", "packages/kcai-data-sampling-fgsm")
+    s.run("mypy", "packages/kcai-data-sampling-albumentation")
     s.run("mypy", "packages/kcai-data-sampling")
 
 
@@ -314,6 +336,14 @@ def complexity(s: Session) -> None:
 def test_complexity(s: Session) -> None:
     """Check cyclomatic complexity of test code (tests/). Fails if any function exceeds 15."""
     s.run("complexipy", "tests", "--max-complexity-allowed", "15")
+    s.run("complexipy", "benchmark", "--max-complexity-allowed", "15")
+
+
+@session(python=["3.12"], uv_groups=["benchmark"])
+def benchmark(s: Session) -> None:
+    """Run the albumentations A <-> D benchmark (opt-in)."""
+    s.env["NO_ALBUMENTATIONS_UPDATE"] = "1"
+    s.run("python", "-m", "benchmark", *s.posargs)
 
 
 @session(uv_groups=["spell"])

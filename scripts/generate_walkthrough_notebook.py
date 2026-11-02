@@ -63,7 +63,7 @@ print(json.dumps(CFG, indent=2))
 
 MD1 = """## 1 · The samples
 
-A sample is a **row**: `id`, `height`, `width`, `path` — and the image itself, decoded **once** at load. The fetch script writes the sidecar `samples.parquet` beside the frames, and the `path` column (relative, resolved against `sample_path.prefix`) names each image. The loader turns each `load_batch_size` chunk into one in-memory **batch**: the source columns stay a table, the image column becomes one numpy `(B, H, W, 4)` uint8 stack — row `i` on every axis is the same sample.
+A sample is the unit the target function consumes; here, one **row** of the selection: `id`, `height`, `width`, `path` — and the image itself, decoded **once** at load. The fetch script writes the sidecar `samples.parquet` beside the frames, and the `path` column (relative, resolved against `sample_path.prefix`) names each image. The loader turns each `load_batch_size` chunk into one in-memory **batch**: the source columns stay a table, the image column becomes one numpy `(B, H, W, 4)` uint8 stack — row `i` on every axis is the same sample.
 
 There is no `y`: the interface never reads an annotation. The comma10k masks below are drawn by the notebook, not the package.
 """
@@ -136,7 +136,7 @@ for label, chunks in partitions.items():
 
 MD3 = """## 3 · What a transformation is
 
-Algorithm, resolved parameters, seed, nothing left open, and that *is* the identity: no separate id on the row. Each algorithm declares its parameters once, as a pydantic schema on `CropResize.Config`; an unknown or a missing one is refused at construction, and the row carries them all, defaults included. The seed rule is relaxed: a seed is always accepted, but a deterministic algorithm draws none — an explicit seed is stored as `None`.
+Algorithm, resolved parameters, seed, nothing left open, and that *is* the identity: the row's `id` is a hash of these fields, derived, not an extra key. Each algorithm declares its parameters once, as a pydantic schema on `CropResize.Config`; an unknown or a missing one is refused at construction, and the row carries them all, defaults included. The seed rule is relaxed: a seed is always accepted, but a deterministic algorithm draws none — an explicit seed is stored as `None`.
 """
 
 CODE3 = """from kcai_data_sampling_images.api.transformations.crop_resize import CropResize

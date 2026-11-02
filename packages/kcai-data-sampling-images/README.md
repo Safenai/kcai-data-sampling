@@ -72,9 +72,9 @@ pixel by pixel. A method that changed the shape would be refused, not resized.
 
 ## Notes
 
-- **The regime is not declared.** Whether an output is a perturbation, an
-  augmentation or a corruption is read off the input/output pair afterwards, not
-  asserted by the algorithm.
+- **The regime is not declared.** Whether an output is an augmentation or a
+  corruption is judged downstream, against a task, not asserted by the
+  algorithm.
 - **`crop_resize` is top-left anchored.** The window is
   `top`/`left` offset by the fraction of `H`/`W`, then resized back by
   nearest-neighbour index replication. Offsets that would leave the image are

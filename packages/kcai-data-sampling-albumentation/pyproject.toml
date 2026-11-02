@@ -1,0 +1,118 @@
+[project]
+name = "kcai-data-sampling-albumentation"
+dynamic = ["dependencies", "version"]
+description = "Procedural image transformations backed by a pinned albumentations for kcai data-sampling"
+authors = [
+  {name = "Safenai", email = "support@safenai.io"},
+]
+license = "Apache-2.0"
+readme = "README.md"
+requires-python = ">=3.11"
+keywords = ["ml", "data", "augmentation", "robustness", "images", "albumentations"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+
+[project.entry-points."kcai_data_sampling.transformations"]
+# BEGIN generated entry points (kcai_data_sampling_albumentation._generate)
+vertical_flip = "kcai_data_sampling_albumentation.api.transformations.vertical_flip:VerticalFlip"
+rotate = "kcai_data_sampling_albumentation.api.transformations.rotate:Rotate"
+shift_scale_rotate = "kcai_data_sampling_albumentation.api.transformations.shift_scale_rotate:ShiftScaleRotate"
+elastic_transform = "kcai_data_sampling_albumentation.api.transformations.elastic_transform:ElasticTransform"
+median_blur = "kcai_data_sampling_albumentation.api.transformations.median_blur:MedianBlur"
+motion_blur = "kcai_data_sampling_albumentation.api.transformations.motion_blur:MotionBlur"
+unsharp_mask = "kcai_data_sampling_albumentation.api.transformations.unsharp_mask:UnsharpMask"
+gauss_noise = "kcai_data_sampling_albumentation.api.transformations.gauss_noise:GaussNoise"
+salt_and_pepper = "kcai_data_sampling_albumentation.api.transformations.salt_and_pepper:SaltAndPepper"
+color_jitter = "kcai_data_sampling_albumentation.api.transformations.color_jitter:ColorJitter"
+hue_saturation_value = "kcai_data_sampling_albumentation.api.transformations.hue_saturation_value:HueSaturationValue"
+random_gamma = "kcai_data_sampling_albumentation.api.transformations.random_gamma:RandomGamma"
+solarize = "kcai_data_sampling_albumentation.api.transformations.solarize:Solarize"
+equalize = "kcai_data_sampling_albumentation.api.transformations.equalize:Equalize"
+coarse_dropout = "kcai_data_sampling_albumentation.api.transformations.coarse_dropout:CoarseDropout"
+erasing = "kcai_data_sampling_albumentation.api.transformations.erasing:Erasing"
+image_compression = "kcai_data_sampling_albumentation.api.transformations.image_compression:ImageCompression"
+downscale = "kcai_data_sampling_albumentation.api.transformations.downscale:Downscale"
+random_crop = "kcai_data_sampling_albumentation.api.transformations.random_crop:RandomCrop"
+pad_if_needed = "kcai_data_sampling_albumentation.api.transformations.pad_if_needed:PadIfNeeded"
+gaussian_blur = "kcai_data_sampling_albumentation.api.transformations.gaussian_blur:GaussianBlur"
+random_brightness_contrast = "kcai_data_sampling_albumentation.api.transformations.random_brightness_contrast:RandomBrightnessContrast"
+d4 = "kcai_data_sampling_albumentation.api.transformations.d4:D4"
+square_symmetry = "kcai_data_sampling_albumentation.api.transformations.square_symmetry:SquareSymmetry"
+safe_rotate = "kcai_data_sampling_albumentation.api.transformations.safe_rotate:SafeRotate"
+affine = "kcai_data_sampling_albumentation.api.transformations.affine:Affine"
+perspective = "kcai_data_sampling_albumentation.api.transformations.perspective:Perspective"
+grid_distortion = "kcai_data_sampling_albumentation.api.transformations.grid_distortion:GridDistortion"
+optical_distortion = "kcai_data_sampling_albumentation.api.transformations.optical_distortion:OpticalDistortion"
+piecewise_affine = "kcai_data_sampling_albumentation.api.transformations.piecewise_affine:PiecewiseAffine"
+thin_plate_spline = "kcai_data_sampling_albumentation.api.transformations.thin_plate_spline:ThinPlateSpline"
+grid_elastic_deform = "kcai_data_sampling_albumentation.api.transformations.grid_elastic_deform:GridElasticDeform"
+blur = "kcai_data_sampling_albumentation.api.transformations.blur:Blur"
+advanced_blur = "kcai_data_sampling_albumentation.api.transformations.advanced_blur:AdvancedBlur"
+defocus = "kcai_data_sampling_albumentation.api.transformations.defocus:Defocus"
+zoom_blur = "kcai_data_sampling_albumentation.api.transformations.zoom_blur:ZoomBlur"
+sharpen = "kcai_data_sampling_albumentation.api.transformations.sharpen:Sharpen"
+ringing_overshoot = "kcai_data_sampling_albumentation.api.transformations.ringing_overshoot:RingingOvershoot"
+additive_noise = "kcai_data_sampling_albumentation.api.transformations.additive_noise:AdditiveNoise"
+multiplicative_noise = "kcai_data_sampling_albumentation.api.transformations.multiplicative_noise:MultiplicativeNoise"
+shot_noise = "kcai_data_sampling_albumentation.api.transformations.shot_noise:ShotNoise"
+isonoise = "kcai_data_sampling_albumentation.api.transformations.isonoise:Isonoise"
+auto_contrast = "kcai_data_sampling_albumentation.api.transformations.auto_contrast:AutoContrast"
+clahe = "kcai_data_sampling_albumentation.api.transformations.clahe:Clahe"
+fancy_pca = "kcai_data_sampling_albumentation.api.transformations.fancy_pca:FancyPca"
+invert_img = "kcai_data_sampling_albumentation.api.transformations.invert_img:InvertImg"
+posterize = "kcai_data_sampling_albumentation.api.transformations.posterize:Posterize"
+rgb_shift = "kcai_data_sampling_albumentation.api.transformations.rgb_shift:RgbShift"
+random_tone_curve = "kcai_data_sampling_albumentation.api.transformations.random_tone_curve:RandomToneCurve"
+planckian_jitter = "kcai_data_sampling_albumentation.api.transformations.planckian_jitter:PlanckianJitter"
+illumination = "kcai_data_sampling_albumentation.api.transformations.illumination:Illumination"
+plasma_brightness_contrast = "kcai_data_sampling_albumentation.api.transformations.plasma_brightness_contrast:PlasmaBrightnessContrast"
+plasma_shadow = "kcai_data_sampling_albumentation.api.transformations.plasma_shadow:PlasmaShadow"
+morphological = "kcai_data_sampling_albumentation.api.transformations.morphological:Morphological"
+channel_shuffle = "kcai_data_sampling_albumentation.api.transformations.channel_shuffle:ChannelShuffle"
+channel_dropout = "kcai_data_sampling_albumentation.api.transformations.channel_dropout:ChannelDropout"
+chromatic_aberration = "kcai_data_sampling_albumentation.api.transformations.chromatic_aberration:ChromaticAberration"
+grid_dropout = "kcai_data_sampling_albumentation.api.transformations.grid_dropout:GridDropout"
+pixel_dropout = "kcai_data_sampling_albumentation.api.transformations.pixel_dropout:PixelDropout"
+xy_masking = "kcai_data_sampling_albumentation.api.transformations.xy_masking:XyMasking"
+frequency_masking = "kcai_data_sampling_albumentation.api.transformations.frequency_masking:FrequencyMasking"
+random_grid_shuffle = "kcai_data_sampling_albumentation.api.transformations.random_grid_shuffle:RandomGridShuffle"
+random_fog = "kcai_data_sampling_albumentation.api.transformations.random_fog:RandomFog"
+random_rain = "kcai_data_sampling_albumentation.api.transformations.random_rain:RandomRain"
+random_shadow = "kcai_data_sampling_albumentation.api.transformations.random_shadow:RandomShadow"
+random_snow = "kcai_data_sampling_albumentation.api.transformations.random_snow:RandomSnow"
+random_sun_flare = "kcai_data_sampling_albumentation.api.transformations.random_sun_flare:RandomSunFlare"
+spatter = "kcai_data_sampling_albumentation.api.transformations.spatter:Spatter"
+center_crop = "kcai_data_sampling_albumentation.api.transformations.center_crop:CenterCrop"
+crop = "kcai_data_sampling_albumentation.api.transformations.crop:Crop"
+random_crop_from_borders = "kcai_data_sampling_albumentation.api.transformations.random_crop_from_borders:RandomCropFromBorders"
+random_scale = "kcai_data_sampling_albumentation.api.transformations.random_scale:RandomScale"
+random_resized_crop = "kcai_data_sampling_albumentation.api.transformations.random_resized_crop:RandomResizedCrop"
+random_sized_crop = "kcai_data_sampling_albumentation.api.transformations.random_sized_crop:RandomSizedCrop"
+resize = "kcai_data_sampling_albumentation.api.transformations.resize:Resize"
+pad = "kcai_data_sampling_albumentation.api.transformations.pad:Pad"
+# END generated entry points
+
+[build-system]
+requires = ["setuptools>=80", "setuptools-scm[simple]>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+version_file = "src/kcai_data_sampling_albumentation/_version_.py"
+root = "../.."
+fallback_version = "0.0.1"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+kcai_data_sampling_albumentation = ["py.typed"]

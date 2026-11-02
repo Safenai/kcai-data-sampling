@@ -70,7 +70,7 @@ def artifact_name(selection_name: str, output_id: str, x: np.ndarray) -> str:
         x: The output ``(H, W, C)`` uint8 pixel array.
 
     Returns:
-        The ``.png`` artifact file stem to store under the payload directory.
+        The ``.png`` artifact file name to store under the payload directory.
     """
     c6 = hashlib.sha1(np.ascontiguousarray(x).tobytes()).hexdigest()[:6]
     return f"{selection_name}__{output_id}__{c6}.png"

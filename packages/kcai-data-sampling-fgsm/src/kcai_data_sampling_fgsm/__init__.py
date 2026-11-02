@@ -1,4 +1,4 @@
-"""Adversarial perturbation with the Fast Gradient Sign Method.
+"""Adversarial transformation with the Fast Gradient Sign Method.
 
 Ships the ``fgsm`` transformation (``model_role = "target"``): a budgeted
 sign-direction step along the gradient of the user's target model, expressed in

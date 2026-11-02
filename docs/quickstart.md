@@ -2,7 +2,7 @@
 
 End-to-end in a few commands: install the package, fetch the sample data, run
 your first job, and read what it produced. The vocabulary used below —
-transformation, families, label effects — is defined in
+transformation, families, annotation states — is defined in
 [docs/terminology.md](terminology.md).
 
 ## Prerequisites
@@ -107,8 +107,8 @@ it works from any launch directory.
 
 ## Optional surfaces (opt-in)
 
-Two transformations need an extra install; the environment above stays free
-of their dependencies. Each has its own umbrella extra:
+Three transformation packages need an extra install; the environment above
+stays free of their dependencies. Each has its own umbrella extra:
 
 - **Generative inpainting** (`[lama]`, weights fetched into `.cache/` on first
   use). This is the extra that pulls torch. On Linux the default install gets a
@@ -142,8 +142,23 @@ of their dependencies. Each has its own umbrella extra:
   (`examples/adapters/yolo_target.py`) and expects your `yolov8n.pt` weights,
   resolved via `ultralytics` on the machine running the job.
 
+- **Albumentations image-robustness** (`[albumentation]`, no torch — a pinned
+  git dependency plus headless OpenCV). A curated catalogue of procedural
+  albumentations transforms, the one stochastic surface in the workspace:
+
+  ```bash
+  pip install "kcai-data-sampling[albumentation]"
+  kcai-data-sampling process -p examples/config/walkthrough-albumentation.yaml
+  ```
+
+  The walkthrough config shows a per-row draw and a sweep;
+  see the
+  [albumentations package page](packages/kcai-data-sampling-albumentation.md)
+  for the full catalogue.
+
 To get everything the walkthrough notebook needs in one go, install the `all`
-extra — it is the union of `notebooks`, `job`, `images`, `fgsm` and `lama`:
+extra — it is the union of `notebooks`, `job`, `images`, `fgsm`, `lama` and
+`albumentation`:
 
 ```bash
 pip install "kcai-data-sampling[all]"
@@ -165,7 +180,7 @@ depends on it itself — the same GPU/CPU choice applies as for `[lama]` above.
 ## Where to go next
 
 - [docs/terminology.md](terminology.md) — the vocabulary: families, regimes,
-  label effects.
+  annotation states.
 - [docs/developer.md](developer.md) — working on kcai itself: repository
   setup and the test and build sessions.
 - [README.md](index.md) — the workspace overview and package layout.

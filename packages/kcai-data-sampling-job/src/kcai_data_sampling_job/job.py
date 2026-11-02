@@ -99,6 +99,8 @@ class SamplingJob:
         self.transform_batch_size = transform_batch_size
         self.include_columns = include_columns
         self.exclude_columns = exclude_columns
+        self._passed_column_names: list[str] | None = None
+        self._passed_column_names_available: tuple[str, ...] | None = None
 
     def run(self) -> dict[str, int]:
         """Run the job over every selection of every loader.
@@ -255,11 +257,16 @@ class SamplingJob:
             One dict per row holding its selected source values.
         """
         available = batch.columns.column_names
-        if self.include_columns is not None or self.exclude_columns is not None:
-            names = resolve_include_exclude(self.include_columns, self.exclude_columns, available)
-            names = [c for c in names if c in available and c not in GENERATOR_COLUMNS]
-        else:
-            names = []
+        available_tuple = tuple(available)
+        if self._passed_column_names_available != available_tuple:
+            if self.include_columns is not None or self.exclude_columns is not None:
+                names = resolve_include_exclude(self.include_columns, self.exclude_columns, available)
+                names = [c for c in names if c in available and c not in GENERATOR_COLUMNS]
+            else:
+                names = []
+            self._passed_column_names = names
+            self._passed_column_names_available = available_tuple
+        names = self._passed_column_names or []
         if not names:
             return [{} for _ in range(len(batch))]
         return cast(list[dict[str, Any]], batch.columns.select(names).to_pylist())

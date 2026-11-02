@@ -74,7 +74,7 @@ def test_scenario_installs_from_index_and_runs_its_smoke(scenario: str, index_so
         assert probe_module(venv, module) == (key in PUBLISHED_SCENARIOS[scenario]), f"{scenario}: {module} broken"
 
     script = Path(__file__).parent / "scripts" / SMOKE_SCRIPTS[scenario]
-    # smoke_extras.py serves all six extras scenarios, so it takes the extra under test.
+    # smoke_extras.py serves all seven extras scenarios, so it takes the extra under test.
     extra_args = (scenario.removeprefix("umbrella+"),) if scenario in EXTRAS_SCENARIOS else ()
     result = run_script(venv, script, tmp_path / "scratch", *extra_args)
     assert result.returncode == 0, result.stderr

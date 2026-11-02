@@ -1,7 +1,7 @@
 # kcai-data-sampling-fgsm
 
 The **adversarial** slot of kcai data-sampling: transformations where a model's
-*response* enters the computation and the result is graded against it. Here the
+*response* enters the computation. Here the
 model is a **target** — it is not asked to produce anything, only to react. That
 is what makes the family adversarial, and the declaring `model_role = "target"`
 is what tells the framework to treat it as such.
@@ -51,16 +51,16 @@ Three declarations follow from that, and the framework enforces each:
 `epsilon` is the adversarial budget, strictly positive, and sweepable, so a run
 can walk a whole budget curve.
 
-## Labels do not move
+## The annotation does not move
 
-An attack moves the model's *prediction*, not the truth. The ground-truth label
+An attack moves the model's *prediction*, not the truth. The annotation
 belongs to the source row, travels with it, and is never touched here — this
-package has no notion of a label at all, only of pixels.
+package has no notion of an annotation at all, only of pixels.
 
-That is what makes an adversarial sample meaningful: if the label had moved
-along with the pixels, the pair would prove nothing. A label that changed under
-perturbation, or a target model whose response was ignored, would both mean the
-measurement was not an attack at all.
+That is what makes an adversarial sample meaningful: if the annotation had moved
+along with the pixels, the pair would prove nothing. An annotation that changed
+under the attack, or a target model whose response was ignored, would both mean
+the measurement was not an attack at all.
 
 ## Example
 

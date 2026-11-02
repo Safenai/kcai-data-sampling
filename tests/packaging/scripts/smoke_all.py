@@ -28,13 +28,15 @@ def main() -> int:
     text = out.getvalue()
     assert "kcai-data-sampling:" in text
     # Every member is reported, installed or not. This scenario deliberately
-    # omits -fgsm and -lama, so both read `None` here — that is the property
-    # worth pinning. That they *resolve* under their own extras is covered by
-    # smoke_fgsm.py and smoke_lama.py.
-    for member in ("core", "job", "images", "fgsm", "lama"):
+    # omits -fgsm, -lama and -albumentation, so all three read `None` here —
+    # that is the property worth pinning. That they *resolve* under their own
+    # extras is covered by smoke_fgsm.py, smoke_lama.py and
+    # smoke_albumentation.py.
+    for member in ("core", "job", "images", "fgsm", "lama", "albumentation"):
         assert f"{member}:" in text
     assert "fgsm: None" in text
     assert "lama: None" in text
+    assert "albumentation: None" in text
 
     for name in ("smoke_core.py", "smoke_images.py", "smoke_job.py"):
         subprocess.run(

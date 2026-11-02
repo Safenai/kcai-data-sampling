@@ -15,8 +15,8 @@ separate package you add yourself.
 
 ## What it ships today
 
-- `version` — the installed versions of the umbrella, the core, and the
-  `job` / `images` members when present.
+- `version` — the installed versions of the umbrella, the core, and every
+  member package (`None` when absent).
 - `list` — every registered plugin, grouped into transformations, models,
   dataloaders and output writers.
 - `process` — run a sampling job from a YAML configuration. **Available only
@@ -44,6 +44,7 @@ job: None
 images: None
 fgsm: None
 lama: None
+albumentation: None
 ```
 
 Every member is listed whether or not it is installed, so this is also the
@@ -59,6 +60,7 @@ the matching command appears.
 | `images` | `horizontal_flip` and `crop_resize`, plus the image batch type | numpy only |
 | `fgsm` | the `fgsm` attack | numpy only, no torch |
 | `lama` | `inpaint` and the `lama_inpaint` tool model | pulls torch; the checkpoint is fetched on first use |
+| `albumentation` | the `albumentations`-backed image transforms | pinned `albumentations` from a git commit, headless OpenCV, no torch |
 | `notebooks` | pandas, `python-pptx`, ipykernel and ultralytics — for reading and plotting results | installs **no** `fgsm` and **no** `lama`; still resolves torch, because ultralytics depends on it |
 | `all` | every row above | the recipe to use if you want the whole set |
 
@@ -86,8 +88,8 @@ Methods are grouped by **the model's role**, not chosen by hand:
 
 Two more properties hold across all of them. Transformations listed together are
 applied **independently** to the same source sample, not chained. And whether an
-output is a perturbation, an augmentation or a corruption is read off the
-input/output pair *afterwards* — it is not declared by the algorithm.
+output is an augmentation or a corruption is not declared by the algorithm: it
+is judged *downstream*, against a task. The output only records `reversible`.
 
 ## Running a job
 
