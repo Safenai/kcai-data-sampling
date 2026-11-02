@@ -13,7 +13,7 @@ jobs:
     outputs:
       is_on_main: ${{ steps.check.outputs.is_on_main }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Check if tag commit is on main
@@ -39,7 +39,7 @@ jobs:
     env:
       PUBLISH_URL: https://upload.pypi.org/legacy/
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           fetch-tags: true

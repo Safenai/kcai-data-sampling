@@ -1,4 +1,4 @@
-# kcai-data-sampling 0.1.0 — first release
+# kcai-data-sampling 0.8.1
 
 > Generate more data from the data you already have — and keep a receipt for
 > every sample you make.
@@ -105,12 +105,21 @@ The full walkthrough is in [docs/quickstart.md](docs/quickstart.md); the
 vocabulary — *transformation, family, regime, label effect* — is defined
 plainly in [docs/terminology.md](docs/terminology.md).
 
-## Before you upgrade
-
-This is the first release, so there is nothing to upgrade from. Two things worth
-knowing:
-
 - **Python 3.11 or newer** is required. Python 3.10 reached end of life in
   October 2026 and is no longer supported.
 - **The API is still settling.** Treat configuration files you write now as
   something to expect to adjust.
+
+## Upgrading
+
+Upgrading from **0.8.0** → **0.8.1**
+
+```bash
+# Core + umbrella
+pip install --upgrade kcai-data-sampling
+```
+
+```bash
+# With extras as needed
+pip install --upgrade "kcai-data-sampling[job,images]""
+```
