@@ -1,0 +1,42 @@
+# Adversarial: FGSM against a target model — the user's. Needs the opt-in
+# `kcai-data-sampling-fgsm` install (numpy-only) in the driving env; the target
+# model needs torch + ultralytics there too (the *job* never does).
+#
+# The target model is user source, loaded through the `models:` python route:
+# `path` names the adapter file, `weights` are fetched independently via
+# `ultralytics` (never by the package). `epsilon` is normalized to [0, 1]
+# pixel units — the signed step is `epsilon * sign(grad)`, rounded back to the
+# batch dtype.
+dataloaders:
+  loaders:
+    - name: comma10k
+      type: parquet
+      path: examples/data/comma10k_sample/samples.parquet
+      id_column: id
+      load_batch_size: 10
+      decode: img_bytes
+      sample_path:
+        - column: path
+          prefix: examples/data/comma10k_sample
+
+# Named model references; a transformation names one via target_model.
+models:
+  yolo:
+    type: python                          # the file route: user source, not a plugin
+    path: examples/adapters/yolo_target.py
+    export: YoloTarget
+    weights: yolov8n.pt                   # your weights, fetched with `ultralytics`
+    params: { conf: 0.25 }
+
+operations:
+  outputs:
+    path: examples/outputs/{selection}/ledger.parquet
+    write_samples: true
+    samples_dir: examples/outputs/{selection}/payloads
+    flush_batch_size: 128
+    include: [height, width]
+  transformations:
+    - name: fgsm
+      type: fgsm
+      target_model: yolo
+      epsilon: 0.05                       # normalized budget (of [0, 1]); must be > 0
