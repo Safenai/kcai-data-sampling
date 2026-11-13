@@ -1,0 +1,56 @@
+# ETT demo, anomaly detection: normal variability and injected faults on the
+# transformer oil temperature (OT).
+# Data: python scripts/fetch_ett_sample.py (ETTh1 + ETTh2, hourly, CC BY-ND 4.0:
+# never commit or share the outputs).
+# One step is one hour: frequencies are in cycles per hour, the daily cycle is
+# 1/24 ≈ 0.042, and a slope is in °C per hour.
+# The label comes from the ledger's `algorithm` column (transformation names
+# are not recorded): `jitter` and `low_pass` are normal variability, which must
+# not raise an alert; `drift` and `add_sinusoid` are faults, which must.
+dataloaders:
+  loaders:
+    - name: ett_ot
+      type: timeseries_parquet
+      path: examples/data/ett_sample/series.parquet
+      id_column: series_id
+      values_column: values
+      sampling_rate: 0.000277778  # 1 / 3600 Hz, informative
+      channels: [6]  # OT only
+      load_batch_size: 64
+      windows:
+        mode: consecutive
+        window: 168  # one week
+        stride: 24  # one day
+
+operations:
+  outputs:
+    path: examples/outputs/ett-anomaly/{selection}/ledger.parquet
+    write_samples: true
+    samples_dir: examples/outputs/ett-anomaly/{selection}/payloads
+    payload_format: npy
+    flush_batch_size: 512
+    include: [series_id, start_window, end_window, start, freq]
+  transformations:
+    # Normal variability: what the detector must ignore.
+    - name: normal_probe_noise  # noisy temperature probe
+      type: jitter
+      sigma: 0.3
+      seed: 7
+    - name: normal_coarse_logging  # readings averaged by the SCADA, daily cycle kept
+      type: low_pass
+      cutoff: 0.1
+    # Injected faults: what the detector must catch. Natural weekly slopes stay
+    # within about ±0.05 (ETTh1) and ±0.07 (ETTh2) °C/h.
+    - name: fault_cooling_drift  # cooling degradation: OT creeps up
+      type: drift
+      slope:
+        range: [0.01, 0.16]
+        samples: 4
+        mode: even
+    - name: fault_cooling_cycling  # cooling system cycling every 6 hours
+      type: add_sinusoid
+      frequency: 0.1666667
+      amplitude:
+        range: [0.5, 4.0]
+        samples: 4
+        mode: even

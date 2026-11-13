@@ -1,0 +1,48 @@
+# ETT demo, forecasting: degraded histories of the transformer oil temperature
+# (OT), to measure how the forecast error grows with the degradation.
+# Data: python scripts/fetch_ett_sample.py (ETTh1 + ETTh2, hourly, CC BY-ND 4.0:
+# never commit or share the outputs).
+# One step is one hour: frequencies are in cycles per hour, the daily cycle is
+# 1/24 ≈ 0.042.
+# Each window is a one-week history; the true future is read from the original
+# series after `end_window`, so it is never transformed.
+dataloaders:
+  loaders:
+    - name: ett_ot
+      type: timeseries_parquet
+      path: examples/data/ett_sample/series.parquet
+      id_column: series_id
+      values_column: values
+      sampling_rate: 0.000277778  # 1 / 3600 Hz, informative
+      channels: [6]  # OT only
+      load_batch_size: 64
+      windows:
+        mode: consecutive
+        window: 168  # one week of history
+        stride: 24  # one day
+
+operations:
+  outputs:
+    path: examples/outputs/ett-forecasting/{selection}/ledger.parquet
+    write_samples: true
+    samples_dir: examples/outputs/ett-forecasting/{selection}/payloads
+    payload_format: npy
+    flush_batch_size: 512
+    include: [series_id, start_window, end_window, start, freq]
+  transformations:
+    # Probe noise, from none (the reference) to about twice the hourly variation.
+    - name: probe_noise
+      type: jitter
+      sigma:
+        range: [0.0, 2.0]
+        samples: 5
+        mode: even
+      seed: 7
+    # Coarser logging: 0.05 keeps the daily cycle and little else, 0.25 almost
+    # everything.
+    - name: coarse_logging
+      type: low_pass
+      cutoff:
+        range: [0.05, 0.25]
+        samples: 3
+        mode: even
