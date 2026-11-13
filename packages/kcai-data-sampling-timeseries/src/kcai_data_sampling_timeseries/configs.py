@@ -88,6 +88,20 @@ class AddSinusoidTransformationConfig(TransformationConfig):
         return self
 
 
+class DriftTransformationConfig(TransformationConfig):
+    """Configuration of the ``drift`` transformation.
+
+    Attributes:
+        slope: Change added per step, in the units of the signal, any sign,
+            or a sweep.
+    """
+
+    type: Literal["drift"] = "drift"
+    slope: float | SweepConfig = Field(
+        description="Change added per step in signal units, any sign; a SweepConfig expands it.",
+    )
+
+
 class JitterTransformationConfig(TransformationConfig):
     """Configuration of the ``jitter`` transformation.
 

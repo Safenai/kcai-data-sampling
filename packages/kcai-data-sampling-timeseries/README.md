@@ -27,12 +27,15 @@ handled by the job package.
   each window draws from its own generator, seeded by the seed, its parent id
   and the parameters, so its output never depends on the batch. Not
   reversible. Pointwise support.
+- `drift` — add a linear ramp `slope * t` to every channel, `t` counted from
+  the window's first step, so the first step is unchanged; `slope` is per step,
+  in signal units, any sign. Deterministic, not reversible. Pointwise support.
 - `TimeSeriesBatch` — a `Batch` specialization for windows: axes
   `(time, channel)`, no value range (a signal is unbounded, so outputs are
   neither clipped nor refused on range), and the series' `sampling_rate` when
   declared.
 
-Three methods, as examples of the slot rather than a catalogue.
+Four methods, as examples of the slot rather than a catalogue.
 
 Every method transforms **every channel** of the windows it receives, with the
 same parameters. Which channels a window holds is decided upstream, by the data

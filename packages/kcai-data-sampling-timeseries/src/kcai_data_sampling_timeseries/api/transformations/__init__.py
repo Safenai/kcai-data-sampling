@@ -7,7 +7,8 @@ contract.
 """
 
 from kcai_data_sampling_timeseries.api.transformations.add_sinusoid import AddSinusoid
+from kcai_data_sampling_timeseries.api.transformations.drift import Drift
 from kcai_data_sampling_timeseries.api.transformations.jitter import Jitter
 from kcai_data_sampling_timeseries.api.transformations.low_pass import LowPass
 
-__all__ = ["AddSinusoid", "Jitter", "LowPass"]
+__all__ = ["AddSinusoid", "Drift", "Jitter", "LowPass"]
