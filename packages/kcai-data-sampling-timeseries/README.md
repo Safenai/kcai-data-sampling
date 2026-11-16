@@ -30,12 +30,16 @@ handled by the job package.
 - `drift` — add a linear ramp `slope * t` to every channel, `t` counted from
   the window's first step, so the first step is unchanged; `slope` is per step,
   in signal units, any sign. Deterministic, not reversible. Pointwise support.
+- `level_shift` — add `offset` to every channel from the step at `start` on,
+  `start` being a fraction of the window (default 0.5): an abrupt break that
+  stays, where `drift` is gradual. Deterministic, not reversible. Pointwise
+  support.
 - `TimeSeriesBatch` — a `Batch` specialization for windows: axes
   `(time, channel)`, no value range (a signal is unbounded, so outputs are
   neither clipped nor refused on range), and the series' `sampling_rate` when
   declared.
 
-Four methods, as examples of the slot rather than a catalogue.
+Five methods, as examples of the slot rather than a catalogue.
 
 Every method transforms **every channel** of the windows it receives, with the
 same parameters. Which channels a window holds is decided upstream, by the data

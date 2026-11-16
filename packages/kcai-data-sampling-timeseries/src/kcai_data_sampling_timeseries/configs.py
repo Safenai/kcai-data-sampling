@@ -102,6 +102,39 @@ class DriftTransformationConfig(TransformationConfig):
     )
 
 
+class LevelShiftTransformationConfig(TransformationConfig):
+    """Configuration of the ``level_shift`` transformation.
+
+    Attributes:
+        offset: Change of level, in the units of the signal, any sign, or a
+            sweep.
+        start: Position of the break as a fraction of the window, in
+            ``[0, 1]`` (default 0.5, halfway), or a sweep.
+    """
+
+    type: Literal["level_shift"] = "level_shift"
+    offset: float | SweepConfig = Field(
+        description="Change of level in signal units, any sign; a SweepConfig expands it.",
+    )
+    start: float | SweepConfig = Field(
+        default=0.5,
+        description="Position of the break as a fraction of the window, in [0, 1]; a SweepConfig expands it.",
+    )
+
+    @model_validator(mode="after")
+    def _parameter_bounds(self) -> Self:
+        """Enforce the start range on the value or the sweep.
+
+        Returns:
+            The validated config.
+
+        Raises:
+            ValueError: If ``start`` leaves ``[0, 1]``.
+        """
+        self._check_parameter_bounds("start", minimum=0, maximum=1)
+        return self
+
+
 class JitterTransformationConfig(TransformationConfig):
     """Configuration of the ``jitter`` transformation.
 
