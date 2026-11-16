@@ -115,7 +115,7 @@ Available subcommands: `version`, `list`, `process`. `process` requires the
 
 ```
 kcai-data-sampling/
-├── packages/          # seven member packages (core, images, albumentation, lama, fgsm, job, cli)
+├── packages/          # member packages (core, images, albumentation, lama, fgsm, job, timeseries, cli)
 ├── examples/          # configs, notebooks, sample data
 ├── docs/              # documentation (quickstart, terminology, usages, benchmark, ...)
 ├── benchmark/         # benchmark harness (s1/s2/s3)

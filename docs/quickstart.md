@@ -144,7 +144,7 @@ stays free of their dependencies. Each has its own umbrella extra:
 
 - **Albumentations image-robustness** (`[albumentation]`, no torch — a pinned
   git dependency plus headless OpenCV). A curated catalogue of procedural
-  albumentations transforms, the one stochastic surface in the workspace:
+  albumentations transforms with seeded random draws:
 
   ```bash
   pip install "kcai-data-sampling[albumentation]"
@@ -166,6 +166,22 @@ stays free of their dependencies. Each has its own umbrella extra:
 
   Windows of 256 steps are cut from five synthetic recordings, and each output
   is written as a `.npy` file (`payload_format: npy`).
+
+  A demo on real data uses [ETT](https://github.com/zhouhaoyi/ETDataset), the
+  reference forecasting benchmark (transformer oil temperature, hourly). The
+  data is downloaded, not shipped: ETT is licensed CC BY-ND 4.0, so neither it
+  nor the outputs derived from it are to be committed or shared.
+
+  ```bash
+  uv run python scripts/fetch_ett_sample.py
+  uv run kcai-data-sampling process -p examples/config/ett-anomaly.yaml
+  uv run kcai-data-sampling process -p examples/config/ett-forecasting.yaml
+  ```
+
+  The notebook `examples/notebooks/ett-demo.ipynb` runs both and turns the
+  outputs into forecast-error and detection-rate curves (it needs
+  scikit-learn and matplotlib: `uv run --with scikit-learn --with matplotlib
+  --with ipykernel jupyter lab`).
 
 To get everything the walkthrough notebook needs in one go, install the `all`
 extra — it is the union of `notebooks`, `job`, `images`, `fgsm`, `lama` and

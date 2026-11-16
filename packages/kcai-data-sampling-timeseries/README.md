@@ -92,6 +92,35 @@ operations:
 Listed transformations are applied **independently** to the same source window,
 not chained.
 
+## Demo on real data (ETT)
+
+[ETT](https://github.com/zhouhaoyi/ETDataset) (*Electricity Transformer
+Temperature*) is the reference forecasting benchmark: hourly load and oil
+temperature of power transformers. The demo treats the oil temperature as a
+transformer operator would, with two use cases:
+
+- **forecasting**: degraded histories (`jitter`, `low_pass`) measure how fast
+  a forecaster's error grows (`examples/config/ett-forecasting.yaml`);
+- **anomaly detection**: harmless variability (`jitter`, `low_pass`) and
+  injected faults (`drift` for cooling degradation, `add_sinusoid` for cooling
+  cycling) measure a detector's false alarms and the smallest fault it catches
+  (`examples/config/ett-anomaly.yaml`). The label of each generated window is
+  read from the ledger.
+
+```bash
+uv run python scripts/fetch_ett_sample.py
+uv run kcai-data-sampling process -p examples/config/ett-anomaly.yaml
+uv run kcai-data-sampling process -p examples/config/ett-forecasting.yaml
+```
+
+`examples/notebooks/ett-demo.ipynb` runs both configs and draws the curves,
+with simple stand-in models from `examples/notebooks/ett_models.py` (it needs
+scikit-learn and matplotlib, which are not workspace dependencies).
+
+ETT is licensed CC BY-ND 4.0: the data is downloaded by the script, never
+shipped, and the generated windows and figures are not to be committed or
+shared.
+
 ## Notes
 
 - **The regime is not declared.** Whether an output is an augmentation or a
