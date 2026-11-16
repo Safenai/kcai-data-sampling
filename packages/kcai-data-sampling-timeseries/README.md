@@ -90,7 +90,7 @@ operations:
     - name: sensor_noise
       type: jitter
       sigma: 0.05
-      seed: 7
+      seed: 0
 ```
 
 Listed transformations are applied **independently** to the same source window,

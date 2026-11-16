@@ -39,22 +39,22 @@ def test_each_window_and_channel_draws_its_own_noise() -> None:
 
 def test_zero_sigma_is_identity(synthetic_series_batch: TimeSeriesBatch) -> None:
     """``sigma=0`` adds nothing."""
-    out = _out_of(synthetic_series_batch, sigma=0.0, seed=1)
+    out = _out_of(synthetic_series_batch, sigma=0.0, seed=0)
     assert np.array_equal(out, synthetic_series_batch.data)
 
 
 def test_the_seed_decides_the_draw(synthetic_series_batch: TimeSeriesBatch) -> None:
     """Same seed, same outputs; another seed, other outputs."""
-    first = _out_of(synthetic_series_batch, sigma=0.1, seed=3)
-    assert np.array_equal(first, _out_of(synthetic_series_batch, sigma=0.1, seed=3))
-    assert not np.array_equal(first, _out_of(synthetic_series_batch, sigma=0.1, seed=4))
+    first = _out_of(synthetic_series_batch, sigma=0.1, seed=0)
+    assert np.array_equal(first, _out_of(synthetic_series_batch, sigma=0.1, seed=0))
+    assert not np.array_equal(first, _out_of(synthetic_series_batch, sigma=0.1, seed=1))
 
 
 def test_jitter_is_independent_of_the_batch_split(synthetic_series_batch: TimeSeriesBatch) -> None:
     """Window by window gives the same draw as the whole batch."""
-    whole = _out_of(synthetic_series_batch, sigma=0.1, seed=3)
+    whole = _out_of(synthetic_series_batch, sigma=0.1, seed=0)
     for i in range(len(synthetic_series_batch)):
-        assert np.array_equal(_out_of(synthetic_series_batch.row(i), sigma=0.1, seed=3)[0], whole[i])
+        assert np.array_equal(_out_of(synthetic_series_batch.row(i), sigma=0.1, seed=0)[0], whole[i])
 
 
 def test_shape_and_dtype_are_kept() -> None:
@@ -79,7 +79,7 @@ def test_one_generator_per_window_is_required() -> None:
 
 def test_declaration_records_the_seed() -> None:
     """Stochastic, procedural, not reversible; the seed reaches the row."""
-    transformation = Jitter({"sigma": 0.1, "seed": 7})
+    transformation = Jitter({"sigma": 0.1, "seed": 0})
     assert transformation.stochastic
     assert transformation.describe() == {
         "algorithm": "jitter",
@@ -87,7 +87,7 @@ def test_declaration_records_the_seed() -> None:
         "arity": "unary",
         "reversible": False,
         "params": {"sigma": 0.1},
-        "seed": 7,
+        "seed": 0,
         "tool_model": None,
         "target_model": None,
     }

@@ -139,7 +139,7 @@ def test_window_ids_are_opaque_and_stable(tmp_path: Path) -> None:
     assert ids[0] == window_id("a", 0, 3)
     assert all(len(i) == 12 and "@" not in i for i in ids)
     by_key = dict(zip(_keys(consecutive), ids, strict=True))
-    independent = _batches(path, {"mode": "independent", "window": 4, "n_windows": 2, "seed": 5})
+    independent = _batches(path, {"mode": "independent", "window": 4, "n_windows": 2, "seed": 0})
     assert _ids(independent) == [by_key[k] for k in _keys(independent)]
 
 
@@ -176,7 +176,7 @@ def test_bad_t0_column_is_refused(tmp_path: Path, t0_column: str, match: str) ->
 def test_batch_size_never_changes_the_windows(tmp_path: Path) -> None:
     """Any ``load_batch_size`` yields the same windows in the same order."""
     path = _write_series(tmp_path / "s.parquet")
-    windows = {"mode": "independent", "window": 3, "n_windows": 2, "seed": 7}
+    windows = {"mode": "independent", "window": 3, "n_windows": 2, "seed": 0}
     reference = _batches(path, windows, load_batch_size=1000)
     for size in (1, 2, 5):
         batches = _batches(path, windows, load_batch_size=size)
@@ -187,11 +187,11 @@ def test_batch_size_never_changes_the_windows(tmp_path: Path) -> None:
 def test_independent_windows_are_seeded(tmp_path: Path) -> None:
     """N windows per series, same seed → same draw."""
     path = _write_series(tmp_path / "s.parquet")
-    windows = {"mode": "independent", "window": 3, "n_windows": 2, "seed": 1}
+    windows = {"mode": "independent", "window": 3, "n_windows": 2, "seed": 0}
     keys = _keys(_batches(path, windows, errors={"on_decode_failure": "silent_fail"}))
     assert keys == _keys(_batches(path, windows))
     assert [k[0] for k in keys] == ["a", "a", "b", "b", "c"][: len(keys)]
-    assert keys != _keys(_batches(path, {**windows, "seed": 2}))
+    assert keys != _keys(_batches(path, {**windows, "seed": 1}))
 
 
 def test_non_overlapping_draw_keeps_windows_apart() -> None:

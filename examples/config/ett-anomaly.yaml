@@ -35,7 +35,7 @@ operations:
     - name: normal_probe_noise  # noisy temperature probe
       type: jitter
       sigma: 0.3
-      seed: 7
+      seed: 0
     - name: normal_coarse_logging  # readings averaged by the SCADA, daily cycle kept
       type: low_pass
       cutoff: 0.1

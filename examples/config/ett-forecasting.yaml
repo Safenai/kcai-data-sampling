@@ -37,7 +37,7 @@ operations:
         range: [0.0, 2.0]
         samples: 5
         mode: even
-      seed: 7
+      seed: 0
     # Coarser logging: 0.05 keeps the daily cycle and little else, 0.25 almost
     # everything.
     - name: coarse_logging

@@ -31,7 +31,7 @@ operations:
     - name: counting_noise  # normal variability
       type: jitter
       sigma: 0.02
-      seed: 7
+      seed: 0
     - name: demand_drop  # a lasting break, 3/4 into the window (month 27 of 36)
       type: level_shift
       offset:

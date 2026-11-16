@@ -120,7 +120,7 @@ def test_independent_selection_is_reproducible(series_parquet: Path, tmp_path: P
 
     ``short`` is filtered out: 20 steps hold no 32-step window to draw.
     """
-    windows = {"mode": "independent", "window": 32, "n_windows": 2, "non_overlap": True, "seed": 3}
+    windows = {"mode": "independent", "window": 32, "n_windows": 2, "non_overlap": True, "seed": 0}
     keep = [{"column": "series_id", "values": ["s0", "s1", "s2"]}]
     summaries = []
     for name in ("a", "b"):
@@ -136,7 +136,7 @@ def test_independent_selection_is_reproducible(series_parquet: Path, tmp_path: P
 
 def test_series_that_cannot_be_windowed_abort_above_the_failure_rate(series_parquet: Path, tmp_path: Path) -> None:
     """1 failed series out of 4 is above the default ``max_failure_rate``."""
-    windows = {"mode": "independent", "window": 32, "n_windows": 2, "seed": 3}
+    windows = {"mode": "independent", "window": 32, "n_windows": 2, "seed": 0}
     with pytest.raises(RuntimeError, match="1/4 rows failed"):
         run(_config(series_parquet, tmp_path, windows))
 
@@ -164,9 +164,9 @@ def test_jitter_is_seeded_and_batch_invariant(series_parquet: Path, tmp_path: Pa
     runs with the same seed are byte-identical whatever the batch sizes, and
     another seed gives other payloads.
     """
-    noise = [{"type": "jitter", "sigma": 0.5, "seed": 7}]
+    noise = [{"type": "jitter", "sigma": 0.5, "seed": 0}]
 
-    def payloads(root: Path, seed: int = 7, **knobs: int) -> dict[str, bytes]:
+    def payloads(root: Path, seed: int = 0, **knobs: int) -> dict[str, bytes]:
         transformations = [{**noise[0], "seed": seed}]
         run(_config(series_parquet, root, transformations=transformations, **knobs))
         return {p.name: p.read_bytes() for p in sorted((root / SELECTION).glob("*.npy"))}
@@ -174,12 +174,12 @@ def test_jitter_is_seeded_and_batch_invariant(series_parquet: Path, tmp_path: Pa
     baseline = payloads(tmp_path / "base", load=64, transform_batch_size=8)
     assert len(baseline) == N_WINDOWS
     rows = _ledger(tmp_path / "base")
-    assert {r["seed"] for r in rows} == {7}
+    assert {r["seed"] for r in rows} == {0}
     parents = _windows_by_id(series_parquet, CONSECUTIVE)
     deltas = np.stack([np.load(tmp_path / "base" / SELECTION / r["artifact"]) - parents[r["parent_id"]] for r in rows])
     assert abs(deltas.std() - 0.5) < 0.05
     assert payloads(tmp_path / "small", load=1, transform_batch_size=1) == baseline
-    assert payloads(tmp_path / "other", seed=8, load=64, transform_batch_size=8) != baseline
+    assert payloads(tmp_path / "other", seed=1, load=64, transform_batch_size=8) != baseline
 
 
 def test_selected_channel_is_the_whole_sample(series_parquet: Path, tmp_path: Path) -> None:
@@ -214,5 +214,5 @@ def test_shipped_example_runs(tmp_path: Path) -> None:
     assert run(config) == {"machines": 5 * 14 * 5}
     rows = pq.read_table(tmp_path / "out" / "machines" / "ledger.parquet").to_pylist()
     assert {r["series_id"] for r in rows} == {f"rec_{i:02d}" for i in range(5)}
-    assert {r["seed"] for r in rows if r["algorithm"] == "jitter"} == {7}
+    assert {r["seed"] for r in rows if r["algorithm"] == "jitter"} == {0}
     assert all(r["parent_id"] == window_id(r["series_id"], r["start_window"], r["end_window"]) for r in rows)

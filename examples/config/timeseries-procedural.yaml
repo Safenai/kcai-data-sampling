@@ -37,4 +37,4 @@ operations:
     - name: sensor_noise
       type: jitter
       sigma: 0.1
-      seed: 7
+      seed: 0
