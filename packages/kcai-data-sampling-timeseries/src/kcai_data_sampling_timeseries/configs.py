@@ -135,6 +135,156 @@ class LevelShiftTransformationConfig(TransformationConfig):
         return self
 
 
+def _upper(value: "float | SweepConfig") -> float:
+    """The largest value a parameter can take: the value itself, or the top of its sweep."""
+    return value.bounds[1] if isinstance(value, SweepConfig) else value
+
+
+class ColoredNoiseTransformationConfig(TransformationConfig):
+    """Configuration of the ``colored_noise`` transformation.
+
+    Attributes:
+        sigma: Standard deviation of the noise, ``>= 0`` (signal units when
+            additive, a relative change when multiplicative), or a sweep.
+        exponent: Spectral exponent in ``[0, 2]``: 0 white, 1 pink (default),
+            2 brown; or a sweep.
+        mode: ``additive`` (``x + n``, default) or ``multiplicative``
+            (``x * (1 + n)``).
+    """
+
+    type: Literal["colored_noise"] = "colored_noise"
+    sigma: float | SweepConfig = Field(description="Noise standard deviation, >= 0; a SweepConfig expands it.")
+    exponent: float | SweepConfig = Field(
+        default=1.0, description="Spectral exponent in [0, 2]: 0 white, 1 pink, 2 brown; a SweepConfig expands it."
+    )
+    mode: Literal["additive", "multiplicative"] = Field(
+        default="additive", description="additive: x + n; multiplicative: x * (1 + n)."
+    )
+
+    @model_validator(mode="after")
+    def _parameter_bounds(self) -> Self:
+        """Enforce the sigma and exponent ranges on the value or the sweep.
+
+        Returns:
+            The validated config.
+
+        Raises:
+            ValueError: If ``sigma`` goes below 0 or ``exponent`` leaves ``[0, 2]``.
+        """
+        self._check_parameter_bounds("sigma", minimum=0)
+        self._check_parameter_bounds("exponent", minimum=0, maximum=2)
+        return self
+
+
+class OUNoiseTransformationConfig(TransformationConfig):
+    """Configuration of the ``ou_noise`` (Ornstein-Uhlenbeck) transformation.
+
+    Attributes:
+        sigma: Stationary standard deviation, ``>= 0``, or a sweep.
+        theta: Mean-reversion rate per step, ``> 0`` (``1 / theta`` is the
+            correlation time in steps), or a sweep.
+        mode: ``additive`` (default) or ``multiplicative``.
+    """
+
+    type: Literal["ou_noise"] = "ou_noise"
+    sigma: float | SweepConfig = Field(description="Stationary standard deviation, >= 0; a SweepConfig expands it.")
+    theta: float | SweepConfig = Field(description="Mean-reversion rate per step, > 0; a SweepConfig expands it.")
+    mode: Literal["additive", "multiplicative"] = Field(
+        default="additive", description="additive: x + n; multiplicative: x * (1 + n)."
+    )
+
+    @model_validator(mode="after")
+    def _parameter_bounds(self) -> Self:
+        """Enforce the sigma and theta ranges on the value or the sweep.
+
+        Returns:
+            The validated config.
+
+        Raises:
+            ValueError: If ``sigma`` goes below 0 or ``theta`` is not above 0.
+        """
+        self._check_parameter_bounds("sigma", minimum=0)
+        self._check_parameter_bounds("theta", minimum=0, exclusive_min=True)
+        return self
+
+
+class GarchNoiseTransformationConfig(TransformationConfig):
+    """Configuration of the ``garch_noise`` (GARCH(1,1)) transformation.
+
+    Attributes:
+        sigma: Unconditional standard deviation, ``>= 0``, or a sweep.
+        alpha: Weight of the last shock, ``>= 0`` (default 0.1), or a sweep.
+        beta: Persistence of the variance, ``>= 0`` (default 0.85), or a sweep;
+            ``alpha + beta`` must stay below 1, sweeps included.
+        mode: ``additive`` (default) or ``multiplicative``.
+    """
+
+    type: Literal["garch_noise"] = "garch_noise"
+    sigma: float | SweepConfig = Field(description="Unconditional standard deviation, >= 0; a SweepConfig expands it.")
+    alpha: float | SweepConfig = Field(
+        default=0.1, description="Weight of the last shock, >= 0; a SweepConfig expands it."
+    )
+    beta: float | SweepConfig = Field(
+        default=0.85, description="Persistence of the variance, >= 0; a SweepConfig expands it."
+    )
+    mode: Literal["additive", "multiplicative"] = Field(
+        default="additive", description="additive: x + n; multiplicative: x * (1 + n)."
+    )
+
+    @model_validator(mode="after")
+    def _parameter_bounds(self) -> Self:
+        """Enforce the ranges, and ``alpha + beta < 1`` for the largest values a sweep can reach.
+
+        Returns:
+            The validated config.
+
+        Raises:
+            ValueError: If a parameter leaves its range or ``alpha + beta`` can reach 1.
+        """
+        self._check_parameter_bounds("sigma", minimum=0)
+        self._check_parameter_bounds("alpha", minimum=0)
+        self._check_parameter_bounds("beta", minimum=0)
+        if _upper(self.alpha) + _upper(self.beta) >= 1:
+            raise ValueError(
+                f"garch_noise: alpha + beta must stay below 1, got up to {_upper(self.alpha) + _upper(self.beta)}"
+            )
+        return self
+
+
+class ImpulseNoiseTransformationConfig(TransformationConfig):
+    """Configuration of the ``impulse_noise`` (spikes, salt and pepper) transformation.
+
+    Attributes:
+        rate: Probability of a spike at each step, in ``[0, 1]``, or a sweep.
+        amplitude: Size of a spike, ``>= 0`` (signal units when additive, a
+            relative change when multiplicative), or a sweep.
+        mode: ``additive`` (default) or ``multiplicative``.
+    """
+
+    type: Literal["impulse_noise"] = "impulse_noise"
+    rate: float | SweepConfig = Field(
+        description="Probability of a spike at each step, in [0, 1]; a SweepConfig expands it."
+    )
+    amplitude: float | SweepConfig = Field(description="Size of a spike, >= 0; a SweepConfig expands it.")
+    mode: Literal["additive", "multiplicative"] = Field(
+        default="additive", description="additive: x + n; multiplicative: x * (1 + n)."
+    )
+
+    @model_validator(mode="after")
+    def _parameter_bounds(self) -> Self:
+        """Enforce the rate and amplitude ranges on the value or the sweep.
+
+        Returns:
+            The validated config.
+
+        Raises:
+            ValueError: If ``rate`` leaves ``[0, 1]`` or ``amplitude`` goes below 0.
+        """
+        self._check_parameter_bounds("rate", minimum=0, maximum=1)
+        self._check_parameter_bounds("amplitude", minimum=0)
+        return self
+
+
 class JitterTransformationConfig(TransformationConfig):
     """Configuration of the ``jitter`` transformation.
 

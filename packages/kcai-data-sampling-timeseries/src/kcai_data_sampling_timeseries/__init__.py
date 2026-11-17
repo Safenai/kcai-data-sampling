@@ -1,7 +1,8 @@
 """No-model time-series transformations.
 
 Ships the time-series algorithm set (``low_pass``, ``add_sinusoid``, ``jitter``,
-``drift``, ``level_shift``): the math
+``drift``, ``level_shift``, ``colored_noise``,
+``ou_noise``, ``garch_noise``, ``impulse_noise``): the math
 functions under ``transformations/`` and the transformation classes under
 ``api/transformations/``, plus the ``TimeSeriesBatch`` specialization under
 ``api/``. I/O is deliberately absent: reads happen in the ``-job`` dataloaders

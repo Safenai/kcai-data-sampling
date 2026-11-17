@@ -34,12 +34,28 @@ handled by the job package.
   `start` being a fraction of the window (default 0.5): an abrupt break that
   stays, where `drift` is gradual. Deterministic, not reversible. Pointwise
   support.
+- Four **time-series noises**, correlated in time unlike `jitter`. Each is
+  stochastic (requires a `seed`, one generator per window), not reversible,
+  and takes a `mode`: `additive` (`x + n`, default, noise in signal units) or
+  `multiplicative` (`x * (1 + n)`, noise as a relative change that scales with
+  the signal).
+  - `colored_noise` — noise whose power spectrum falls as `1/f^exponent`
+    (`exponent` 0 white, 1 pink, 2 brown), rescaled to standard deviation
+    `sigma` over each window. Global support.
+  - `ou_noise` — Ornstein-Uhlenbeck: a mean-reverting random walk of
+    stationary deviation `sigma`, pulled back at rate `theta` per step
+    (correlated over about `1 / theta` steps). Causal support.
+  - `garch_noise` — GARCH(1,1): volatility that clusters in time,
+    unconditional deviation `sigma`, shock weight `alpha`, persistence `beta`,
+    `alpha + beta < 1`. Causal support.
+  - `impulse_noise` — isolated spikes ("salt and pepper"): each step is hit
+    with probability `rate` by `±amplitude`. Pointwise support.
 - `TimeSeriesBatch` — a `Batch` specialization for windows: axes
   `(time, channel)`, no value range (a signal is unbounded, so outputs are
   neither clipped nor refused on range), and the series' `sampling_rate` when
   declared.
 
-Five methods, as examples of the slot rather than a catalogue.
+Nine methods, as examples of the slot rather than a catalogue.
 
 Every method transforms **every channel** of the windows it receives, with the
 same parameters. Which channels a window holds is decided upstream, by the data
