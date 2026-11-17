@@ -1,7 +1,7 @@
 """Demo models for the newcomer notebook (Air Passengers), on the log scale.
 
 Not part of any package: the simplest forecasts a newcomer can follow, enough
-to turn the generated windows into the demo's curves.
+to turn the windows generated in ``toy-demo.ipynb`` into the demo's curves.
 
 - ``seasonal_naive``: next year is this year.
 - ``seasonal_growth``: next year is this year, moved by the last yearly growth
@@ -13,9 +13,6 @@ to turn the generated windows into the demo's curves.
 These models have nothing to fit, so every window can be evaluated; only the
 detector's threshold is read from the clean windows.
 """
-
-import json
-from pathlib import Path
 
 import numpy as np
 import pyarrow.parquet as pq
@@ -103,38 +100,3 @@ class Detector:
             ``(N,)`` booleans.
         """
         return self.score(windows) > self.threshold
-
-
-def cut(series, length):
-    """Every window of ``length`` steps of ``series``, stride 1.
-
-    Args:
-        series: ``(T,)`` array.
-        length: Window length.
-
-    Returns:
-        ``(T - length + 1, length)`` array.
-    """
-    return np.stack([series[s : s + length] for s in range(len(series) - length + 1)])
-
-
-def load_outputs(root):
-    """Read a run's ledger and payloads.
-
-    Args:
-        root: The selection folder holding ``ledger.parquet`` and
-            ``payloads/``.
-
-    Returns:
-        ``(ledger, windows)``: the ledger with ``params`` decoded and a
-        ``value`` column (the swept parameter), and the ``(N, W)`` payloads in
-        row order.
-    """
-    root = Path(root)
-    ledger = pq.read_table(root / "ledger.parquet").to_pandas()
-    ledger["params"] = ledger.params.map(json.loads)
-    swept = {"jitter": "sigma", "low_pass": "cutoff", "drift": "slope", "add_sinusoid": "amplitude", "level_shift": "offset",
-             "colored_noise": "sigma", "ou_noise": "sigma", "garch_noise": "sigma", "impulse_noise": "amplitude"}
-    ledger["value"] = [p[swept[a]] for a, p in zip(ledger.algorithm, ledger.params, strict=True)]
-    windows = np.stack([np.load(root / "payloads" / a)[:, 0] for a in ledger.artifact])
-    return ledger, windows

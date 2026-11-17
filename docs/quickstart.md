@@ -178,8 +178,10 @@ stays free of their dependencies. Each has its own umbrella extra:
   uv run kcai-data-sampling process -p examples/config/ett-forecasting.yaml
   ```
 
-  The notebook `examples/notebooks/ett-demo.ipynb` runs both and turns the
-  outputs into forecast-error and detection-rate curves (it needs
+  The notebook `examples/notebooks/ett-demo.ipynb` builds the same test sets
+  step by step (loader, transformation classes, sweeps), turns them into
+  forecast-error and detection-rate curves, and checks that both configs write
+  the same windows (it needs
   scikit-learn and matplotlib: `uv run --with scikit-learn --with matplotlib
   --with ipykernel jupyter lab`).
 

@@ -133,9 +133,13 @@ uv run kcai-data-sampling process -p examples/config/ett-anomaly.yaml
 uv run kcai-data-sampling process -p examples/config/ett-forecasting.yaml
 ```
 
-`examples/notebooks/ett-demo.ipynb` runs both configs and draws the curves,
-with simple stand-in models from `examples/notebooks/ett_models.py` (it needs
-scikit-learn and matplotlib, which are not workspace dependencies).
+`examples/notebooks/ett-demo.ipynb` is the same demo as a tutorial: it cuts
+the windows with the loader, calls the transformation classes and sweeps their
+parameters itself, evaluates simple stand-in models from
+`examples/notebooks/ett_models.py`, then runs the three ETT configs and checks
+that the pipeline writes the same windows (it needs scikit-learn and
+matplotlib, which are not workspace dependencies). `toy-demo.ipynb` does the
+same on Air Passengers, for newcomers.
 
 ETT is licensed CC BY-ND 4.0: the data is downloaded by the script, never
 shipped, and the generated windows and figures are not to be committed or

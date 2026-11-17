@@ -1,8 +1,9 @@
 """Demo models for the ETT notebook: a forecaster and an anomaly detector.
 
 Not part of any package: these are deliberately simple stand-ins for the
-operator's models, enough to turn the generated windows into the two curves of
-the demo (forecast error vs. degradation, detection rate vs. fault size).
+operator's models, enough to turn the windows generated in ``ett-demo.ipynb``
+into the two curves of the demo (forecast error vs. degradation, detection
+rate vs. fault size).
 
 - ``SeasonalNaive``: tomorrow is today (the last 24 hours repeated).
 - ``LagRidge``: a ridge regression from the history to the next ``horizon``
@@ -19,9 +20,6 @@ training data.
 Needs scikit-learn, which is not a workspace dependency:
 ``uv run --with scikit-learn …``.
 """
-
-import json
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -207,44 +205,6 @@ class SurpriseDetector:
         return self.score(windows) > self.threshold
 
 
-def load_outputs(root, series):
-    """Read a run's ledger and payloads, keeping evaluation windows only.
-
-    Args:
-        root: The selection folder holding ``ledger.parquet`` and
-            ``payloads/``.
-        series: ``{series_id: (T,) array}``, to find the training cut.
-
-    Returns:
-        ``(ledger, windows)``: the ledger rows whose window starts after the
-        training part, with ``params`` decoded and a ``value`` column (the
-        swept parameter's value), and their ``(N, W)`` payloads in row order.
-    """
-    root = Path(root)
-    ledger = pq.read_table(root / "ledger.parquet").to_pandas()
-    ends = train_end(series)
-    ledger = ledger[ledger.start_window >= ledger.series_id.map(ends)].reset_index(drop=True)
-    ledger["params"] = ledger.params.map(json.loads)
-    swept = {"jitter": "sigma", "low_pass": "cutoff", "drift": "slope", "add_sinusoid": "amplitude",
-             "colored_noise": "sigma", "ou_noise": "sigma", "garch_noise": "sigma", "impulse_noise": "amplitude"}
-    ledger["value"] = [p[swept[a]] for a, p in zip(ledger.algorithm, ledger.params, strict=True)]
-    windows = np.stack([np.load(root / "payloads" / a)[:, 0] for a in ledger.artifact])
-    return ledger, windows
-
-
-def clean_windows(ledger, series):
-    """The original windows the ledger rows were generated from.
-
-    Args:
-        ledger: Rows with ``series_id``, ``start_window``, ``end_window``.
-        series: ``{series_id: (T,) array}``.
-
-    Returns:
-        ``(N, W)`` array in row order.
-    """
-    return np.stack([series[s][a : b + 1] for s, a, b in zip(ledger.series_id, ledger.start_window, ledger.end_window, strict=True)])
-
-
 def forecast_errors(ledger, windows, series, models, horizon=DAY):
     """Forecast error of each model on each degraded history.
 
@@ -253,7 +213,9 @@ def forecast_errors(ledger, windows, series, models, horizon=DAY):
     dropped.
 
     Args:
-        ledger: Rows from ``load_outputs``.
+        ledger: One row per generated history, with ``series_id``,
+            ``end_window``, ``algorithm`` and ``value`` (the swept
+            parameter).
         windows: Their degraded histories, ``(N, W)``.
         series: ``{series_id: (T,) array}``.
         models: ``{name: fitted forecaster}``.
