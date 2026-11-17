@@ -225,7 +225,8 @@ def load_outputs(root, series):
     ends = train_end(series)
     ledger = ledger[ledger.start_window >= ledger.series_id.map(ends)].reset_index(drop=True)
     ledger["params"] = ledger.params.map(json.loads)
-    swept = {"jitter": "sigma", "low_pass": "cutoff", "drift": "slope", "add_sinusoid": "amplitude"}
+    swept = {"jitter": "sigma", "low_pass": "cutoff", "drift": "slope", "add_sinusoid": "amplitude",
+             "colored_noise": "sigma", "ou_noise": "sigma", "garch_noise": "sigma", "impulse_noise": "amplitude"}
     ledger["value"] = [p[swept[a]] for a, p in zip(ledger.algorithm, ledger.params, strict=True)]
     windows = np.stack([np.load(root / "payloads" / a)[:, 0] for a in ledger.artifact])
     return ledger, windows

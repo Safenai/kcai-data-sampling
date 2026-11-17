@@ -1,0 +1,50 @@
+# Newcomer demo, time-series noises on Air Passengers, on the raw counts
+# (thousands of passengers, not the log scale): additive noises (x + n) have
+# the same size every year, multiplicative ones (x * (1 + n)) grow with the
+# traffic.
+# Data: python scripts/fetch_toy_samples.py (Air Passengers, monthly, 1949-1960).
+# One step is one month.
+dataloaders:
+  loaders:
+    - name: air_passengers
+      type: timeseries_parquet
+      path: examples/data/toy_sample/air_passengers.parquet
+      id_column: series_id
+      values_column: values  # raw counts: the modes keep their meaning
+      load_batch_size: 128
+      windows:
+        mode: consecutive
+        window: 36
+        stride: 1
+
+operations:
+  outputs:
+    path: examples/outputs/toy-noises/{selection}/ledger.parquet
+    write_samples: true
+    samples_dir: examples/outputs/toy-noises/{selection}/payloads
+    payload_format: npy
+    flush_batch_size: 512
+    include: [series_id, start_window, end_window, start, freq]
+  transformations:
+    - name: reporting_drift  # pink noise: slow wanderings dominate
+      type: colored_noise
+      sigma: 10.0
+      exponent: 1.0
+      seed: 0
+    - name: fluctuating_offset  # mean-reverting offset, correlated over ~5 months
+      type: ou_noise
+      sigma: 15.0
+      theta: 0.2
+      seed: 0
+    - name: turbulent_periods  # volatility clustering, proportional to the traffic
+      type: garch_noise
+      sigma: 0.05
+      alpha: 0.15
+      beta: 0.8
+      mode: multiplicative
+      seed: 0
+    - name: counting_glitches  # isolated miscounted months, 5 % of them
+      type: impulse_noise
+      rate: 0.05
+      amplitude: 60.0
+      seed: 0

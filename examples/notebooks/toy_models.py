@@ -133,7 +133,8 @@ def load_outputs(root):
     root = Path(root)
     ledger = pq.read_table(root / "ledger.parquet").to_pandas()
     ledger["params"] = ledger.params.map(json.loads)
-    swept = {"jitter": "sigma", "low_pass": "cutoff", "drift": "slope", "add_sinusoid": "amplitude", "level_shift": "offset"}
+    swept = {"jitter": "sigma", "low_pass": "cutoff", "drift": "slope", "add_sinusoid": "amplitude", "level_shift": "offset",
+             "colored_noise": "sigma", "ou_noise": "sigma", "garch_noise": "sigma", "impulse_noise": "amplitude"}
     ledger["value"] = [p[swept[a]] for a, p in zip(ledger.algorithm, ledger.params, strict=True)]
     windows = np.stack([np.load(root / "payloads" / a)[:, 0] for a in ledger.artifact])
     return ledger, windows
