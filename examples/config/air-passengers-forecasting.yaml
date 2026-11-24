@@ -34,7 +34,6 @@ operations:
         range: [0.0, 0.1]
         samples: 5
         mode: even
-        round: 4  # sweeps round to 2 decimals by default
       seed: 0
     # Smoothed reporting: 0.1 keeps little more than the yearly season, 0.3 almost everything.
     - name: smoothed_reporting
@@ -43,4 +42,3 @@ operations:
         range: [0.1, 0.3]
         samples: 3
         mode: even
-        round: 4  # sweeps round to 2 decimals by default

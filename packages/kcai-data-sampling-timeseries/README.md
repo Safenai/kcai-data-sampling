@@ -121,10 +121,12 @@ transformer operator would, with two use cases:
 
 - **forecasting**: degraded histories (`jitter`, `low_pass`) measure how fast
   a forecaster's error grows (`examples/config/ett-forecasting.yaml`);
-- **anomaly detection**: harmless variability (`jitter`, `low_pass`) and
-  injected faults (`drift` for cooling degradation, `add_sinusoid` for cooling
-  cycling) measure a detector's false alarms and the smallest fault it catches
-  (`examples/config/ett-anomaly.yaml`). The label of each generated window is
+- **anomaly detection**: harmless variability (`jitter`, `low_pass`, and the
+  `colored_noise`, `ou_noise` and `garch_noise` noises swept from mild to
+  strong) and injected faults (`drift` for cooling degradation, `add_sinusoid`
+  for cooling cycling, `impulse_noise` for acquisition glitches) measure a
+  detector's false alarms, how much variability it tolerates and the smallest
+  fault it catches (`examples/config/ett-anomaly.yaml`). The label of each generated window is
   read from the ledger.
 
 ```bash

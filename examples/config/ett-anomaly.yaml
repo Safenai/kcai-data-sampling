@@ -4,9 +4,10 @@
 # never commit or share the outputs).
 # One step is one hour: frequencies are in cycles per hour, the daily cycle is
 # 1/24 ≈ 0.042, and a slope is in °C per hour.
-# The label comes from the ledger's `algorithm` column (transformation names
-# are not recorded): `jitter` and `low_pass` are normal variability, which must
-# not raise an alert; `drift` and `add_sinusoid` are faults, which must.
+# The label comes from the ledger's `algorithm` column: `jitter`, `low_pass`,
+# `colored_noise`, `ou_noise` and `garch_noise` are normal variability, which
+# must not raise an alert; `drift`, `add_sinusoid` and `impulse_noise` are
+# faults, which must.
 dataloaders:
   loaders:
     - name: ett_ot
@@ -39,6 +40,34 @@ operations:
     - name: normal_coarse_logging  # readings averaged by the SCADA, daily cycle kept
       type: low_pass
       cutoff: 0.1
+    # Time-series noises, swept from mild to strong: how much variability does
+    # the detector tolerate before it raises false alarms?
+    - name: normal_drifting_probe  # pink (1/f) noise, additive
+      type: colored_noise
+      sigma:
+        range: [0.5, 3.0]
+        samples: 6
+        mode: even
+      exponent: 1.0
+      seed: 0
+    - name: normal_fluctuating_offset  # Ornstein-Uhlenbeck, correlated over ~10 hours
+      type: ou_noise
+      sigma:
+        range: [0.5, 3.0]
+        samples: 6
+        mode: even
+      theta: 0.1
+      seed: 0
+    - name: normal_agitated_periods  # GARCH volatility, proportional to the level
+      type: garch_noise
+      sigma:
+        range: [0.02, 0.12]
+        samples: 6
+        mode: even
+      alpha: 0.15
+      beta: 0.8
+      mode: multiplicative
+      seed: 0
     # Injected faults: what the detector must catch. Natural weekly slopes stay
     # within about ±0.05 (ETTh1) and ±0.07 (ETTh2) °C/h.
     - name: fault_cooling_drift  # cooling degradation: OT creeps up
@@ -56,3 +85,13 @@ operations:
         range: [1.0, 16.0]
         samples: 6
         mode: even
+    # Isolated spikes: the detector scores the mean error over a day, so the
+    # sweep goes high enough to see whether spikes are averaged away.
+    - name: fault_acquisition_glitches  # spikes on 2 % of the hours
+      type: impulse_noise
+      rate: 0.02
+      amplitude:
+        range: [2.0, 16.0]
+        samples: 8
+        mode: even
+      seed: 0

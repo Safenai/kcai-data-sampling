@@ -2,14 +2,15 @@
 
 A ``SweepConfig`` widens an algorithm parameter into a sweep: ``mode: even``
 samples ``numpy.linspace`` across the interval (inclusive ends), ``mode:
-random`` draws seeded uniform values, and ``step`` walks an arithmetic
-progression. Values are resolved **once at config expansion** from the global
-``compute.seed``, so a run stays reproducible and batch-invariant.
+random`` draws seeded uniform values, ``step`` walks an arithmetic
+progression, and ``values`` lists the values explicitly. Values are resolved
+**once at config expansion** from the global ``compute.seed``, so a run stays
+reproducible and batch-invariant.
 
 The expansion helper (:func:`expand_sweeps`) turns a validated transformation
 model with any ``SweepConfig``-valued fields into as many concrete models as
 the cartesian product of the swept parameters; each concrete model carries the
-rounded value in the swept field and an auto-suffixed ``name``; the derived
+expanded value in the swept field and an auto-suffixed ``name``; the derived
 ``id`` stays deterministic — it hashes resolved ``params``.
 """
 
@@ -40,25 +41,31 @@ TModel = TypeVar("TModel", bound=_Expandable)
 class SweepConfig(BaseModel):
     """Expand one parameter into a range of concrete values.
 
-    ``samples`` and ``step`` are mutually exclusive; exactly one is required.
-    ``mode`` applies with ``samples`` only.
+    Exactly one of ``samples``, ``step`` and ``values`` is required.
+    ``samples`` and ``step`` cover ``range``; ``values`` lists the values
+    themselves and takes no ``range``. ``mode`` applies with ``samples`` only.
 
     Attributes:
-        range: The inclusive ``[min, max]`` interval to cover.
+        range: The inclusive ``[min, max]`` interval to cover, with
+            ``samples`` or ``step``.
         samples: Number of values when sweeping by count; exclusive with
             ``step``.
         step: Step of the arithmetic progression; exclusive with ``samples``.
         mode: ``even`` (``linspace``) or ``random`` (seeded draws); applies
             with ``samples``.
-        round: Decimals kept on the expanded values (default 2).
+        listed: The values themselves, in the order given (YAML key
+            ``values``); exclusive with ``range``, ``samples`` and ``step``.
+        round: Decimals kept on the expanded values; ``None`` (the default)
+            keeps them as computed, up to 12 significant digits.
     """
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
-    range: list[float] = Field(
+    range: list[float] | None = Field(
+        default=None,
         min_length=2,
         max_length=2,
-        description="The inclusive [min, max] interval to cover.",
+        description="The inclusive [min, max] interval to cover, with 'samples' or 'step'.",
     )
     samples: int | None = Field(
         default=None,
@@ -71,19 +78,25 @@ class SweepConfig(BaseModel):
         description="Step of the arithmetic progression; exclusive with 'samples'.",
     )
     mode: str = Field(default="even", description="'even' (linspace) or 'random' (seeded draws).")
-    round: int = Field(
-        default=2,
+    listed: list[float] | None = Field(
+        default=None,
+        alias="values",
+        min_length=1,
+        description="The values themselves, in the order given; exclusive with 'range', 'samples' and 'step'.",
+    )
+    round: int | None = Field(
+        default=None,
         ge=0,
-        description="Decimals kept on the expanded values (default 2).",
+        description="Decimals kept on the expanded values; by default none: the values are kept as computed.",
     )
 
     @field_validator("range")
     @classmethod
-    def _ordered(cls, v: list[float]) -> list[float]:
+    def _ordered(cls, v: list[float] | None) -> list[float] | None:
         """Refuse inverted intervals (they would expand to nothing useful).
 
         Args:
-            v: The ``[min, max]`` interval.
+            v: The ``[min, max]`` interval, or ``None``.
 
         Returns:
             The interval as given, when ``min <= max``.
@@ -91,37 +104,57 @@ class SweepConfig(BaseModel):
         Raises:
             ValueError: If ``min > max``.
         """
-        if v[0] > v[1]:
+        if v is not None and v[0] > v[1]:
             raise ValueError(f"sweep range {v} must satisfy min <= max")
         return v
 
     @model_validator(mode="after")
     def _exclusive(self) -> Self:
-        """Enforce exactly one of ``samples`` or ``step``.
+        """Enforce exactly one of ``samples``, ``step`` and ``values``.
 
         Returns:
             The validated sweep.
 
         Raises:
-            ValueError: If both ``samples`` and ``step`` are set, or neither
-                is.
+            ValueError: If not exactly one of them is set, if ``range`` is
+                missing with ``samples`` or ``step`` or given with
+                ``values``, or if ``values`` repeats a value.
         """
-        if (self.samples is None) == (self.step is None):
-            raise ValueError("a sweep needs exactly one of 'samples' or 'step'")
+        if sum(x is not None for x in (self.samples, self.step, self.listed)) != 1:
+            raise ValueError("a sweep needs exactly one of 'samples', 'step' or 'values'")
+        if self.listed is not None:
+            if self.range is not None:
+                raise ValueError("a sweep with 'values' takes no 'range'")
+            if len(set(self.listed)) != len(self.listed):
+                raise ValueError(f"sweep values {self.listed} repeat a value")
+        elif self.range is None:
+            raise ValueError("a sweep with 'samples' or 'step' needs a 'range'")
         return self
 
     @property
     def bounds(self) -> tuple[float, float]:
-        """The inclusive ``(min, max)`` interval as a tuple."""
+        """The inclusive ``(min, max)`` the sweep covers: its range, or its smallest and largest values."""
+        if self.listed is not None:
+            return (min(self.listed), max(self.listed))
+        assert self.range is not None
         return (self.range[0], self.range[1])
 
+    @property
+    def shown(self) -> list[float]:
+        """What the sweep was given, for messages: its ``range``, or its ``values``."""
+        return list(self.listed if self.listed is not None else self.range or [])
+
     def values(self, seed: int | None = None) -> list[float]:
-        """Expand this sweep to its concrete values, each rounded to ``round``.
+        """Expand this sweep to its concrete values.
 
         ``even`` uses ``linspace(min, max, samples)`` (inclusive ends), ``step``
-        walks ``min, min+step, ...`` (a final partial step is dropped), and
-        ``random`` draws ``samples`` uniform values in ``[min, max]`` from the
-        seed.
+        walks ``min, min+step, ...`` up to ``max`` included (a final partial
+        step is dropped), ``random`` draws ``samples`` uniform values in
+        ``[min, max]`` from the seed, and ``values`` gives them as listed. The
+        values are kept as computed, to 12 significant digits (which
+        drops the float noise of ``linspace`` and of the step walk, such as
+        ``0.15000000000000002``, without collapsing small values), or rounded
+        to ``round`` decimals when it is set.
 
         Args:
             seed: Seed for the ``random`` draws; required by that mode,
@@ -129,17 +162,23 @@ class SweepConfig(BaseModel):
 
         Returns:
             The expanded values, in ascending order (draw order for
-            ``random``) and rounded to ``round`` decimals.
+            ``random``, listed order for ``values``).
 
         Raises:
             ValueError: If ``mode: random`` is used without a seed (it would
                 otherwise be non-deterministic).
         """
+        if self.listed is not None:
+            raw = list(self.listed)
+            return self._finish(raw)
+        assert self.range is not None
         lo, hi = self.range
         if self.step is not None:
             step = float(self.step)
-            raw = [lo + i * step for i in range(int((hi - lo) / step) + 1)]
-            raw = [v for v in raw if v <= hi + 1e-9]
+            # Count the steps on the cleaned quotient: 0.3 / 0.1 is 2.9999999999999996, which must give 3.
+            count = int(_clean((hi - lo) / step))
+            raw = [lo + i * step for i in range(count + 1)]
+            raw = [v for v in raw if _clean(v) <= hi]
         elif self.mode == "even":
             assert self.samples is not None
             raw = np.linspace(lo, hi, self.samples).tolist()
@@ -149,7 +188,32 @@ class SweepConfig(BaseModel):
             assert self.samples is not None
             rng = np.random.default_rng(seed)
             raw = rng.uniform(lo, hi, size=self.samples).tolist()
+        return self._finish(raw)
+
+    def _finish(self, raw: list[float]) -> list[float]:
+        """Clean the float noise off the values, or round them to ``round`` decimals when it is set.
+
+        Args:
+            raw: The expanded values.
+
+        Returns:
+            The values to use.
+        """
+        if self.round is None:
+            return [_clean(v) for v in raw]
         return [round(v, self.round) for v in raw]
+
+
+def _clean(value: float) -> float:
+    """Keep 12 significant digits: drops float noise (``0.15000000000000002``), never collapses small values.
+
+    Args:
+        value: A computed value.
+
+    Returns:
+        The value without its float noise.
+    """
+    return float(f"{value:.12g}")
 
 
 def _coerce_to_field(value: float, annotation: Any) -> Any:
@@ -159,7 +223,7 @@ def _coerce_to_field(value: float, annotation: Any) -> Any:
     ``int`` (integer params swept via ``step``); float params keep their float.
 
     Args:
-        value: The rounded expanded value.
+        value: The expanded value.
         annotation: The swept field's type annotation.
 
     Returns:

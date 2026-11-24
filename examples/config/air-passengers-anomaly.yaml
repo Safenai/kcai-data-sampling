@@ -38,7 +38,6 @@ operations:
         range: [-0.4, -0.05]
         samples: 6
         mode: even
-        round: 4  # sweeps round to 2 decimals by default
       start: 0.75
     - name: demand_slump  # a gradual collapse over the window
       type: drift
@@ -46,7 +45,6 @@ operations:
         range: [-0.02, -0.002]
         samples: 6
         mode: even
-        round: 4  # sweeps round to 2 decimals by default
     - name: season_reshaped  # the yearly season distorted
       type: add_sinusoid
       frequency: 0.0833333
@@ -55,4 +53,3 @@ operations:
         range: [0.02, 0.2]
         samples: 6
         mode: even
-        round: 4  # sweeps round to 2 decimals by default
