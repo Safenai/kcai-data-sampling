@@ -129,7 +129,7 @@ passes.
 
 ## The walkthrough notebook
 
-`nox -s test_packaging_notebook` executes `examples/notebooks/walkthrough.ipynb` itself,
+`nox -s test_packaging_notebook` executes `examples/notebooks/image-walkthrough.ipynb` itself,
 in a venv built from the index. It covers all three families: the procedural pipeline
 through the CLI, LaMa inpainting behind the `lama_inpaint` entry point, and FGSM against
 `examples/adapters/yolo_target.py` loaded through the `python` model route.

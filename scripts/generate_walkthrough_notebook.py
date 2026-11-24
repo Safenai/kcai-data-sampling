@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the walkthrough notebook.
+"""Generate the image walkthrough notebook.
 
 Adapts the story of the interface walkthrough (steps 0, 1, 2, 3, 4, 9 and 10)
 to the current interface, keeping the two ways of driving the tool: the
@@ -8,7 +8,7 @@ drive a parameter range (sweep) through the CLI on a raw-bytes sidecar table;
 the last section runs a generative inpainting job through the CLI on the same
 comma10k sample (needs the opt-in ``-lama`` install with torch).
 
-``examples/notebooks/display.py`` (imported by the setup cell) is
+``examples/notebooks/helpers/display.py`` (imported by the setup cell) is
 hand-maintained next to the notebook, not generated.
 
 Usage:
@@ -18,7 +18,7 @@ Usage:
 import json
 import pathlib
 
-OUT = pathlib.Path("examples/notebooks/walkthrough.ipynb")
+OUT = pathlib.Path("examples/notebooks/image-walkthrough.ipynb")
 
 INTRO = """# The sample-generation interface, on real driving frames
 
@@ -49,7 +49,7 @@ from IPython.display import display
 from PIL import Image
 %config InlineBackend.figure_format = 'jpeg'   # photographs: keeps the committed notebook small
 
-from display import show, rows_table   # presentation only, next to this notebook
+from helpers.display import show, rows_table   # presentation only, next to this notebook
 
 # Every path (in the YAML, in the outputs) is relative to the repository root.
 REPO = next(p for p in [Path.cwd(), *Path.cwd().parents] if (p / ".git").exists())

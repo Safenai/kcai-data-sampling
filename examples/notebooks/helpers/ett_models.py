@@ -1,7 +1,7 @@
 """Demo models for the ETT notebook: a forecaster and an anomaly detector.
 
 Not part of any package: these are deliberately simple stand-ins for the
-operator's models, enough to turn the windows generated in ``ett-demo.ipynb``
+operator's models, enough to turn the windows generated in ``timeseries-walkthrough.ipynb``
 into the two curves of the demo (forecast error vs. degradation, detection
 rate vs. fault size).
 

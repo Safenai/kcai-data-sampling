@@ -135,17 +135,31 @@ uv run kcai-data-sampling process -p examples/config/ett-anomaly.yaml
 uv run kcai-data-sampling process -p examples/config/ett-forecasting.yaml
 ```
 
-`examples/notebooks/ett-demo.ipynb` is the same demo as a tutorial: it cuts
-the windows with the loader, calls the transformation classes and sweeps their
-parameters itself, evaluates simple stand-in models from
-`examples/notebooks/ett_models.py`, then runs the three ETT configs and checks
-that the pipeline writes the same windows (it needs scikit-learn and
-matplotlib, which are not workspace dependencies). `air-passengers-demo.ipynb` does the
-same on Air Passengers, for newcomers.
+`examples/notebooks/timeseries-walkthrough.ipynb` is the same demo as a
+tutorial. It cuts the windows with the loader and relates them through their
+keys, shows what `low_pass`, `add_sinusoid` and `jitter` do exactly (spectra,
+seed guarantees), sweeps the parameters itself, evaluates simple stand-in
+models from `examples/notebooks/helpers/ett_models.py`, then runs the three
+ETT configs, checks that the pipeline writes the same windows and replays a
+ledger row bit for bit (it needs scikit-learn and matplotlib, which are not
+workspace dependencies).
 
 ETT is licensed CC BY-ND 4.0: the data is downloaded by the script, never
 shipped, and the generated windows and figures are not to be committed or
 shared.
+
+The same use cases on a monthly series, Air Passengers (twelve years of
+airline passengers, on a log scale), with `level_shift` among the faults:
+
+```bash
+uv run python scripts/fetch_air_passengers_nile.py
+uv run kcai-data-sampling process -p examples/config/air-passengers-anomaly.yaml
+uv run kcai-data-sampling process -p examples/config/air-passengers-forecasting.yaml
+uv run kcai-data-sampling process -p examples/config/air-passengers-noises.yaml
+```
+
+The data comes from the R `datasets` package through Rdatasets; its licence is
+not established for certain, so the outputs are kept out of the repository too.
 
 ## Notes
 

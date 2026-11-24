@@ -35,7 +35,7 @@ Install individual packages based on your needs:
 
 - [Home](https://safenai.github.io/kcai-data-sampling/) — project overview
 - [Quick Start](docs/quickstart.md) — install, fetch sample data, run the procedural example, read its output.
-- [Examples](docs/examples/notebooks/walkthrough.ipynb) — walkthrough notebook (procedural, LaMa, FGSM).
+- Examples — two notebooks: the [image walkthrough](docs/examples/notebooks/image-walkthrough.ipynb) (procedural, LaMa, FGSM on comma10k frames) and the [time-series walkthrough](docs/examples/notebooks/timeseries-walkthrough.ipynb) (windows, transformations, forecasting and anomaly detection on ETT).
 - [Terminology](docs/terminology.md) — vocabulary used across code and configs (transformation, families, regimes, annotation states).
 - [Usages](docs/usages.md) — user scenarios (robustness testing, controlled context, composite) and benefits.
 - [Benchmark](docs/benchmark/albumentations.md) — albumentations through our package vs. direct.
@@ -124,9 +124,14 @@ kcai-data-sampling/
 └── noxfile.py         # lint, type_check, test, coverage sessions
 ```
 
-## Running the walkthrough notebook
+## Running the example notebooks
 
-The walkthrough runs the procedural job, LaMa inpainting and FGSM on real
+`examples/notebooks/` holds two notebooks: `image-walkthrough.ipynb` and
+`timeseries-walkthrough.ipynb`.
+
+### Image walkthrough
+
+The image walkthrough runs the procedural job, LaMa inpainting and FGSM on real
 comma10k frames. Its notebook, configs and data all live in the repository
 rather than in the wheel, so if you have not cloned it yet:
 
@@ -158,11 +163,27 @@ without an NVIDIA GPU, ask for the CPU wheel instead:
 pip install "kcai-data-sampling[all]" --extra-index-url https://download.pytorch.org/whl/cpu
 ```
 
-Open `examples/notebooks/walkthrough.ipynb` in Jupyter (JupyterLab or VS Code)
+Open `examples/notebooks/image-walkthrough.ipynb` in Jupyter (JupyterLab or VS Code)
 and pick the interpreter of the environment you activated as the kernel. Run it
 top to bottom — the setup cell re-chdirs to the repository root and reads
 `examples/config/walkthrough-procedural.yaml`, so it works regardless of the
 launch directory. Generated files are left under `examples/outputs/`.
+
+### Time-series walkthrough
+
+The time-series walkthrough runs on ETT, two power transformers logged hourly:
+it cuts one-week windows, shows what each transformation does, then measures a
+forecaster and an anomaly detector on the generated test sets. From a clone,
+with the workspace set up (`uv sync`, see the [developer guide](docs/developer.md)):
+
+```bash
+uv run python scripts/fetch_ett_sample.py
+uv run --with scikit-learn --with matplotlib --with ipykernel --with jupyterlab \
+    jupyter lab examples/notebooks/timeseries-walkthrough.ipynb
+```
+
+ETT is licensed CC BY-ND 4.0: the notebook is committed without its outputs,
+and the generated windows and figures are not to be committed or shared.
 
 ## Companion tool
 

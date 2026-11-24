@@ -138,7 +138,8 @@ nav:
   - Home: index.md
   - Quick Start: quickstart.md
   - Examples:
-    - Walkthrough Notebook: examples/notebooks/walkthrough.ipynb
+    - Image Walkthrough: examples/notebooks/image-walkthrough.ipynb
+    - Time-Series Walkthrough: examples/notebooks/timeseries-walkthrough.ipynb
   - Terminology: terminology.md
   - Usages: usages.md
   - Benchmark:
