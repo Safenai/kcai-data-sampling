@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Download the two toy series of the newcomer demo, Air Passengers and Nile,
-and write them as `timeseries_parquet` samples, into `examples/data/toy_sample/`
+and write them as `timeseries_parquet` samples, into `examples/data/air_passengers_nile/`
 (git-ignored).
 
-    python scripts/fetch_toy_samples.py [--out DIR]
+    python scripts/fetch_air_passengers_nile.py [--out DIR]
 
 - Air Passengers: monthly international airline passengers, 1949-1960, in
   thousands (Box, Jenkins & Reinsel 1976, "Series G"; R `datasets`).
@@ -39,7 +39,7 @@ SERIES = {
     "air_passengers": ("AirPassengers", "1949-01", "1M", 144),
     "nile": ("Nile", "1871", "1Y", 100),
 }
-OUT = Path(__file__).resolve().parents[1] / "examples" / "data" / "toy_sample"
+OUT = Path(__file__).resolve().parents[1] / "examples" / "data" / "air_passengers_nile"
 
 
 def fetch_values(name: str, length: int) -> list[float]:

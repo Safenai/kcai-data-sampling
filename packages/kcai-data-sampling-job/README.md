@@ -118,17 +118,17 @@ none.
 ```yaml
 dataloaders:
   loaders:
-    - name: machines
+    - name: ett_ot
       type: timeseries_parquet
-      path: examples/data/timeseries_sample/series.parquet
+      path: examples/data/ett_sample/series.parquet
       id_column: series_id
       values_column: values
-      sampling_rate: 100
-      channels: [0]          # optional: keep the vibration channel only
+      sampling_rate: 0.000277778  # 1 / 3600 Hz: hourly
+      channels: [6]          # optional: keep the oil temperature (OT) only
       windows:
         mode: consecutive
-        window: 256
-        stride: 128
+        window: 168          # one week
+        stride: 84
 operations:
   outputs:
     path: examples/outputs/{selection}/ledger.parquet

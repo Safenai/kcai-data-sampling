@@ -1,0 +1,44 @@
+# Procedural transformations on time-series windows: the transformer oil
+# temperature (OT) of ETT, cut into one-week windows.
+# Data: python scripts/fetch_ett_sample.py (ETTh1 + ETTh2, hourly, CC BY-ND 4.0:
+# never commit or share the outputs).
+# One step is one hour, so frequencies are in cycles per hour: the daily cycle
+# is 1/24 ~ 0.042, a 6-hour cycle 1/6 ~ 0.167.
+dataloaders:
+  loaders:
+    - name: ett_ot
+      type: timeseries_parquet
+      path: examples/data/ett_sample/series.parquet
+      id_column: series_id
+      values_column: values
+      sampling_rate: 0.000277778  # 1 / 3600 Hz, informative
+      channels: [6]  # OT only
+      load_batch_size: 64
+      windows:
+        mode: consecutive
+        window: 168  # one week
+        stride: 84  # half a week: consecutive windows share 84 hours
+
+operations:
+  outputs:
+    path: examples/outputs/ett-procedural/{selection}/ledger.parquet
+    write_samples: true
+    samples_dir: examples/outputs/ett-procedural/{selection}/payloads
+    payload_format: npy
+    flush_batch_size: 512
+    include: [series_id, start_window, end_window]
+  transformations:
+    - name: low_pass  # 0.03 removes the daily cycle, 0.06 keeps it, 0.09 also keeps its 12-hour harmonic
+      type: low_pass
+      cutoff:
+        range: [0.03, 0.09]
+        samples: 3
+        mode: even
+    - name: cycling_6h  # a 6-hour oscillation of 1 °C
+      type: add_sinusoid
+      frequency: 0.1666667
+      amplitude: 1.0
+    - name: probe_noise  # 0.3 °C of white noise
+      type: jitter
+      sigma: 0.3
+      seed: 0

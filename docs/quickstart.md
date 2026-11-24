@@ -156,24 +156,25 @@ stays free of their dependencies. Each has its own umbrella extra:
   [albumentations package page](packages/kcai-data-sampling-albumentation.md)
   for the full catalogue.
 - **Time series** (workspace only: `kcai-data-sampling-timeseries` is not yet
-  published, and has no umbrella extra). From a checkout, `uv sync` installs it;
-  the example generates its own synthetic data, nothing is downloaded:
-
-  ```bash
-  uv run python scripts/make_timeseries_sample.py
-  uv run kcai-data-sampling process -p examples/config/timeseries-procedural.yaml
-  ```
-
-  Windows of 256 steps are cut from five synthetic recordings, and each output
-  is written as a `.npy` file (`payload_format: npy`).
-
-  A demo on real data uses [ETT](https://github.com/zhouhaoyi/ETDataset), the
+  published, and has no umbrella extra). From a checkout, `uv sync` installs it.
+  The examples run on [ETT](https://github.com/zhouhaoyi/ETDataset), the
   reference forecasting benchmark (transformer oil temperature, hourly). The
   data is downloaded, not shipped: ETT is licensed CC BY-ND 4.0, so neither it
   nor the outputs derived from it are to be committed or shared.
 
   ```bash
   uv run python scripts/fetch_ett_sample.py
+  uv run kcai-data-sampling process -p examples/config/ett-procedural.yaml
+  ```
+
+  One-week windows of the oil temperature are cut from the two transformers,
+  and each output is written as a `.npy` file (`payload_format: npy`). The
+  notebook `examples/notebooks/timeseries-transformations.ipynb` walks through
+  the windows, their keys and each transformation.
+
+  A demo of two use cases, forecasting and anomaly detection, on the same data:
+
+  ```bash
   uv run kcai-data-sampling process -p examples/config/ett-anomaly.yaml
   uv run kcai-data-sampling process -p examples/config/ett-forecasting.yaml
   ```

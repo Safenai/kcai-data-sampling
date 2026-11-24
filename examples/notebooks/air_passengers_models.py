@@ -1,7 +1,7 @@
 """Demo models for the newcomer notebook (Air Passengers), on the log scale.
 
 Not part of any package: the simplest forecasts a newcomer can follow, enough
-to turn the windows generated in ``toy-demo.ipynb`` into the demo's curves.
+to turn the windows generated in ``air-passengers-demo.ipynb`` into the demo's curves.
 
 - ``seasonal_naive``: next year is this year.
 - ``seasonal_growth``: next year is this year, moved by the last yearly growth
@@ -25,7 +25,7 @@ def load_series(path, column="log_values"):
     """Read the only series of a toy sample file.
 
     Args:
-        path: A parquet file written by ``scripts/fetch_toy_samples.py``.
+        path: A parquet file written by ``scripts/fetch_air_passengers_nile.py``.
         column: ``log_values`` or ``values``.
 
     Returns:

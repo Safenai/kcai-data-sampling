@@ -2,13 +2,13 @@
 # (thousands of passengers, not the log scale): additive noises (x + n) have
 # the same size every year, multiplicative ones (x * (1 + n)) grow with the
 # traffic.
-# Data: python scripts/fetch_toy_samples.py (Air Passengers, monthly, 1949-1960).
+# Data: python scripts/fetch_air_passengers_nile.py (Air Passengers, monthly, 1949-1960).
 # One step is one month.
 dataloaders:
   loaders:
     - name: air_passengers
       type: timeseries_parquet
-      path: examples/data/toy_sample/air_passengers.parquet
+      path: examples/data/air_passengers_nile/air_passengers.parquet
       id_column: series_id
       values_column: values  # raw counts: the modes keep their meaning
       load_batch_size: 128
@@ -19,9 +19,9 @@ dataloaders:
 
 operations:
   outputs:
-    path: examples/outputs/toy-noises/{selection}/ledger.parquet
+    path: examples/outputs/air-passengers-noises/{selection}/ledger.parquet
     write_samples: true
-    samples_dir: examples/outputs/toy-noises/{selection}/payloads
+    samples_dir: examples/outputs/air-passengers-noises/{selection}/payloads
     payload_format: npy
     flush_batch_size: 512
     include: [series_id, start_window, end_window, start, freq]

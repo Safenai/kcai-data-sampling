@@ -6,7 +6,7 @@ Checked: one ledger row and one ``.npy`` file per (window, transformation),
 each file equal to the algorithm applied to its parent window, sweeps, the
 independent selection, the seeded ``jitter``, and byte-identical outputs
 whatever the batch knobs.
-The shipped example (script + config) is run too.
+The shipped ETT example config is run too, on a table with ETT's schema.
 """
 
 from __future__ import annotations
@@ -14,8 +14,6 @@ from __future__ import annotations
 import itertools
 import json
 from pathlib import Path
-import subprocess
-import sys
 
 from kcai_data_sampling_job.cli import run
 from kcai_data_sampling_job.dataloaders.api.timeseries import (
@@ -26,6 +24,7 @@ from kcai_data_sampling_job.dataloaders.api.timeseries import (
 from kcai_data_sampling_job.job import GENERATOR_COLUMNS
 from kcai_data_sampling_timeseries.transformations import add_sinusoid, low_pass
 import numpy as np
+import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
 import yaml
@@ -195,24 +194,42 @@ def test_selected_channel_is_the_whole_sample(series_parquet: Path, tmp_path: Pa
 
 
 def test_shipped_example_runs(tmp_path: Path) -> None:
-    """``make_timeseries_sample.py`` + ``timeseries-procedural.yaml`` run as shipped.
+    """``ett-procedural.yaml`` runs as shipped, on a table with ETT's schema.
 
-    Only the data and output paths are moved under ``tmp_path``; 5 series of
-    2,000 steps give 14 windows each, and the config asks for 3 + 1 + 1 outputs
-    per window (the low-pass sweep, the sinusoid, the seeded jitter).
+    ETT itself is downloaded by ``scripts/fetch_ett_sample.py`` and may not be
+    redistributed, so the test writes two series with the same columns
+    (``series_id``, 7-channel ``values``, ``start``, ``freq``) and 504 hourly
+    steps each. Only the data and output paths are moved under ``tmp_path``:
+    one-week windows every 84 hours give 5 windows per series, and the config
+    asks for 3 + 1 + 1 outputs per window (the low-pass sweep, the sinusoid,
+    the seeded jitter), on the oil temperature (channel 6) only.
     """
-    data = tmp_path / "data"
-    subprocess.run(
-        [sys.executable, str(REPO / "scripts" / "make_timeseries_sample.py"), "--out", str(data)], check=True
+    steps, channels = 504, 7
+    rng = np.random.default_rng(0)
+    hours = np.arange(steps)[:, None]
+    values = [30 + 5 * np.sin(2 * np.pi * hours / 24 + k) + rng.normal(size=(steps, channels)) for k in range(2)]
+    data = tmp_path / "series.parquet"
+    pq.write_table(
+        pa.table(
+            {
+                "series_id": ["ETTh1", "ETTh2"],
+                "values": [v.tolist() for v in values],
+                "start": ["2016-07-01 00:00:00"] * 2,
+                "freq": ["1h"] * 2,
+            }
+        ),
+        data,
     )
-    config = yaml.safe_load((REPO / "examples" / "config" / "timeseries-procedural.yaml").read_text())
-    config["dataloaders"]["loaders"][0]["path"] = str(data / "series.parquet")
+    config = yaml.safe_load((REPO / "examples" / "config" / "ett-procedural.yaml").read_text())
+    config["dataloaders"]["loaders"][0]["path"] = str(data)
     outputs = config["operations"]["outputs"]
     outputs["path"] = str(tmp_path / "out" / "{selection}" / "ledger.parquet")
     outputs["samples_dir"] = str(tmp_path / "out" / "{selection}" / "payloads")
     config["compute"] = {"progress_bar": False}
-    assert run(config) == {"machines": 5 * 14 * 5}
-    rows = pq.read_table(tmp_path / "out" / "machines" / "ledger.parquet").to_pylist()
-    assert {r["series_id"] for r in rows} == {f"rec_{i:02d}" for i in range(5)}
+    assert run(config) == {"ett_ot": 2 * 5 * 5}
+    rows = pq.read_table(tmp_path / "out" / "ett_ot" / "ledger.parquet").to_pylist()
+    assert {r["series_id"] for r in rows} == {"ETTh1", "ETTh2"}
     assert {r["seed"] for r in rows if r["algorithm"] == "jitter"} == {0}
     assert all(r["parent_id"] == window_id(r["series_id"], r["start_window"], r["end_window"]) for r in rows)
+    payload = np.load(tmp_path / "out" / "ett_ot" / "payloads" / rows[0]["artifact"])
+    assert payload.shape == (168, 1)
