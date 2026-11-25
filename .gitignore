@@ -52,3 +52,8 @@ docs/reports/
 benchmark/outputs/artifacts/
 benchmark/outputs/inputs/
 !benchmark/outputs/
+
+# Example data is downloaded or dropped in by hand, never committed: each
+# dataset folder only tracks its own .gitignore placeholder.
+examples/data/*/*
+!examples/data/*/.gitignore
