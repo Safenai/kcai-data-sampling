@@ -2,7 +2,7 @@
 # correlated in time, unlike jitter, applied additively (x + n, in °C) or
 # multiplicatively (x * (1 + n), a relative change).
 # Data: python scripts/fetch_ett_sample.py (ETTh1 + ETTh2, hourly, CC BY-ND 4.0:
-# never commit or share the outputs).
+# never commit the generated windows).
 # One step is one hour.
 dataloaders:
   loaders:

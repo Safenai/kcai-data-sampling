@@ -1,7 +1,7 @@
 # ETT demo, forecasting: degraded histories of the transformer oil temperature
 # (OT), to measure how the forecast error grows with the degradation.
 # Data: python scripts/fetch_ett_sample.py (ETTh1 + ETTh2, hourly, CC BY-ND 4.0:
-# never commit or share the outputs).
+# never commit the generated windows).
 # One step is one hour: frequencies are in cycles per hour, the daily cycle is
 # 1/24 ≈ 0.042.
 # Each window is a one-week history; the true future is read from the original

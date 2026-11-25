@@ -160,7 +160,7 @@ stays free of their dependencies. Each has its own umbrella extra:
   The examples run on [ETT](https://github.com/zhouhaoyi/ETDataset), the
   reference forecasting benchmark (transformer oil temperature, hourly). The
   data is downloaded, not shipped: ETT is licensed CC BY-ND 4.0, so neither it
-  nor the outputs derived from it are to be committed or shared.
+  nor the generated windows derived from it are committed.
 
   ```bash
   uv run python scripts/fetch_ett_sample.py

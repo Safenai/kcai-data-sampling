@@ -145,8 +145,8 @@ ledger row bit for bit (it needs scikit-learn and matplotlib, which are not
 workspace dependencies).
 
 ETT is licensed CC BY-ND 4.0: the data is downloaded by the script, never
-shipped, and the generated windows and figures are not to be committed or
-shared.
+shipped, and the generated windows (payloads, ledgers) are never committed.
+The notebook shows plots and summary tables of them, not the data itself.
 
 The same use cases on a monthly series, Air Passengers (twelve years of
 airline passengers, on a log scale), with `level_shift` among the faults:

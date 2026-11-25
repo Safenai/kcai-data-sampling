@@ -182,8 +182,10 @@ uv run --with scikit-learn --with matplotlib --with ipykernel --with jupyterlab 
     jupyter lab examples/notebooks/timeseries-walkthrough.ipynb
 ```
 
-ETT is licensed CC BY-ND 4.0: the notebook is committed without its outputs,
-and the generated windows and figures are not to be committed or shared.
+ETT is licensed CC BY-ND 4.0: the data is downloaded by the script, never
+shipped, and no modified data (CSV, parquet, payloads) is committed. The
+notebook is committed with its outputs, which are plots and summary tables
+only.
 
 ## Companion tool
 

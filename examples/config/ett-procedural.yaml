@@ -1,7 +1,7 @@
 # Procedural transformations on time-series windows: the transformer oil
 # temperature (OT) of ETT, cut into one-week windows.
 # Data: python scripts/fetch_ett_sample.py (ETTh1 + ETTh2, hourly, CC BY-ND 4.0:
-# never commit or share the outputs).
+# never commit the generated windows).
 # One step is one hour, so frequencies are in cycles per hour: the daily cycle
 # is 1/24 ~ 0.042, a 6-hour cycle 1/6 ~ 0.167.
 dataloaders:
