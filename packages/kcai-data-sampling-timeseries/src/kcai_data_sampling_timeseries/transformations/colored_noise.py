@@ -11,7 +11,7 @@ from kcai_data_sampling_timeseries.transformations._checks import require_window
 from kcai_data_sampling_timeseries.transformations._noise import apply_noise, require_generators
 
 
-def colored_series(rng: np.random.Generator, length: int, channels: int, exponent: float) -> np.ndarray:
+def draw_colored_noise(rng: np.random.Generator, length: int, channels: int, exponent: float) -> np.ndarray:
     """Zero-mean, unit-variance noise whose power spectrum falls as 1/f^exponent.
 
     White Gaussian noise is shaped in the frequency domain: each frequency's
@@ -75,5 +75,7 @@ def colored_noise(
     require_windows(xs, "colored_noise")
     require_generators(xs, rngs, "colored_noise")
     _, w, c = xs.shape
-    noise = np.stack([sigma * colored_series(rng, w, c, exponent) for rng in rngs]) if len(xs) else np.zeros_like(xs)
+    noise = (
+        np.stack([sigma * draw_colored_noise(rng, w, c, exponent) for rng in rngs]) if len(xs) else np.zeros_like(xs)
+    )
     return apply_noise(xs, noise, mode)

@@ -11,7 +11,7 @@ from kcai_data_sampling_timeseries.transformations._checks import require_window
 from kcai_data_sampling_timeseries.transformations._noise import apply_noise, require_generators
 
 
-def garch_series(
+def draw_garch_noise(
     rng: np.random.Generator, length: int, channels: int, sigma: float, alpha: float, beta: float
 ) -> np.ndarray:
     """A GARCH(1,1) path with unconditional standard deviation ``sigma``.
@@ -88,5 +88,7 @@ def garch_noise(
     if alpha + beta >= 1:
         raise ValueError(f"garch_noise: alpha + beta must be below 1, got {alpha + beta}")
     _, w, c = xs.shape
-    noise = np.stack([garch_series(rng, w, c, sigma, alpha, beta) for rng in rngs]) if len(xs) else np.zeros_like(xs)
+    noise = (
+        np.stack([draw_garch_noise(rng, w, c, sigma, alpha, beta) for rng in rngs]) if len(xs) else np.zeros_like(xs)
+    )
     return apply_noise(xs, noise, mode)

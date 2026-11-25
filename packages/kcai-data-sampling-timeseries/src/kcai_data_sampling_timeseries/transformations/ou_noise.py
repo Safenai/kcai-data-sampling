@@ -11,7 +11,7 @@ from kcai_data_sampling_timeseries.transformations._checks import require_window
 from kcai_data_sampling_timeseries.transformations._noise import apply_noise, require_generators
 
 
-def ou_series(rng: np.random.Generator, length: int, channels: int, sigma: float, theta: float) -> np.ndarray:
+def draw_ou_noise(rng: np.random.Generator, length: int, channels: int, sigma: float, theta: float) -> np.ndarray:
     """A stationary Ornstein-Uhlenbeck path, sampled exactly at every step.
 
     ``n[0] ~ N(0, sigma²)`` and ``n[t] = a n[t-1] + sigma sqrt(1 - a²) z[t]``
@@ -78,5 +78,5 @@ def ou_noise(
     require_windows(xs, "ou_noise")
     require_generators(xs, rngs, "ou_noise")
     _, w, c = xs.shape
-    noise = np.stack([ou_series(rng, w, c, sigma, theta) for rng in rngs]) if len(xs) else np.zeros_like(xs)
+    noise = np.stack([draw_ou_noise(rng, w, c, sigma, theta) for rng in rngs]) if len(xs) else np.zeros_like(xs)
     return apply_noise(xs, noise, mode)

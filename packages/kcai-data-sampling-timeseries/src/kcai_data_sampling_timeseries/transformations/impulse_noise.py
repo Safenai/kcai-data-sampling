@@ -11,7 +11,9 @@ from kcai_data_sampling_timeseries.transformations._checks import require_window
 from kcai_data_sampling_timeseries.transformations._noise import apply_noise, require_generators
 
 
-def impulse_series(rng: np.random.Generator, length: int, channels: int, rate: float, amplitude: float) -> np.ndarray:
+def draw_impulse_noise(
+    rng: np.random.Generator, length: int, channels: int, rate: float, amplitude: float
+) -> np.ndarray:
     """Spikes of size ``amplitude`` and random sign, at random steps.
 
     Each step of each channel is hit independently with probability ``rate``
@@ -71,5 +73,5 @@ def impulse_noise(
     require_windows(xs, "impulse_noise")
     require_generators(xs, rngs, "impulse_noise")
     _, w, c = xs.shape
-    noise = np.stack([impulse_series(rng, w, c, rate, amplitude) for rng in rngs]) if len(xs) else np.zeros_like(xs)
+    noise = np.stack([draw_impulse_noise(rng, w, c, rate, amplitude) for rng in rngs]) if len(xs) else np.zeros_like(xs)
     return apply_noise(xs, noise, mode)
