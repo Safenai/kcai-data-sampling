@@ -18,6 +18,15 @@ def ou_series(rng: np.random.Generator, length: int, channels: int, sigma: float
     with ``a = exp(-theta)``: the path reverts to 0 at rate ``theta`` per step
     and keeps a stationary standard deviation ``sigma``.
 
+    This is the noise model for **one** window, drawn from that window's own
+    generator. ``ou_noise`` is the batch side: it checks the batch, calls this
+    function once per window with that window's generator (so a window's noise
+    never depends on the batch it lands in), and applies the result additively
+    or multiplicatively. The two are kept apart so that the model (the
+    step-by-step recursion) can be read and checked on its own, without the
+    batch code around it. ``length`` is any number of steps: a window's, or a
+    whole series'.
+
     Args:
         rng: The window's generator.
         length: Number of steps ``W``.

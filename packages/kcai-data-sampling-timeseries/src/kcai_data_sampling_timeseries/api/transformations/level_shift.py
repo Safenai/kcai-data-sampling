@@ -14,11 +14,10 @@ from kcai_data_sampling_timeseries.transformations.level_shift import level_shif
 
 
 class LevelShift(UnaryTransformation):
-    """Shift every channel of each window by ``offset`` from ``start`` on.
+    """Shift every step and every channel of each window by ``offset``.
 
-    Deterministic: the offset and the position are parameters, nothing is
-    drawn. Not reversible: the break cannot be told apart from a real change
-    of level in the signal.
+    Deterministic: the offset is a parameter, nothing is drawn. Not
+    reversible: the offset cannot be told apart from the signal's own level.
     """
 
     algorithm = "level_shift"
@@ -32,14 +31,14 @@ class LevelShift(UnaryTransformation):
         xs: np.ndarray,  # (b, w, c) float
         rngs: list[np.random.Generator] | None = None,
     ) -> np.ndarray:
-        """Add the shift to the batch.
+        """Add the offset to the batch.
 
         Args:
             xs: Batch of windows shaped ``(B, W, C)``, floating point.
             rngs: Unused for this deterministic operation.
 
         Returns:
-            The batch with the shift added, same shape and dtype.
+            The batch with the offset added, same shape and dtype.
         """
         del rngs
-        return level_shift(xs, offset=self.params["offset"], start=self.params["start"])
+        return level_shift(xs, offset=self.params["offset"])

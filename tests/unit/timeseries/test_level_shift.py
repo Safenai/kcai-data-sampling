@@ -1,14 +1,15 @@
 """Semantics of the ``level_shift`` transformation.
 
-The steps before ``floor(start * W)`` are unchanged and every step from it on
-moves by ``offset``, the same on every channel; the window space (shape,
-dtype) never changes, and nothing is clipped since a series has no value
-range. The class comes from ``kcai_data_sampling_timeseries.api.transformations``.
+Every step of every channel moves by ``offset``: the whole window, no position
+parameter (a break at a given step will come from a ``support`` common to all
+transformations). The window space (shape, dtype) never changes, and nothing is
+clipped since a series has no value range. The class comes from
+``kcai_data_sampling_timeseries.api.transformations``.
 """
 
 from kcai_data_sampling_timeseries.api.selection import TimeSeriesBatch
 from kcai_data_sampling_timeseries.api.transformations.level_shift import LevelShift
-from kcai_data_sampling_timeseries.transformations.level_shift import level_shift, shift_step
+from kcai_data_sampling_timeseries.transformations.level_shift import level_shift
 import numpy as np
 from pydantic import ValidationError
 import pytest
@@ -20,26 +21,15 @@ def _out_of(batch: TimeSeriesBatch, **params: float) -> np.ndarray:
     return np.stack([o.x for o in outputs])
 
 
-@pytest.mark.parametrize(("offset", "start"), [(2.0, 0.5), (-0.7, 0.25), (1.5, 0.9)])
-def test_the_added_step_is_exact(synthetic_series_batch: TimeSeriesBatch, offset: float, start: float) -> None:
-    """Output minus input is 0 before the break and ``offset`` from it on, on every window and channel."""
-    out = _out_of(synthetic_series_batch, offset=offset, start=start)
-    w = synthetic_series_batch.data.shape[1]
-    expected = np.where(np.arange(w) >= shift_step(w, start), offset, 0.0)
-    assert np.allclose(out - synthetic_series_batch.data, expected[None, :, None])
+@pytest.mark.parametrize("offset", [2.0, -0.7, 1.5])
+def test_the_whole_window_moves_by_offset(synthetic_series_batch: TimeSeriesBatch, offset: float) -> None:
+    """Output minus input is ``offset`` on every step, window and channel."""
+    out = _out_of(synthetic_series_batch, offset=offset)
+    assert np.allclose(out - synthetic_series_batch.data, offset)
 
 
-@pytest.mark.parametrize(
-    ("length", "start", "step"), [(10, 0.0, 0), (10, 0.5, 5), (10, 0.55, 5), (7, 0.5, 3), (10, 1.0, 10)]
-)
-def test_the_break_position(length: int, start: float, step: int) -> None:
-    """The break is at ``floor(start * W)``: 0 shifts the whole window, 1 shifts nothing."""
-    assert shift_step(length, start) == step
-
-
-def test_start_one_and_zero_offset_are_identity(synthetic_series_batch: TimeSeriesBatch) -> None:
-    """``start=1`` reaches no step and ``offset=0`` adds nothing."""
-    assert np.array_equal(_out_of(synthetic_series_batch, offset=3.0, start=1.0), synthetic_series_batch.data)
+def test_zero_offset_is_identity(synthetic_series_batch: TimeSeriesBatch) -> None:
+    """``offset=0`` adds nothing."""
     assert np.array_equal(_out_of(synthetic_series_batch, offset=0.0), synthetic_series_batch.data)
 
 
@@ -57,25 +47,24 @@ def test_integer_windows_are_refused() -> None:
         level_shift(np.zeros((1, 8, 1), dtype=np.int32), offset=0.1)
 
 
-def test_declaration_and_default_start() -> None:
-    """Deterministic, procedural, not reversible; ``start`` defaults to 0.5."""
+def test_declaration() -> None:
+    """Deterministic, procedural, not reversible; ``offset`` is the only parameter."""
     assert LevelShift({"offset": -0.2}).describe() == {
         "algorithm": "level_shift",
         "family": "procedural",
         "arity": "unary",
         "reversible": False,
-        "params": {"offset": -0.2, "start": 0.5},
+        "params": {"offset": -0.2},
         "seed": None,
         "tool_model": None,
         "target_model": None,
     }
 
 
-@pytest.mark.parametrize("start", [-0.1, 1.1])
-def test_start_outside_the_window_is_refused(start: float) -> None:
-    """``start`` stays in ``[0, 1]``."""
+def test_a_position_is_refused() -> None:
+    """There is no ``start``: the shift applies to the whole window."""
     with pytest.raises(ValidationError, match="start"):
-        LevelShift({"offset": 1.0, "start": start})
+        LevelShift({"offset": 1.0, "start": 0.5})
 
 
 def test_missing_offset_is_refused() -> None:

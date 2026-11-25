@@ -30,10 +30,11 @@ handled by the job package.
 - `drift` — add a linear ramp `slope * t` to every channel, `t` counted from
   the window's first step, so the first step is unchanged; `slope` is per step,
   in signal units, any sign. Deterministic, not reversible. Pointwise support.
-- `level_shift` — add `offset` to every channel from the step at `start` on,
-  `start` being a fraction of the window (default 0.5): an abrupt break that
-  stays, where `drift` is gradual. Deterministic, not reversible. Pointwise
-  support.
+- `level_shift` — add `offset` to every step and every channel: the whole
+  window moves (a sensor or calibration bias). No position parameter: like
+  every transformation here, it acts on the whole sample; a break at a given
+  step will come from a `support` common to all transformations.
+  Deterministic, not reversible. Pointwise support.
 - Four **time-series noises**, correlated in time unlike `jitter`. Each is
   stochastic (requires a `seed`, one generator per window), not reversible,
   and takes a `mode`: `additive` (`x + n`, default, noise in signal units) or

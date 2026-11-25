@@ -18,6 +18,15 @@ def impulse_series(rng: np.random.Generator, length: int, channels: int, rate: f
     (Bernoulli arrivals, the discrete counterpart of a Poisson process), and a
     hit is ``+amplitude`` or ``-amplitude`` with equal probability.
 
+    This is the noise model for **one** window, drawn from that window's own
+    generator. ``impulse_noise`` is the batch side: it checks the batch, calls
+    this function once per window with that window's generator (so a window's
+    noise never depends on the batch it lands in), and applies the result
+    additively or multiplicatively. The two are kept apart so that the model
+    (the arrivals and their signs) can be read and checked on its own, without
+    the batch code around it. ``length`` is any number of steps: a window's, or
+    a whole series'.
+
     Args:
         rng: The window's generator.
         length: Number of steps ``W``.

@@ -18,6 +18,15 @@ def colored_series(rng: np.random.Generator, length: int, channels: int, exponen
     amplitude is scaled by ``f^(-exponent / 2)``, the constant term is
     removed, and the result is rescaled to unit variance per channel.
 
+    This is the noise model for **one** window, drawn from that window's own
+    generator. ``colored_noise`` is the batch side: it checks the batch, calls
+    this function once per window with that window's generator (so a window's
+    noise never depends on the batch it lands in), and applies the result
+    additively or multiplicatively. The two are kept apart so that the model
+    (the spectral shaping) can be read and checked on its own, without the
+    batch code around it. ``length`` is any number of steps: a window's, or a
+    whole series'.
+
     Args:
         rng: The window's generator.
         length: Number of steps ``W``.
