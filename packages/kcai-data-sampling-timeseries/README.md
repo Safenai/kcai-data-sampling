@@ -148,19 +148,6 @@ ETT is licensed CC BY-ND 4.0: the data is downloaded by the script, never
 shipped, and the generated windows (payloads, ledgers) are never committed.
 The notebook shows plots and summary tables of them, not the data itself.
 
-The same use cases on a monthly series, Air Passengers (twelve years of
-airline passengers, on a log scale), with `level_shift` among the faults:
-
-```bash
-uv run python scripts/fetch_air_passengers_nile.py
-uv run kcai-data-sampling process -p examples/config/air-passengers-anomaly.yaml
-uv run kcai-data-sampling process -p examples/config/air-passengers-forecasting.yaml
-uv run kcai-data-sampling process -p examples/config/air-passengers-noises.yaml
-```
-
-The data comes from the R `datasets` package through Rdatasets; its licence is
-not established for certain, so the outputs are kept out of the repository too.
-
 ## Notes
 
 - **The regime is not declared.** Whether an output is an augmentation or a
