@@ -1,0 +1,51 @@
+# ETT demo, time-series noises on the transformer oil temperature (OT): noises
+# correlated in time, unlike jitter, applied additively (x + n, in °C) or
+# multiplicatively (x * (1 + n), a relative change).
+# Data: python scripts/fetch_ett_sample.py (ETTh1 + ETTh2, hourly, CC BY-ND 4.0:
+# never commit the generated windows).
+# One step is one hour.
+dataloaders:
+  loaders:
+    - name: ett_ot
+      type: timeseries_parquet
+      path: examples/data/ett_sample/series.parquet
+      id_column: series_id
+      values_column: values
+      channels: [6]  # OT only
+      load_batch_size: 64
+      windows:
+        mode: consecutive
+        window: 168  # one week
+        stride: 24  # one day
+
+operations:
+  outputs:
+    path: examples/outputs/ett-noises/{selection}/ledger.parquet
+    write_samples: true
+    samples_dir: examples/outputs/ett-noises/{selection}/payloads
+    payload_format: npy
+    flush_batch_size: 512
+    include: [series_id, start_window, end_window, start, freq]
+  transformations:
+    - name: drifting_probe  # pink noise: slow wanderings dominate
+      type: colored_noise
+      sigma: 1.0
+      exponent: 1.0
+      seed: 0
+    - name: fluctuating_offset  # mean-reverting offset, correlated over ~10 hours
+      type: ou_noise
+      sigma: 1.5
+      theta: 0.1
+      seed: 0
+    - name: agitated_periods  # volatility clustering, proportional to the level
+      type: garch_noise
+      sigma: 0.05
+      alpha: 0.15
+      beta: 0.8
+      mode: multiplicative
+      seed: 0
+    - name: acquisition_glitches  # isolated spikes on 2 % of the hours
+      type: impulse_noise
+      rate: 0.02
+      amplitude: 8.0
+      seed: 0
