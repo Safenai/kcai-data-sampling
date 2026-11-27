@@ -53,8 +53,7 @@ handled by the job package.
     with probability `rate` by `±amplitude`. Pointwise support.
 - `TimeSeriesBatch` — a `Batch` specialization for windows: axes
   `(time, channel)`, no value range (a signal is unbounded, so outputs are
-  neither clipped nor refused on range), and the series' `sampling_rate` when
-  declared.
+  neither clipped nor refused on range), and arrow-native source columns.
 
 Nine methods, as examples of the slot rather than a catalogue.
 
@@ -67,23 +66,43 @@ fit them.
 ## Frequencies are in cycles per step
 
 `cutoff` and `frequency` are given in **cycles per step**, in `(0, 0.5]`, where
-`0.5` is the Nyquist frequency. A transformation receives the window array
-only, not the series' sampling rate, so it cannot read a frequency in hertz.
-For a series sampled at `fs` Hz, `f` Hz is `f / fs` cycles per step: 5 Hz at
-100 Hz is `0.05`.
+`0.5` is the Nyquist frequency. They are compared against the discrete bins
+returned by `numpy.fft.rfftfreq(window_length)`, not against a continuous
+analog filter. A transformation receives the window array only, not the
+series' sampling rate, so it cannot read a frequency in hertz. For a series
+sampled at `fs` Hz, `f` Hz is `f / fs` cycles per step: 5 Hz at 100 Hz is
+`0.05`.
 
-A sinusoid at exactly `0.5` with `phase: 0` is zero at every step: pick a
-frequency below Nyquist, or a non-zero phase.
+`low_pass` keeps every bin when `cutoff = 0.5`: its comparison is
+`rfftfreq(W) > cutoff`, so no bin is zeroed. `add_sinusoid` at exactly `0.5`
+with `phase: 0` is zero at every step: pick a frequency below Nyquist, or a
+non-zero phase.
+
+`low_pass` has **global support**: every output step depends on the whole
+window, so shifting where the window is cut changes the result even when the
+underlying series is unchanged.
 
 ## Install
 
-Not published yet, and not part of the umbrella's extras: the package is
-available from a checkout of the repository, where `uv sync` installs it with
-the rest of the workspace.
+The distribution is published on PyPI and can be installed on its own for
+library use:
 
 ```bash
-uv run python scripts/fetch_ett_sample.py
-uv run kcai-data-sampling process -p examples/config/ett-procedural.yaml
+pip install kcai-data-sampling-timeseries
+```
+
+The umbrella exposes the same package as an extra. Add `[job]` when running the
+YAML pipeline, because window loading and writing live there:
+
+```bash
+pip install "kcai-data-sampling[job,timeseries]"
+```
+
+The sample data, configs and notebook stay in the repository; after cloning it:
+
+```bash
+python scripts/fetch_ett_sample.py
+kcai-data-sampling process -p examples/config/ett-procedural.yaml
 ```
 
 Cutting series into windows (the `timeseries_parquet` loader) and writing the

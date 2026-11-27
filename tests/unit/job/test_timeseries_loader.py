@@ -19,6 +19,8 @@ from kcai_data_sampling_job.dataloaders.api.timeseries import (
     IndependentWindowsConfig,
     TimeSeriesLoaderConfig,
     TimeSeriesParquetDataLoader,
+    as_series,
+    as_series_arrow,
     independent_starts,
     window_id,
 )
@@ -310,6 +312,35 @@ def test_ids_fall_back_to_the_row_index(tmp_path: Path) -> None:
     assert _ids(list(selection)) == [window_id("0", 0, 6), window_id("0", 7, 13), window_id("1", 0, 6)]
 
 
+def test_filtered_rows_keep_their_original_row_index(tmp_path: Path) -> None:
+    """A filtered-out leading row still advances the fallback id counter."""
+    path = _write_series(tmp_path / "s.parquet")
+    batches = _batches(
+        path,
+        {"mode": "consecutive", "window": 7},
+        id_column=None,
+        filters=[{"column": "series_id", "values": ["b"]}],
+    )
+    assert _ids(batches) == [window_id("1", 0, 6)]
+    assert np.array_equal(batches[0].data[0][:, 0], np.arange(100.0, 107.0))
+
+
+def test_filtered_empty_batch_still_advances_the_row_index(tmp_path: Path) -> None:
+    """A batch whose rows all filter out still advances the fallback counter."""
+    rows = {sid: [100.0 * i + t for t in range(3)] for i, sid in enumerate(("a", "b", "c"))}
+    path = _write_series(tmp_path / "s.parquet", rows)
+    batches = _batches(
+        path,
+        {"mode": "consecutive", "window": 3},
+        id_column=None,
+        load_batch_size=1,
+        filters=[{"column": "series_id", "values": ["b", "c"]}],
+    )
+    assert _ids(batches) == [window_id("1", 0, 2), window_id("2", 0, 2)]
+    assert np.array_equal(batches[0].data[0][:, 0], rows["b"])
+    assert np.array_equal(batches[1].data[0][:, 0], rows["c"])
+
+
 def test_selection_class_follows_the_mode(tmp_path: Path) -> None:
     """``consecutive`` and ``independent`` build their own selection class."""
     path = tmp_path / "s.parquet"
@@ -332,6 +363,94 @@ def test_batch_count_estimate(tmp_path: Path) -> None:
         (selection,) = loader.get_selections()
         selection.bootstrap(None)
         assert selection.get_nb_batches() == expected
+
+
+def test_arrow_series_match_the_python_path() -> None:
+    """Every supported Arrow layout flattens to the same float64 series."""
+    columns = [
+        pa.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]),
+        pa.array([[[1.0, 2.0], [3.0, 4.0]], [[5.0, 6.0]]]),
+        pa.array(
+            [[[1.0, 2.0], [3.0, 4.0]], [[5.0, 6.0], [7.0, 8.0]]],
+            type=pa.list_(pa.list_(pa.float64(), 2)),
+        ),
+        pa.array([[1, 2], [3, 4]], type=pa.list_(pa.float32())),
+        pa.array([[1, 2], [3, 4]], type=pa.list_(pa.int64())),
+        pa.array([[1.0, 2.0], [3.0, 4.0]], type=pa.list_(pa.float64(), 2)),
+    ]
+    for column in columns:
+        for index in range(len(column)):
+            assert np.array_equal(as_series_arrow(column, index), as_series(column[index].as_py()))
+
+
+def test_as_series_rejects_a_null_row() -> None:
+    """A null series row has no shape and is refused."""
+    with pytest.raises(ValueError, match="null series row"):
+        as_series(None)
+
+
+def test_arrow_series_rejects_ragged_channels() -> None:
+    """A variable-inner list with uneven channel counts is a failure."""
+    column = pa.array([[[1.0, 2.0], [3.0]], [[4.0, 5.0]]])
+    with pytest.raises(ValueError, match="constant channel count"):
+        as_series_arrow(column, 0)
+
+
+def test_filter_renames_an_existing_index_column(tmp_path: Path) -> None:
+    """A source column named like the internal index does not break filtering."""
+    path = _write_series(tmp_path / "s.parquet")
+    table = pq.read_table(path).append_column("_timeseries_row_index", pa.array(["x", "y", "z"]))
+    pq.write_table(table, path)
+    windows = {"mode": "consecutive", "window": 4}
+    batches = _batches(path, windows, filters=[{"column": "series_id", "values": ["a"]}])
+    assert _keys(batches) == [("a", start) for start in range(0, 17, 4)]
+
+
+def test_n_steps_is_used_for_the_batch_count_estimate(tmp_path: Path) -> None:
+    """Bootstrap reads the explicit row count instead of rereading ``values``."""
+    path = _write_series(tmp_path / "s.parquet")
+    table = pq.read_table(path).append_column("n_steps", pa.array([4, 4, 4], pa.int64()))
+    pq.write_table(table, path)
+    windows = {"mode": "consecutive", "window": 4, "stride": 3}
+    loader = TimeSeriesParquetDataLoader("s", _loader_config(path, windows, load_batch_size=3))
+    (selection,) = loader.get_selections()
+    selection.bootstrap(None)
+    assert selection.get_nb_batches() == 1
+    expected = [
+        window_id(sid, start, start + 3) for sid, length in LENGTHS.items() for start in range(0, length - 3, 3)
+    ]
+    assert _ids(_batches(path, windows, load_batch_size=3)) == expected
+
+
+def test_bootstrap_streams_lengths_across_files_and_filters(tmp_path: Path) -> None:
+    """A filtered multi-file dataset counts every retained row, not just survivors."""
+    dataset = tmp_path / "dataset"
+    dataset.mkdir()
+    _write_series(dataset / "one.parquet", {"a": [0.0] * 8, "b": [1.0] * 8})
+    _write_series(dataset / "two.parquet", {"c": [2.0] * 8, "d": [3.0] * 8})
+    windows = {"mode": "consecutive", "window": 4}
+    config = _loader_config(
+        dataset, windows, load_batch_size=2, filters=[{"column": "series_id", "values": ["b", "d"]}]
+    )
+    loader = TimeSeriesParquetDataLoader("s", config)
+    (selection,) = loader.get_selections()
+    selection.bootstrap(None)
+    assert selection.get_nb_batches() == 4
+    batches = list(selection)
+    assert [len(b.data) for b in batches] == [2, 2]
+    assert _keys(batches) == [("b", 0), ("b", 4), ("d", 0), ("d", 4)]
+
+
+def test_long_series_batches_stay_bounded(tmp_path: Path) -> None:
+    """``load_batch_size`` alone governs output batches, even for one long series."""
+    length = 1000
+    path = _write_series(tmp_path / "s.parquet", {"long": [float(i) for i in range(length)]})
+    windows = {"mode": "consecutive", "window": 4, "stride": 1}
+    batches = _batches(path, windows, load_batch_size=7)
+    assert len(batches) == (length - 3 + 6) // 7
+    assert [len(b.data) for b in batches] == [7] * (len(batches) - 1) + [length - 3 - 7 * (len(batches) - 1)]
+    assert all(len(b.columns) == len(b.data) and len(b.data.shape) == 3 for b in batches)
+    assert _keys(batches)[:2] == [("long", 0), ("long", 1)]
 
 
 def test_iteration_before_bootstrap_yields_nothing(tmp_path: Path) -> None:
@@ -365,14 +484,13 @@ def test_invalid_windows_are_refused(tmp_path: Path, windows: dict) -> None:
     [
         {"sample_path": [{"column": "values"}]},
         {"transform": [{"column": "site", "to_type": "str"}]},
-        {"sampling_rate": 0},
         {"channels": []},
         {"channels": [-1]},
         {"channels": [0, 0]},
     ],
 )
 def test_unsupported_keys_are_refused(tmp_path: Path, extra: dict) -> None:
-    """Image-only keys, a non-positive sampling rate and bad channel lists are refused."""
+    """Image-only keys and bad channel lists are refused."""
     with pytest.raises(pydantic.ValidationError):
         _loader_config(tmp_path / "s.parquet", {"mode": "consecutive", "window": 2}, **extra)
 

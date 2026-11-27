@@ -60,7 +60,7 @@ def synthetic_series_batch(test_seed: int) -> TimeSeriesBatch:
     """A ``TimeSeriesBatch`` of synthetic windows, as a loader would emit.
 
     Returns:
-        The 6-window batch for the current seed, at 100 Hz.
+        The 6-window batch for the current seed.
     """
     windows, _ = make_windows(test_seed)
     n = len(windows)
@@ -70,7 +70,6 @@ def synthetic_series_batch(test_seed: int) -> TimeSeriesBatch:
         ids=[window_id(f"series_{i}", 0, SERIES_WIDTH - 1) for i in range(n)],
         columns=pa.table({"series_id": [f"series_{i}" for i in range(n)], "start": [0] * n}),
         data=windows,
-        sampling_rate=100.0,
     )
 
 

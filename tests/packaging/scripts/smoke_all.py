@@ -1,4 +1,4 @@
-"""Umbrella smoke: core, images, job and the umbrella CLI installed together.
+"""Umbrella smoke: core, images, job, timeseries and the CLI installed together.
 
 Runs inside the ``all`` scenario venv: the version/list/process dispatch is
 present and working, and the three earlier smokes are re-run under this venv —
@@ -8,6 +8,7 @@ two as ``None``; see smoke_fgsm.py and smoke_lama.py for the installed case.
 """
 
 import contextlib
+import importlib.metadata
 import io
 import pathlib
 import subprocess
@@ -32,11 +33,15 @@ def main() -> int:
     # that is the property worth pinning. That they *resolve* under their own
     # extras is covered by smoke_fgsm.py, smoke_lama.py and
     # smoke_albumentation.py.
-    for member in ("core", "job", "images", "fgsm", "lama", "albumentation"):
+    for member in ("core", "job", "images", "fgsm", "lama", "albumentation", "timeseries"):
         assert f"{member}:" in text
     assert "fgsm: None" in text
     assert "lama: None" in text
     assert "albumentation: None" in text
+    assert "timeseries: None" not in text
+
+    transformations = {ep.name for ep in importlib.metadata.entry_points(group="kcai_data_sampling.transformations")}
+    assert "low_pass" in transformations
 
     for name in ("smoke_core.py", "smoke_images.py", "smoke_job.py"):
         subprocess.run(

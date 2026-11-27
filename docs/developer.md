@@ -111,7 +111,7 @@ for the full procedure.
 
 | Command | What it does |
 |---|---|
-| `uv run nox -s test_packaging` | Package isolation: fresh venvs, seven wheel subsets, smoke scripts. Fast, no network. |
+| `uv run nox -s test_packaging` | Package isolation: fresh venvs, eight wheel subsets, smoke scripts. Fast, no network. |
 | `uv run nox -s test_packaging_testpypi` | Installs each scenario from test.pypi.org and smoke-tests it. |
 | `uv run nox -s test_packaging_pypi` | The same against pypi.org — what a user actually gets. |
 | `uv run nox -s test_packaging_notebook` | Installs the `all` extra from test.pypi.org and executes the real walkthrough notebook in it. Several hundred MB and minutes of CPU. |
@@ -137,7 +137,7 @@ whatever the workspace interpreter is.
 
 `docs_build` and `docs_serve` run the hooks in `docs/hooks.py`, which generate
 files inside `docs/` before the build: `index.md` from `README.md`,
-`RELEASE.md` (and `CHANGELOG.md` when one exists) from the repository root, the seven package
+`RELEASE.md` (and `CHANGELOG.md` when one exists) from the repository root, the eight package
 READMEs under `docs/packages/`, and the example notebooks under
 `docs/examples/`. All of them are git-ignored, so `git status` stays clean —
 but do not edit the generated copies, edit the sources.

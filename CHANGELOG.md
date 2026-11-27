@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.2 (2026-11-27) — Time-series distribution
+
+### Added
+- **Time-series package** (`kcai-data-sampling-timeseries`): a publishable distribution with nine deterministic transformations — `low_pass`, `add_sinusoid`, `jitter`, `drift`, `level_shift`, `colored_noise`, `ou_noise`, `garch_noise`, and `impulse_noise` — configurable from YAML with seeded, replayable application and sweeps. Install it directly or through the new `kcai-data-sampling[timeseries]` extra; `[all]` includes it too.
+- **Time-series loader and writer**: the `timeseries_parquet` dataloader reads `(n_rows, n_steps, n_channels)` windows from Parquet, and `payload_format: npy` writes each generated window as a `.npy` payload with a provenance ledger row.
+- **ETT examples**: four walkthrough configs (`ett-procedural.yaml`, `ett-forecasting.yaml`, `ett-noises.yaml`, `ett-anomaly.yaml`) and the accompanying notebook walkthrough.
+
+### Changed
+- **Validation:** sweep `mode` is constrained to `even` or `random` at config load; an unknown `payload_format` fails when the CLI builds writers.
+
 ## 0.8.1 (2026-10-30) — Albumentations integration, docs restructure
 
 ### Added

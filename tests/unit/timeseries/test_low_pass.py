@@ -12,7 +12,6 @@ from kcai_data_sampling_timeseries.transformations.low_pass import low_pass
 import numpy as np
 from pydantic import ValidationError
 import pytest
-
 from tests.fixtures.series import HIGH_FREQUENCY, LOW_FREQUENCY, make_windows
 
 

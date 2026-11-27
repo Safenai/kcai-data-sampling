@@ -123,7 +123,6 @@ dataloaders:
       path: examples/data/ett_sample/series.parquet
       id_column: series_id
       values_column: values
-      sampling_rate: 0.000277778  # 1 / 3600 Hz: hourly
       channels: [6]          # optional: keep the oil temperature (OT) only
       windows:
         mode: consecutive

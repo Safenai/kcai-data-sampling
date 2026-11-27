@@ -42,8 +42,13 @@ there. Without it, `version` prints `job: None` and `list` shows empty
 categories rather than failing.
 
 The extras are independent, so compose what you need: `[job]` alone for the
-CLI, `[images]` alone if you are driving the library from Python, or `[all]` for
-every surface plus Jupyter.
+CLI, `[images]` alone if you are driving the library from Python,
+`[timeseries]` alone for the time-series algorithms, or `[all]` for every
+published surface plus Jupyter. For YAML runs on windows, ask for
+`[job,timeseries]`: the transformations come from `-timeseries`, while the
+`timeseries_parquet` loader and `.npy` writer come from `-job`. The example
+configs, ETT download and notebook stay in the repository; the packages come
+from the index.
 
 ## Get the examples
 
@@ -155,16 +160,18 @@ stays free of their dependencies. Each has its own umbrella extra:
   see the
   [albumentations package page](packages/kcai-data-sampling-albumentation.md)
   for the full catalogue.
-- **Time series** (workspace only: `kcai-data-sampling-timeseries` is not yet
-  published, and has no umbrella extra). From a checkout, `uv sync` installs it.
-  The examples run on [ETT](https://github.com/zhouhaoyi/ETDataset), the
-  reference forecasting benchmark (transformer oil temperature, hourly). The
-  data is downloaded, not shipped: ETT is licensed CC BY-ND 4.0, so neither it
-  nor the generated windows derived from it are committed.
+- **Time series** (`kcai-data-sampling-timeseries`, available on PyPI and through
+  the `[timeseries]` umbrella extra). Install the recipe below, then clone the
+  repository for the example configs and data. The examples run on
+  [ETT](https://github.com/zhouhaoyi/ETDataset), the reference forecasting
+  benchmark (transformer oil temperature, hourly). The data is downloaded, not
+  shipped: ETT is licensed CC BY-ND 4.0, so neither it nor the generated windows
+  derived from it are committed.
 
   ```bash
-  uv run python scripts/fetch_ett_sample.py
-  uv run kcai-data-sampling process -p examples/config/ett-procedural.yaml
+  pip install "kcai-data-sampling[job,timeseries]"
+  python scripts/fetch_ett_sample.py
+  kcai-data-sampling process -p examples/config/ett-procedural.yaml
   ```
 
   One-week windows of the oil temperature are cut from the two transformers,
@@ -173,8 +180,8 @@ stays free of their dependencies. Each has its own umbrella extra:
   A demo of two use cases, forecasting and anomaly detection, on the same data:
 
   ```bash
-  uv run kcai-data-sampling process -p examples/config/ett-anomaly.yaml
-  uv run kcai-data-sampling process -p examples/config/ett-forecasting.yaml
+  kcai-data-sampling process -p examples/config/ett-anomaly.yaml
+  kcai-data-sampling process -p examples/config/ett-forecasting.yaml
   ```
 
   The notebook `examples/notebooks/timeseries-walkthrough.ipynb` walks
@@ -186,8 +193,8 @@ stays free of their dependencies. Each has its own umbrella extra:
   jupyter lab examples/notebooks/timeseries-walkthrough.ipynb`).
 
 To get everything the image walkthrough notebook needs in one go, install the `all`
-extra — it is the union of `notebooks`, `job`, `images`, `fgsm`, `lama` and
-`albumentation`:
+extra — it is the union of `notebooks`, `job`, `images`, `fgsm`, `lama`,
+`albumentation` and `timeseries`:
 
 ```bash
 pip install "kcai-data-sampling[all]"

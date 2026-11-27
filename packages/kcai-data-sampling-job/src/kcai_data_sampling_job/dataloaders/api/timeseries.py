@@ -33,8 +33,8 @@ the transformation never knows.
 
 from collections.abc import Iterator
 import hashlib
-import logging
 import json
+import logging
 from typing import Annotated, Any, Literal, Self
 
 from kcai_data_sampling_core.api.dataloaders import DataLoader, DataSelection
@@ -54,6 +54,9 @@ logger = logging.getLogger(__name__)
 
 #: The window space every time-series selection declares.
 SAMPLE_AXES = ("time", "channel")
+
+#: Rows per Arrow read batch; output batches are governed by ``load_batch_size``.
+ARROW_ROW_BATCH_SIZE = 1024
 
 
 class ConsecutiveWindowsConfig(BaseModel):
@@ -105,7 +108,6 @@ class TimeSeriesLoaderConfig(DataLoaderConfig):
         t0_column: The integer column holding each series' step 0, in steps
             from the step 0 of the earliest series; carried as ``t0_series``.
             ``None`` when the series share no clock.
-        sampling_rate: Steps per second of the series, in Hz; informative.
         channels: Indices of the channels each window keeps, in that order,
             distinct and ``>= 0``; ``None`` keeps them all.
         windows: How windows are cut from each series.
@@ -114,7 +116,6 @@ class TimeSeriesLoaderConfig(DataLoaderConfig):
     type: Literal["timeseries_parquet"] = "timeseries_parquet"
     values_column: str = Field(description="Column holding each series: list<float> or list<list<float>>.")
     t0_column: str | None = Field(default=None, description="Integer column holding step 0, in steps; optional.")
-    sampling_rate: float | None = Field(default=None, gt=0, description="Sampling rate in Hz; informative.")
     channels: list[Annotated[int, Field(ge=0)]] | None = Field(
         default=None, min_length=1, description="Indices of the channels each window keeps; all of them when unset."
     )
@@ -236,6 +237,55 @@ def as_series(values: Any) -> np.ndarray:
     return series
 
 
+def as_series_arrow(column: pa.Array | pa.ChunkedArray, index: int) -> np.ndarray:
+    """Read one row of an Arrow values column as a ``(T, C)`` float64 array.
+
+    Supported schemas (``list<double>``, ``list<list<double>>`` and the fixed
+    inner lists written by ``fetch_ett_sample.py``) are flattened from Arrow
+    offsets and buffers without going through Python lists. Anything else falls
+    back to :func:`as_series`.
+
+    Args:
+        column: The values column of one Arrow record batch.
+        index: Row index within that column.
+
+    Returns:
+        The series, one row per step.
+
+    Raises:
+        ValueError: If the row is null, ragged, or not a 1-D/2-D series.
+    """
+    array = column.combine_chunks() if isinstance(column, pa.ChunkedArray) else column
+    if array.is_null()[index].as_py():
+        raise ValueError("null series row")
+    if not pa.types.is_list(array.type):
+        return as_series(array[index].as_py())
+    item_type = array.values.type
+    if not (pa.types.is_floating(item_type) or pa.types.is_list(item_type) or pa.types.is_fixed_size_list(item_type)):
+        return as_series(array[index].as_py())
+
+    offsets = array.offsets.to_numpy(zero_copy_only=False)
+    first, last = int(offsets[index]), int(offsets[index + 1])
+    item = array.values
+    if pa.types.is_floating(item.type):
+        values = np.asarray(item.to_numpy(zero_copy_only=False)[first:last], dtype=np.float64)
+        return values[:, None]
+    if pa.types.is_fixed_size_list(item.type):
+        width = item.type.list_size
+        values = np.asarray(item.values.to_numpy(zero_copy_only=False)[first * width : last * width], dtype=np.float64)
+        return values.reshape(-1, width)
+
+    inner_offsets = item.offsets.to_numpy(zero_copy_only=False)
+    widths = np.diff(inner_offsets[first : last + 1])
+    if widths.size == 0 or not np.all(widths == widths[0]):
+        raise ValueError("a series must have a constant channel count")
+    width = int(widths[0])
+    starts = inner_offsets[first:last]
+    indices = (starts[:, None] + np.arange(width)).ravel()
+    values = np.asarray(item.values.to_numpy(zero_copy_only=False)[indices], dtype=np.float64)
+    return values.reshape(-1, width)
+
+
 class TimeSeriesDataSelection(DataSelection):
     """A selection of windows cut from the series of a Parquet dataset.
 
@@ -321,8 +371,19 @@ class TimeSeriesDataSelection(DataSelection):
         self.filter_expr = self._build_filter_expr()
         self._parquet = pq.ParquetDataset(self.config.path, filters=self.filter_expr)
         self._check_t0_column(self._parquet.schema)
-        lengths = pc.list_value_length(self._parquet.read([self.config.values_column]).column(0))
-        self._lengths = [int(n or 0) for n in lengths.to_pylist()]
+        if "n_steps" in self._parquet.schema.names:
+            lengths = self._parquet.read(["n_steps"]).column("n_steps").to_pylist()
+            self._lengths = [int(n or 0) for n in lengths]
+        else:
+            self._lengths = []
+            for file in self._parquet.files:
+                for batch in pq.ParquetFile(file).iter_batches(
+                    batch_size=ARROW_ROW_BATCH_SIZE,
+                    columns=[self.config.values_column],
+                    use_threads=self.threads,
+                ):
+                    counts = pc.list_value_length(batch.column(0))
+                    self._lengths.extend(int(n or 0) for n in counts.to_pylist())
 
     def _check_t0_column(self, schema: pa.Schema) -> None:
         """Check that ``t0_column``, when set, is an integer column.
@@ -382,12 +443,15 @@ class TimeSeriesDataSelection(DataSelection):
         if self.errors["on_decode_failure"] == "fail_fast":
             raise
 
-    def _cut(self, series_id: str, values: Any) -> tuple[np.ndarray, list[int]] | None:
+    def _cut(
+        self, series_id: str, values: pa.Array | pa.ChunkedArray, index: int
+    ) -> tuple[np.ndarray, list[int]] | None:
         """Cut one series into its windows, or count it as a failure.
 
         Args:
             series_id: The series identifier.
-            values: The row's raw values.
+            values: The record batch's Arrow values column.
+            index: The row's index in that column.
 
         A series shorter than one window yields no window and is not a
         failure; a series without one of the selected ``channels``, or with
@@ -399,7 +463,7 @@ class TimeSeriesDataSelection(DataSelection):
             series yields no window.
         """
         try:
-            series = self._select_channels(as_series(values), series_id)
+            series = self._select_channels(as_series_arrow(values, index), series_id)
             if self._channels is not None and series.shape[1] != self._channels:
                 raise ValueError(f"series {series_id!r} has {series.shape[1]} channels, expected {self._channels}")
             starts = self._starts(len(series), series_id)
@@ -434,25 +498,33 @@ class TimeSeriesDataSelection(DataSelection):
             raise ValueError(f"series {series_id!r} has {series.shape[1]} channels, no channel {missing}")
         return series[:, channels]
 
-    def _windows_of(self, record: pa.RecordBatch, row_offset: int) -> Iterator[tuple[np.ndarray, pa.Table]]:
+    def _windows_of(
+        self, record: pa.RecordBatch, row_offset: int, row_indices: list[int] | None = None
+    ) -> Iterator[tuple[np.ndarray, pa.Table]]:
         """Window every series of one record batch.
 
         Args:
-            record: The chunk of series rows.
-            row_offset: Absolute index of the chunk's first row (id fallback).
+            record: The chunk of series rows (already batch-filtered).
+            row_offset: Absolute index of the chunk's first row in the row order
+                of the retained files, before batch-level predicate filtering.
+            row_indices: Original row indices of the surviving rows, used for
+                fallback ids. Defaults to the unfiltered chunk's positions.
 
         Yields:
             Per series: its windows ``(n, W, C)`` and their source columns.
         """
         id_column = self.config.id_column
-        ids = record.column(id_column).to_pylist() if id_column else range(row_offset, row_offset + len(record))
-        values = record.column(self.config.values_column).to_pylist()
+        if id_column:
+            row_ids = record.column(id_column).to_pylist()
+        else:
+            row_ids = row_indices if row_indices is not None else range(row_offset, row_offset + len(record))
+        values = record.column(self.config.values_column)
         sources = pa.Table.from_batches([record]).drop([self.config.values_column])
         if self.config.t0_column is not None:
             t0_series = sources.column(self.config.t0_column).cast(pa.int64())
             sources = sources.drop([self.config.t0_column]).append_column("t0_series", t0_series)
-        for i, (series_id, row_values) in enumerate(zip(ids, values, strict=True)):
-            cut = self._cut(str(series_id), row_values)
+        for i, series_id in enumerate(row_ids):
+            cut = self._cut(str(series_id), values, i)
             if cut is None:
                 continue
             windows, starts = cut
@@ -484,6 +556,23 @@ class TimeSeriesDataSelection(DataSelection):
             value_range=self.value_range,
         )
 
+    def _filter_record(self, record: pa.RecordBatch, row_offset: int) -> tuple[pa.RecordBatch, list[int]]:
+        """Filter one Arrow record, returning survivors and their global row indices."""
+        assert self.filter_expr is not None
+        index_column = "_timeseries_row_index"
+        while index_column in record.schema.names:
+            index_column += "_"
+        indexed = pa.Table.from_batches([record]).append_column(
+            index_column, pa.array(range(record.num_rows), pa.int64())
+        )
+        filtered = indexed.filter(self.filter_expr)
+        row_indices = [row_offset + i for i in filtered.column(index_column).to_pylist()]
+        survivors = pa.RecordBatch.from_arrays(
+            [filtered.column(name).combine_chunks() for name in record.schema.names],
+            schema=record.schema,
+        )
+        return survivors, row_indices
+
     @override
     def __iter__(self) -> Iterator[Batch]:
         if self._parquet is None:
@@ -492,18 +581,25 @@ class TimeSeriesDataSelection(DataSelection):
         pending_columns: list[pa.Table] = []
         row_offset = 0
         for file in self._parquet.files:
-            for record in pq.ParquetFile(file).iter_batches(batch_size=self.load_batch_size, use_threads=self.threads):
-                if self.filter_expr is not None:
-                    record = record.filter(self.filter_expr)
-                for windows, columns in self._windows_of(record, row_offset):
+            for record in pq.ParquetFile(file).iter_batches(batch_size=ARROW_ROW_BATCH_SIZE, use_threads=self.threads):
+                raw_rows = record.num_rows
+                if self.filter_expr is None:
+                    row_indices = list(range(row_offset, row_offset + raw_rows))
+                else:
+                    record, row_indices = self._filter_record(record, row_offset)
+                for windows, columns in self._windows_of(record, row_offset, row_indices):
                     pending_data.append(windows)
                     pending_columns.append(columns)
-                row_offset += len(record)
+                row_offset += raw_rows
                 yield from self._drain(pending_data, pending_columns, final=False)
         yield from self._drain(pending_data, pending_columns, final=True)
 
     def _drain(self, data: list[np.ndarray], columns: list[pa.Table], final: bool) -> Iterator[Batch]:
         """Emit full batches from the pending windows; the remainder at the end.
+
+        Pending windows stay as one chunk per source record. Only the chunks
+        consumed by a batch are concatenated, so emitted buffers are released
+        and a tail is a slice of its original chunk, not of an accumulation.
 
         Args:
             data: Pending window stacks, consumed in place.
@@ -514,17 +610,37 @@ class TimeSeriesDataSelection(DataSelection):
             Batches of exactly ``load_batch_size`` windows, then the remainder
             when ``final``.
         """
-        if not data:
-            return
-        stack = np.concatenate(data)
-        table = pa.concat_tables(columns)
         size = self.load_batch_size
-        cut = len(stack) if final else len(stack) - len(stack) % size
-        for start in range(0, cut, size):
-            stop = min(start + size, cut)
-            yield self._batch(stack[start:stop], table.slice(start, stop - start))
-        data[:] = [stack[cut:]] if cut < len(stack) else []
-        columns[:] = [table.slice(cut)] if cut < len(stack) else []
+        while data:
+            available = sum(len(chunk) for chunk in data)
+            if available < size and not final:
+                break
+            stack, batch_columns = self._take_pending(data, columns, min(size, available))
+            yield self._batch(stack, batch_columns)
+
+    def _take_pending(self, data: list[np.ndarray], columns: list[pa.Table], take: int) -> tuple[np.ndarray, pa.Table]:
+        """Consume ``take`` windows from the pending chunks and concatenate them."""
+        arrays: list[np.ndarray] = []
+        tables: list[pa.Table] = []
+        remaining = take
+        while remaining:
+            chunk, table = data[0], columns[0]
+            n = len(chunk)
+            if n <= remaining:
+                arrays.append(chunk)
+                tables.append(table)
+                data.pop(0)
+                columns.pop(0)
+                remaining -= n
+            else:
+                arrays.append(chunk[:remaining])
+                tables.append(table.slice(0, remaining))
+                data[0] = chunk[remaining:]
+                columns[0] = table.slice(remaining)
+                remaining = 0
+        stack = arrays[0] if len(arrays) == 1 else np.concatenate(arrays)
+        batch_columns = tables[0] if len(tables) == 1 else pa.concat_tables(tables)
+        return stack, batch_columns
 
     @override
     def __repr__(self) -> str:

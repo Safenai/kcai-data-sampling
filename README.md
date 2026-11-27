@@ -18,10 +18,10 @@ Install individual packages based on your needs:
 | **kcai-data-sampling-lama** | Generative inpainting (LaMa) transformation and tool-model plugin | [![][pypi-lama-badge]](https://pypi.org/project/kcai-data-sampling-lama/) |
 | **kcai-data-sampling-fgsm** | Adversarial (FGSM) transformation and target-model support | [![][pypi-fgsm-badge]](https://pypi.org/project/kcai-data-sampling-fgsm/) |
 | **kcai-data-sampling-job** | Pipeline orchestration and IO plugins | [![][pypi-job-badge]](https://pypi.org/project/kcai-data-sampling-job/) |
+| **kcai-data-sampling-timeseries** | No-model time-series transformations and window batches | [![][pypi-timeseries-badge]](https://pypi.org/project/kcai-data-sampling-timeseries/) |
 
-> **Note:** The `kcai-data-sampling` package is the CLI wrapper.
-
-`kcai-data-sampling-timeseries` (time-series windows) lives in the workspace only and is not yet published.
+> **Note:** The `kcai-data-sampling` package is the CLI wrapper. Install
+> `[timeseries]` for the algorithms, and add `[job]` for YAML runs on windows.
 
 [pypi-core-badge]: https://img.shields.io/pypi/v/kcai-data-sampling-core.svg
 [pypi-images-badge]: https://img.shields.io/pypi/v/kcai-data-sampling-images.svg
@@ -29,19 +29,20 @@ Install individual packages based on your needs:
 [pypi-lama-badge]: https://img.shields.io/pypi/v/kcai-data-sampling-lama.svg
 [pypi-fgsm-badge]: https://img.shields.io/pypi/v/kcai-data-sampling-fgsm.svg
 [pypi-job-badge]: https://img.shields.io/pypi/v/kcai-data-sampling-job.svg
+[pypi-timeseries-badge]: https://img.shields.io/pypi/v/kcai-data-sampling-timeseries.svg
 [pypi-cli-badge]: https://img.shields.io/pypi/v/kcai-data-sampling.svg
 
 ## Documentation
 
 - [Home](https://safenai.github.io/kcai-data-sampling/) — project overview
 - [Quick Start](docs/quickstart.md) — install, fetch sample data, run the procedural example, read its output.
-- Examples — two notebooks: the [image walkthrough](docs/examples/notebooks/image-walkthrough.ipynb) (procedural, LaMa, FGSM on comma10k frames) and the [time-series walkthrough](docs/examples/notebooks/timeseries-walkthrough.ipynb) (windows, transformations, forecasting and anomaly detection on ETT).
+- Examples — two notebooks: the [image walkthrough](examples/notebooks/image-walkthrough.ipynb) (procedural, LaMa, FGSM on comma10k frames) and the [time-series walkthrough](examples/notebooks/timeseries-walkthrough.ipynb) (windows, transformations, forecasting and anomaly detection on ETT).
 - [Terminology](docs/terminology.md) — vocabulary used across code and configs (transformation, families, regimes, annotation states).
 - [Usages](docs/usages.md) — user scenarios (robustness testing, controlled context, composite) and benefits.
 - [Benchmark](docs/benchmark/albumentations.md) — albumentations through our package vs. direct.
 - [Release Notes](RELEASE.md)
 - [Developer Guide](docs/developer.md) — developer notes; see also [Packaging Tests](docs/packaging-tests.md).
-- [Packages](docs/packages/kcai-data-sampling-core.md) — API docs for core, images, lama, fgsm, albumentations, job, and cli.
+- [Packages](docs/packages/kcai-data-sampling-core.md) — API docs for core, images, lama, fgsm, albumentations, job, time series, and cli.
 
 ## What is KCAI Sampling?
 
@@ -84,6 +85,13 @@ Select only the extras you need:
 
 ```bash
 pip install "kcai-data-sampling[core,images,job]"
+```
+
+For time-series windows, install `[timeseries]` alone for the algorithms or add
+`[job]` for the YAML pipeline:
+
+```bash
+pip install "kcai-data-sampling[job,timeseries]"
 ```
 
 `[all]` pulls torch, which on Linux defaults to a CUDA build. On a machine

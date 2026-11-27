@@ -6,8 +6,8 @@
 # 1/24 ≈ 0.042, and a slope is in °C per hour.
 # The label comes from the ledger's `algorithm` column: `jitter`, `low_pass`,
 # `colored_noise`, `ou_noise` and `garch_noise` are normal variability, which
-# must not raise an alert; `drift`, `add_sinusoid` and `impulse_noise` are
-# faults, which must.
+# must not raise an alert; `drift`, `level_shift`, `add_sinusoid` and
+# `impulse_noise` are faults, which must.
 dataloaders:
   loaders:
     - name: ett_ot
@@ -15,7 +15,6 @@ dataloaders:
       path: examples/data/ett_sample/series.parquet
       id_column: series_id
       values_column: values
-      sampling_rate: 0.000277778  # 1 / 3600 Hz, informative
       channels: [6]  # OT only
       load_batch_size: 64
       windows:
@@ -74,6 +73,12 @@ operations:
       type: drift
       slope:
         range: [0.01, 0.16]
+        samples: 4
+        mode: even
+    - name: fault_calibration_offset  # a step change after sensor recalibration
+      type: level_shift
+      offset:
+        range: [1.0, 8.0]
         samples: 4
         mode: even
     # A forecast-based detector extrapolates a regular cycle instead of being

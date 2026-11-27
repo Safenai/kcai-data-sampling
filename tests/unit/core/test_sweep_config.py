@@ -18,6 +18,12 @@ def test_sweep_refuses_an_inverted_interval() -> None:
         SweepConfig.model_validate({"range": [1, 0], "samples": 3})
 
 
+def test_sweep_refuses_an_unknown_mode() -> None:
+    """A typo is rejected instead of silently taking the random branch."""
+    with pytest.raises(ValueError, match="mode"):
+        SweepConfig.model_validate({"range": [0, 1], "samples": 3, "mode": "evne"})
+
+
 def test_sweep_requires_exactly_one_of_samples_step_or_values() -> None:
     """None set, or two set, are refused with the same message."""
     message = r"exactly one of 'samples', 'step' or 'values'"

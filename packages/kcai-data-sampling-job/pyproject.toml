@@ -42,3 +42,6 @@ dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+kcai_data_sampling_job = ["py.typed"]

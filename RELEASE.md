@@ -1,7 +1,11 @@
-# kcai-data-sampling 0.8.1
+# kcai-data-sampling 0.8.2
 
 > Generate more data from the data you already have — and keep a receipt for
 > every sample you make.
+
+> The time-series distribution ships in this release, directly and through
+> `kcai-data-sampling[timeseries]` and `[all]`. The example configs and
+> walkthrough notebook are in the repository.
 
 ## What this is
 
@@ -53,10 +57,11 @@ deliberately.
 - **A simple command line.** Describe a job in a YAML file, run one command.
   A working example ships with the repository, and there is a guided
   walkthrough notebook if you would rather read than script.
-- **Seven packages, one repository**, each installable on its own or together:
+- **Eight packages, one repository**, each installable on its own or together:
   the shared core, the procedural image methods, the job runner that owns
-  image and ledger IO, the CLI wrapper, and three optional model-backed packages
-  (generative inpainting, adversarial examples and the albumentations wrapper).
+  image and ledger IO, the CLI wrapper, the no-model time-series package, and
+  three optional model-backed packages (generative inpainting, adversarial
+  examples and the albumentations wrapper).
 - **A provenance ledger.** One row per generated sample; the generated images
   themselves are stored separately, addressed by content. Inspect the result
   with any Parquet reader.
@@ -77,6 +82,10 @@ deliberately.
   noise, geometric, dihedral, occlusion/dropout, compression and weather — each configurable from YAML
   with seeded, replayable application and parameter sweeps. Includes per-transform
   documentation and a walkthrough config.
+- **No-model time-series transformations** (`kcai-data-sampling-timeseries`) with
+  nine deterministic transforms on `(batch, window, channel)` stacks. Install
+  directly or through the `[timeseries]` extra; add `[job]` for the window
+  loader and `.npy` writer.
 
 ## Try it
 
@@ -112,7 +121,7 @@ plainly in [docs/terminology.md](docs/terminology.md).
 
 ## Upgrading
 
-Upgrading from **0.8.0** → **0.8.1**
+Upgrading from **0.8.1** → **0.8.2**
 
 ```bash
 # Core + umbrella
@@ -121,5 +130,5 @@ pip install --upgrade kcai-data-sampling
 
 ```bash
 # With extras as needed
-pip install --upgrade "kcai-data-sampling[job,images]""
+pip install --upgrade "kcai-data-sampling[job,images]"
 ```

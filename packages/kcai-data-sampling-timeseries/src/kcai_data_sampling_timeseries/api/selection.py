@@ -29,14 +29,10 @@ class TimeSeriesBatch(Batch):
             window, in row order.
         sample_axes: Labels of the window dimensions ``(W, C)``.
         value_range: ``None``: a signal is unbounded unless the data says so.
-        sampling_rate: Steps per second of the source series, in Hz, or
-            ``None`` when undeclared. Informative: algorithm parameters are in
-            cycles per step, so no algorithm reads it.
     """
 
     sample_axes: tuple[str, ...] = ("time", "channel")
     value_range: tuple[float, float] | None = None
-    sampling_rate: float | None = None
 
     @override
     def row(self, index: int) -> "TimeSeriesBatch":
@@ -56,5 +52,4 @@ class TimeSeriesBatch(Batch):
             data=self.data[index : index + 1],
             sample_axes=self.sample_axes,
             value_range=self.value_range,
-            sampling_rate=self.sampling_rate,
         )

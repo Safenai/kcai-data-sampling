@@ -127,3 +127,20 @@ def test_transformations_are_registry_reachable_by_type_string() -> None:
     """
     assert get_transformations_registry()["horizontal_flip"].algorithm == "horizontal_flip"
     assert get_transformations_registry()["crop_resize"].algorithm == "crop_resize"
+
+
+def test_timeseries_entry_points_are_wired() -> None:
+    """The published smoke test: all nine algorithms, the loader and the writer resolve."""
+    assert {
+        "low_pass",
+        "add_sinusoid",
+        "jitter",
+        "drift",
+        "level_shift",
+        "colored_noise",
+        "ou_noise",
+        "garch_noise",
+        "impulse_noise",
+    } <= set(get_transformations_registry())
+    assert "timeseries_parquet" in PluginLoadedRegistry.get_dataloaders_registry()
+    assert "npy" in PluginLoadedRegistry.get_outputwriter_registry()

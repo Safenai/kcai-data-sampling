@@ -18,8 +18,8 @@ from kcai_data_sampling_job.dataloaders.api.parquet import (
 from kcai_data_sampling_job.dataloaders.api.timeseries import (
     ConsecutiveTimeSeriesSamples,
     IndependentTimeSeriesSamples,
-    TimeSeriesParquetDataLoader,
     TimeSeriesLoaderConfig,
+    TimeSeriesParquetDataLoader,
 )
 
 __all__ = [

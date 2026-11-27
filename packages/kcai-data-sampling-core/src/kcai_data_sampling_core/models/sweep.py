@@ -16,7 +16,7 @@ expanded value in the swept field and an auto-suffixed ``name``; the derived
 
 import itertools
 import typing
-from typing import Any, Protocol, Self, TypeVar
+from typing import Any, Literal, Protocol, Self, TypeVar
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -77,7 +77,7 @@ class SweepConfig(BaseModel):
         gt=0,
         description="Step of the arithmetic progression; exclusive with 'samples'.",
     )
-    mode: str = Field(default="even", description="'even' (linspace) or 'random' (seeded draws).")
+    mode: Literal["even", "random"] = Field(default="even", description="'even' (linspace) or 'random' (seeded draws).")
     listed: list[float] | None = Field(
         default=None,
         alias="values",
