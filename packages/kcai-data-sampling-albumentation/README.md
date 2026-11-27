@@ -20,13 +20,14 @@ From the repository root, use the walkthrough configuration (examples live in th
 repo):
 
 ```bash
-python -m kcai_data_sampling.cli run examples/configs/walkthrough_albumentations.yaml
+python scripts/fetch_comma10k_sample.py
+kcai-data-sampling process -p examples/config/walkthrough-albumentation.yaml
 ```
 
 Or via the published index flow (if using the packaging test helpers), ensure
 the package is installed in the environment. The walkthrough reads the sample
-data under `examples/data/woodscape_sample/` and writes outputs under
-`examples/out/walkthrough_albumentations/` with a recipe and ledger.
+data under `examples/data/comma10k_sample/` and writes outputs under
+`examples/outputs/comma10k/`: a ledger and one PNG per output.
 
 ## What this package does
 

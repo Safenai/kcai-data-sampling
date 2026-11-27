@@ -31,6 +31,7 @@ MEMBERS = {
     "fgsm": "kcai-data-sampling-fgsm",
     "lama": "kcai-data-sampling-lama",
     "albumentation": "kcai-data-sampling-albumentation",
+    "timeseries": "kcai-data-sampling-timeseries",
 }
 
 #: extra -> (distributions it must install, kcai members it must not).
@@ -43,13 +44,14 @@ MEMBERS = {
 EXTRAS: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
     "notebooks": (
         ("ipykernel", "pandas", "python-pptx", "ultralytics"),
-        ("fgsm", "lama", "albumentation"),
+        ("fgsm", "lama", "albumentation", "timeseries"),
     ),
-    "job": ((MEMBERS["job"],), ("images", "fgsm", "lama", "albumentation")),
-    "images": ((MEMBERS["images"],), ("job", "fgsm", "lama", "albumentation")),
-    "fgsm": ((MEMBERS["fgsm"],), ("job", "images", "lama", "albumentation")),
-    "lama": ((MEMBERS["lama"],), ("job", "images", "fgsm", "albumentation")),
-    "albumentation": ((MEMBERS["albumentation"],), ("job", "images", "fgsm", "lama")),
+    "job": ((MEMBERS["job"],), ("images", "fgsm", "lama", "albumentation", "timeseries")),
+    "images": ((MEMBERS["images"],), ("job", "fgsm", "lama", "albumentation", "timeseries")),
+    "fgsm": ((MEMBERS["fgsm"],), ("job", "images", "lama", "albumentation", "timeseries")),
+    "lama": ((MEMBERS["lama"],), ("job", "images", "fgsm", "albumentation", "timeseries")),
+    "albumentation": ((MEMBERS["albumentation"],), ("job", "images", "fgsm", "lama", "timeseries")),
+    "timeseries": ((MEMBERS["timeseries"],), ("job", "images", "fgsm", "lama", "albumentation")),
     "all": ((*MEMBERS.values(),), ()),
 }
 
@@ -62,6 +64,7 @@ MEMBER_PLUGINS: dict[str, tuple[str, str]] = {
     "fgsm": ("kcai_data_sampling.transformations", "fgsm"),
     "lama": ("kcai_data_sampling.models", "lama_inpaint"),
     "albumentation": ("kcai_data_sampling.transformations", "random_brightness_contrast"),
+    "timeseries": ("kcai_data_sampling.transformations", "low_pass"),
 }
 
 

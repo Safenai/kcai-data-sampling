@@ -18,8 +18,10 @@ Install individual packages based on your needs:
 | **kcai-data-sampling-lama** | Generative inpainting (LaMa) transformation and tool-model plugin | [![][pypi-lama-badge]](https://pypi.org/project/kcai-data-sampling-lama/) |
 | **kcai-data-sampling-fgsm** | Adversarial (FGSM) transformation and target-model support | [![][pypi-fgsm-badge]](https://pypi.org/project/kcai-data-sampling-fgsm/) |
 | **kcai-data-sampling-job** | Pipeline orchestration and IO plugins | [![][pypi-job-badge]](https://pypi.org/project/kcai-data-sampling-job/) |
+| **kcai-data-sampling-timeseries** | No-model time-series transformations and window batches | [![][pypi-timeseries-badge]](https://pypi.org/project/kcai-data-sampling-timeseries/) |
 
-> **Note:** The `kcai-data-sampling` package is the CLI wrapper.
+> **Note:** The `kcai-data-sampling` package is the CLI wrapper. Install
+> `[timeseries]` for the algorithms, and add `[job]` for YAML runs on windows.
 
 [pypi-core-badge]: https://img.shields.io/pypi/v/kcai-data-sampling-core.svg
 [pypi-images-badge]: https://img.shields.io/pypi/v/kcai-data-sampling-images.svg
@@ -27,19 +29,20 @@ Install individual packages based on your needs:
 [pypi-lama-badge]: https://img.shields.io/pypi/v/kcai-data-sampling-lama.svg
 [pypi-fgsm-badge]: https://img.shields.io/pypi/v/kcai-data-sampling-fgsm.svg
 [pypi-job-badge]: https://img.shields.io/pypi/v/kcai-data-sampling-job.svg
+[pypi-timeseries-badge]: https://img.shields.io/pypi/v/kcai-data-sampling-timeseries.svg
 [pypi-cli-badge]: https://img.shields.io/pypi/v/kcai-data-sampling.svg
 
 ## Documentation
 
 - [Home](https://safenai.github.io/kcai-data-sampling/) — project overview
 - [Quick Start](docs/quickstart.md) — install, fetch sample data, run the procedural example, read its output.
-- [Examples](docs/examples/notebooks/walkthrough.ipynb) — walkthrough notebook (procedural, LaMa, FGSM).
+- Examples — two notebooks: the [image walkthrough](examples/notebooks/image-walkthrough.ipynb) (procedural, LaMa, FGSM on comma10k frames) and the [time-series walkthrough](examples/notebooks/timeseries-walkthrough.ipynb) (windows, transformations, forecasting and anomaly detection on ETT).
 - [Terminology](docs/terminology.md) — vocabulary used across code and configs (transformation, families, regimes, annotation states).
 - [Usages](docs/usages.md) — user scenarios (robustness testing, controlled context, composite) and benefits.
 - [Benchmark](docs/benchmark/albumentations.md) — albumentations through our package vs. direct.
 - [Release Notes](RELEASE.md)
 - [Developer Guide](docs/developer.md) — developer notes; see also [Packaging Tests](docs/packaging-tests.md).
-- [Packages](docs/packages/kcai-data-sampling-core.md) — API docs for core, images, lama, fgsm, albumentations, job, and cli.
+- [Packages](docs/packages/kcai-data-sampling-core.md) — API docs for core, images, lama, fgsm, albumentations, job, time series, and cli.
 
 ## What is KCAI Sampling?
 
@@ -84,6 +87,13 @@ Select only the extras you need:
 pip install "kcai-data-sampling[core,images,job]"
 ```
 
+For time-series windows, install `[timeseries]` alone for the algorithms or add
+`[job]` for the YAML pipeline:
+
+```bash
+pip install "kcai-data-sampling[job,timeseries]"
+```
+
 `[all]` pulls torch, which on Linux defaults to a CUDA build. On a machine
 without an NVIDIA GPU, ask for the CPU wheel instead:
 
@@ -113,7 +123,7 @@ Available subcommands: `version`, `list`, `process`. `process` requires the
 
 ```
 kcai-data-sampling/
-├── packages/          # seven member packages (core, images, albumentation, lama, fgsm, job, cli)
+├── packages/          # member packages (core, images, albumentation, lama, fgsm, job, timeseries, cli)
 ├── examples/          # configs, notebooks, sample data
 ├── docs/              # documentation (quickstart, terminology, usages, benchmark, ...)
 ├── benchmark/         # benchmark harness (s1/s2/s3)
@@ -122,9 +132,14 @@ kcai-data-sampling/
 └── noxfile.py         # lint, type_check, test, coverage sessions
 ```
 
-## Running the walkthrough notebook
+## Running the example notebooks
 
-The walkthrough runs the procedural job, LaMa inpainting and FGSM on real
+`examples/notebooks/` holds two notebooks: `image-walkthrough.ipynb` and
+`timeseries-walkthrough.ipynb`.
+
+### Image walkthrough
+
+The image walkthrough runs the procedural job, LaMa inpainting and FGSM on real
 comma10k frames. Its notebook, configs and data all live in the repository
 rather than in the wheel, so if you have not cloned it yet:
 
@@ -156,11 +171,29 @@ without an NVIDIA GPU, ask for the CPU wheel instead:
 pip install "kcai-data-sampling[all]" --extra-index-url https://download.pytorch.org/whl/cpu
 ```
 
-Open `examples/notebooks/walkthrough.ipynb` in Jupyter (JupyterLab or VS Code)
+Open `examples/notebooks/image-walkthrough.ipynb` in Jupyter (JupyterLab or VS Code)
 and pick the interpreter of the environment you activated as the kernel. Run it
 top to bottom — the setup cell re-chdirs to the repository root and reads
 `examples/config/walkthrough-procedural.yaml`, so it works regardless of the
 launch directory. Generated files are left under `examples/outputs/`.
+
+### Time-series walkthrough
+
+The time-series walkthrough runs on ETT, two power transformers logged hourly:
+it cuts one-week windows, shows what each transformation does, then measures a
+forecaster and an anomaly detector on the generated test sets. From a clone,
+with the workspace set up (`uv sync`, see the [developer guide](docs/developer.md)):
+
+```bash
+uv run python scripts/fetch_ett_sample.py
+uv run --with scikit-learn --with matplotlib --with ipykernel --with jupyterlab \
+    jupyter lab examples/notebooks/timeseries-walkthrough.ipynb
+```
+
+ETT is licensed CC BY-ND 4.0: the data is downloaded by the script, never
+shipped, and no modified data (CSV, parquet, payloads) is committed. The
+notebook is committed with its outputs, which are plots and summary tables
+only.
 
 ## Companion tool
 

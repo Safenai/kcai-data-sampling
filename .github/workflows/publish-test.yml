@@ -90,6 +90,7 @@ jobs:
           uv build packages/kcai-data-sampling-lama
           uv build packages/kcai-data-sampling-fgsm
           uv build packages/kcai-data-sampling-job
+          uv build packages/kcai-data-sampling-timeseries
           uv build packages/kcai-data-sampling
 
       - name: Publish kcai-data-sampling-core
@@ -109,6 +110,9 @@ jobs:
 
       - name: Publish kcai-data-sampling-job
         run: bash .github/scripts/publish-tolerantly.sh 'dist/kcai_data_sampling_job-*'
+
+      - name: Publish kcai-data-sampling-timeseries
+        run: bash .github/scripts/publish-tolerantly.sh 'dist/kcai_data_sampling_timeseries-*'
 
       - name: Publish kcai-data-sampling
         run: bash .github/scripts/publish-tolerantly.sh 'dist/kcai_data_sampling-*'

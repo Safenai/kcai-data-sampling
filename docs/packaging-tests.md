@@ -1,6 +1,6 @@
 # Packaging Tests
 
-The six kcai distributions are published separately on purpose: a user who only wants
+The eight kcai distributions are published separately on purpose: a user who only wants
 to run procedural transforms should not download a deep-learning framework. This page
 documents how that separation is verified — each scenario installs its own subset into
 a fresh virtual environment and proves the environment resolves *exactly* that subset.
@@ -19,6 +19,8 @@ once the release goes out.
 | `kcai-data-sampling-job` | The YAML pipeline and its CLI | pyarrow, pyyaml |
 | `kcai-data-sampling-fgsm` | FGSM adversarial attack | numpy only — **no torch** |
 | `kcai-data-sampling-lama` | LaMa inpainting | torch, but only on first checkpoint load |
+| `kcai-data-sampling-albumentation` | Curated image-robustness catalogue | albumentations, opencv |
+| `kcai-data-sampling-timeseries` | No-model time-series transformations | numpy, core |
 | `kcai-data-sampling` | Umbrella CLI; its extras compose the surfaces | core only, then by extra |
 
 Two invariants follow, and both are asserted rather than assumed:
@@ -28,7 +30,7 @@ Two invariants follow, and both are asserted rather than assumed:
 - `-lama` must not import `torch` at import time. The framework is needed only when a
   checkpoint is actually loaded, so importing the plugin stays cheap.
 
-Every scenario installs a subset and then probes **all six** module roots. A venv that
+Every scenario installs a subset and then probes **all eight** module roots. A venv that
 resolves a package it did not ask for fails the test, which is how a transitive leak
 gets caught.
 
@@ -79,7 +81,7 @@ KCAI_PACKAGING_VERSION=0.1.0rc1 nox -s test_packaging_testpypi
 
 ## Scenarios
 
-The first six run against every source. The six extras scenarios and the notebook
+The first eight run against every source. The eight extras scenarios and the notebook
 walkthrough are index-only.
 
 | Scenario | Installs | Smoke script | What it proves |
@@ -87,15 +89,19 @@ walkthrough are index-only.
 | `core` | `-core` | `smoke_core.py` | Batch + transformation runner round-trip; no sibling leaks in |
 | `core+images` | `-core`, `-images` | `smoke_images.py` | Image transforms and the image dataloader/writer plugins register |
 | `core+job` | `-core`, `-job` | `smoke_job.py` | A synthetic parquet through the CLI — in-memory frames, no dataset |
-| `all` | `-core`, `-images`, `-job`, umbrella | `smoke_all.py` | Umbrella `version`/`list`/`process` dispatch works |
-| `all+lama` | the four above + `-lama` + CPU torch | `smoke_lama.py` | The model plugin loads and inpaints on a stub tool, still without importing torch |
-| `all+fgsm` | the four above + `-fgsm` | `smoke_fgsm.py` | The attack is importable and numpy-only — no torch, no ultralytics |
-| `umbrella+notebooks` | umbrella`[notebooks]` | `smoke_extras.py` | The notebook stack installed, and **no** `-fgsm`/`-lama` dragged in |
+| `core+timeseries` | `-core`, `-timeseries` | `smoke_timeseries.py` | Nine transformation entry points and one `low_pass` call; no job/images leak |
+| `all` | `-core`, `-images`, `-job`, `-timeseries`, umbrella | `smoke_all.py` | Umbrella `version`/`list`/`process` dispatch works |
+| `all+lama` | the five above + `-lama` + CPU torch | `smoke_lama.py` | The model plugin loads and inpaints on a stub tool, still without importing torch |
+| `all+fgsm` | the five above + `-fgsm` | `smoke_fgsm.py` | The attack is importable and numpy-only — no torch, no ultralytics |
+| `all+albumentation` | the five above + `-albumentation` | `smoke_albumentation.py` | The albumentations plugin registers from wheel metadata |
+| `umbrella+notebooks` | umbrella`[notebooks]` | `smoke_extras.py` | The notebook stack installed, and **no** `-fgsm`/`-lama`/`-timeseries` dragged in |
 | `umbrella+job` | umbrella`[job]` | `smoke_extras.py` | `-job` pulled by the extra alone; `process` appears |
 | `umbrella+images` | umbrella`[images]` | `smoke_extras.py` | `-images` pulled by the extra alone; no sibling leaks |
 | `umbrella+fgsm` | umbrella`[fgsm]` | `smoke_extras.py` | `-fgsm` pulled by the extra alone, still without torch |
 | `umbrella+lama` | umbrella`[lama]` | `smoke_extras.py` | `-lama` plus CPU torch; its plugins register from wheel metadata |
-| `umbrella+all` | umbrella`[all]` | `smoke_extras.py` | The union extra pulls every member |
+| `umbrella+albumentation` | umbrella`[albumentation]` | `smoke_extras.py` | `-albumentation` pulled by the extra alone |
+| `umbrella+timeseries` | umbrella`[timeseries]` | `smoke_extras.py` | `-timeseries` pulled by the extra alone; nine transforms register, but `process` stays absent |
+| `umbrella+all` | umbrella`[all]` | `smoke_extras.py` | The union extra pulls every member, including `-timeseries` |
 | `notebook-walkthrough` | umbrella`[all]` + nbclient | `execute_walkthrough.py` | The real walkthrough notebook runs end to end |
 
 ### Extras scenarios
@@ -129,7 +135,7 @@ passes.
 
 ## The walkthrough notebook
 
-`nox -s test_packaging_notebook` executes `examples/notebooks/walkthrough.ipynb` itself,
+`nox -s test_packaging_notebook` executes `examples/notebooks/image-walkthrough.ipynb` itself,
 in a venv built from the index. It covers all three families: the procedural pipeline
 through the CLI, LaMa inpainting behind the `lama_inpaint` entry point, and FGSM against
 `examples/adapters/yolo_target.py` loaded through the `python` model route.

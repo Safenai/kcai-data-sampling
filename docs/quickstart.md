@@ -42,8 +42,13 @@ there. Without it, `version` prints `job: None` and `list` shows empty
 categories rather than failing.
 
 The extras are independent, so compose what you need: `[job]` alone for the
-CLI, `[images]` alone if you are driving the library from Python, or `[all]` for
-every surface plus Jupyter.
+CLI, `[images]` alone if you are driving the library from Python,
+`[timeseries]` alone for the time-series algorithms, or `[all]` for every
+published surface plus Jupyter. For YAML runs on windows, ask for
+`[job,timeseries]`: the transformations come from `-timeseries`, while the
+`timeseries_parquet` loader and `.npy` writer come from `-job`. The example
+configs, ETT download and notebook stay in the repository; the packages come
+from the index.
 
 ## Get the examples
 
@@ -100,7 +105,7 @@ print(t.schema)          # the column layout
 print(t.to_pydict())     # the rows, column-arrays
 ```
 
-Or, instead of the CLI, open `examples/notebooks/walkthrough.ipynb` in Jupyter
+Or, instead of the CLI, open `examples/notebooks/image-walkthrough.ipynb` in Jupyter
 with your virtual environment's interpreter as the kernel (`.venv/bin/python`)
 and run it top to bottom — the setup cell re-chdirs to the repository root, so
 it works from any launch directory.
@@ -144,7 +149,7 @@ stays free of their dependencies. Each has its own umbrella extra:
 
 - **Albumentations image-robustness** (`[albumentation]`, no torch — a pinned
   git dependency plus headless OpenCV). A curated catalogue of procedural
-  albumentations transforms, the one stochastic surface in the workspace:
+  albumentations transforms with seeded random draws:
 
   ```bash
   pip install "kcai-data-sampling[albumentation]"
@@ -155,10 +160,41 @@ stays free of their dependencies. Each has its own umbrella extra:
   see the
   [albumentations package page](packages/kcai-data-sampling-albumentation.md)
   for the full catalogue.
+- **Time series** (`kcai-data-sampling-timeseries`, available on PyPI and through
+  the `[timeseries]` umbrella extra). Install the recipe below, then clone the
+  repository for the example configs and data. The examples run on
+  [ETT](https://github.com/zhouhaoyi/ETDataset), the reference forecasting
+  benchmark (transformer oil temperature, hourly). The data is downloaded, not
+  shipped: ETT is licensed CC BY-ND 4.0, so neither it nor the generated windows
+  derived from it are committed.
 
-To get everything the walkthrough notebook needs in one go, install the `all`
-extra — it is the union of `notebooks`, `job`, `images`, `fgsm`, `lama` and
-`albumentation`:
+  ```bash
+  pip install "kcai-data-sampling[job,timeseries]"
+  python scripts/fetch_ett_sample.py
+  kcai-data-sampling process -p examples/config/ett-procedural.yaml
+  ```
+
+  One-week windows of the oil temperature are cut from the two transformers,
+  and each output is written as a `.npy` file (`payload_format: npy`).
+
+  A demo of two use cases, forecasting and anomaly detection, on the same data:
+
+  ```bash
+  kcai-data-sampling process -p examples/config/ett-anomaly.yaml
+  kcai-data-sampling process -p examples/config/ett-forecasting.yaml
+  ```
+
+  The notebook `examples/notebooks/timeseries-walkthrough.ipynb` walks
+  through the windows, their keys and the transformations, builds the same
+  test sets step by step (loader, transformation classes, sweeps), turns them
+  into forecast-error and detection-rate curves, and checks that the configs
+  write the same windows (it needs scikit-learn and matplotlib:
+  `uv run --with scikit-learn --with matplotlib --with ipykernel --with jupyterlab
+  jupyter lab examples/notebooks/timeseries-walkthrough.ipynb`).
+
+To get everything the image walkthrough notebook needs in one go, install the `all`
+extra — it is the union of `notebooks`, `job`, `images`, `fgsm`, `lama`,
+`albumentation` and `timeseries`:
 
 ```bash
 pip install "kcai-data-sampling[all]"
@@ -184,4 +220,7 @@ depends on it itself — the same GPU/CPU choice applies as for `[lama]` above.
 - [docs/developer.md](developer.md) — working on kcai itself: repository
   setup and the test and build sessions.
 - [README.md](index.md) — the workspace overview and package layout.
-- `examples/notebooks/walkthrough.ipynb` — the full annotated walkthrough.
+- `examples/notebooks/image-walkthrough.ipynb` — the annotated image walkthrough
+  (procedural, LaMa, FGSM on comma10k frames).
+- `examples/notebooks/timeseries-walkthrough.ipynb` — the annotated time-series
+  walkthrough (windows, transformations, forecasting and anomaly detection on ETT).

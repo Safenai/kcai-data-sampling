@@ -31,6 +31,26 @@ jobs:
       - name: Run nox session
         run: uv run --frozen nox -s ${{ matrix.nox-session }}
 
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Build publishable distributions
+        run: |
+          uv build --package kcai-data-sampling-timeseries --out-dir dist
+          uv build --package kcai-data-sampling --out-dir dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: publishable-dist
+          path: |
+            dist/kcai_data_sampling_timeseries-*
+            dist/kcai_data_sampling-*
+          retention-days: 1
+          overwrite: true
+
   compatibility:
     runs-on: ubuntu-24.04
     strategy:

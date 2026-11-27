@@ -8,7 +8,7 @@ generic core configures the output writer, which may hold any datatype.
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class SamplingOutputsConfig(BaseModel):
@@ -21,6 +21,8 @@ class SamplingOutputsConfig(BaseModel):
             trace with no payload files.
         samples_dir: Payload store: one encoded sample file per row, with
             ``{selection}`` substitutable by the selection name.
+        payload_format: The registered payload writer that encodes each
+            sample file (``images`` for PNG, ``npy`` for any array).
         flush_batch_size: Output rows buffered before a parquet write; also
             bounds the payload writer's in-memory buffer.
         include: Source columns passed through to the ledger, fnmatch wildcard
@@ -39,6 +41,10 @@ class SamplingOutputsConfig(BaseModel):
         description="Emit hashed payload files; False → trace-only.",
     )
     samples_dir: str = Field(description="Payload store, {selection} substitutable.")
+    payload_format: str = Field(
+        default="images",
+        description="Registered payload writer: 'images' (PNG) or 'npy' (any array).",
+    )
     flush_batch_size: int = Field(
         default=5,
         description="Rows buffered before a parquet write; bounds the payload buffer.",
@@ -56,3 +62,21 @@ class SamplingOutputsConfig(BaseModel):
         default=None,
         description="Storage configuration (local only).",
     )
+
+    @field_validator("payload_format")
+    @classmethod
+    def _not_the_ledger(cls, v: str) -> str:
+        """Refuse the ledger writer as a payload format.
+
+        Args:
+            v: The ``payload_format`` string from the config.
+
+        Returns:
+            The validated format.
+
+        Raises:
+            ValueError: If the format names the ``parquet`` ledger writer.
+        """
+        if v == "parquet":
+            raise ValueError("payload_format 'parquet' is the ledger writer, not a payload format")
+        return v

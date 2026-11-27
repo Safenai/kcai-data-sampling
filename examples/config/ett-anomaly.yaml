@@ -1,0 +1,102 @@
+# ETT demo, anomaly detection: normal variability and injected faults on the
+# transformer oil temperature (OT).
+# Data: python scripts/fetch_ett_sample.py (ETTh1 + ETTh2, hourly, CC BY-ND 4.0:
+# never commit the generated windows).
+# One step is one hour: frequencies are in cycles per hour, the daily cycle is
+# 1/24 ≈ 0.042, and a slope is in °C per hour.
+# The label comes from the ledger's `algorithm` column: `jitter`, `low_pass`,
+# `colored_noise`, `ou_noise` and `garch_noise` are normal variability, which
+# must not raise an alert; `drift`, `level_shift`, `add_sinusoid` and
+# `impulse_noise` are faults, which must.
+dataloaders:
+  loaders:
+    - name: ett_ot
+      type: timeseries_parquet
+      path: examples/data/ett_sample/series.parquet
+      id_column: series_id
+      values_column: values
+      channels: [6]  # OT only
+      load_batch_size: 64
+      windows:
+        mode: consecutive
+        window: 168  # one week
+        stride: 24  # one day
+
+operations:
+  outputs:
+    path: examples/outputs/ett-anomaly/{selection}/ledger.parquet
+    write_samples: true
+    samples_dir: examples/outputs/ett-anomaly/{selection}/payloads
+    payload_format: npy
+    flush_batch_size: 512
+    include: [series_id, start_window, end_window, start, freq]
+  transformations:
+    # Normal variability: what the detector must ignore.
+    - name: normal_probe_noise  # noisy temperature probe
+      type: jitter
+      sigma: 0.3
+      seed: 0
+    - name: normal_coarse_logging  # readings averaged by the SCADA, daily cycle kept
+      type: low_pass
+      cutoff: 0.1
+    # Time-series noises, swept from mild to strong: how much variability does
+    # the detector tolerate before it raises false alarms?
+    - name: normal_drifting_probe  # pink (1/f) noise, additive
+      type: colored_noise
+      sigma:
+        range: [0.5, 3.0]
+        samples: 6
+        mode: even
+      exponent: 1.0
+      seed: 0
+    - name: normal_fluctuating_offset  # Ornstein-Uhlenbeck, correlated over ~10 hours
+      type: ou_noise
+      sigma:
+        range: [0.5, 3.0]
+        samples: 6
+        mode: even
+      theta: 0.1
+      seed: 0
+    - name: normal_agitated_periods  # GARCH volatility, proportional to the level
+      type: garch_noise
+      sigma:
+        range: [0.02, 0.12]
+        samples: 6
+        mode: even
+      alpha: 0.15
+      beta: 0.8
+      mode: multiplicative
+      seed: 0
+    # Injected faults: what the detector must catch. Natural weekly slopes stay
+    # within about ±0.05 (ETTh1) and ±0.07 (ETTh2) °C/h.
+    - name: fault_cooling_drift  # cooling degradation: OT creeps up
+      type: drift
+      slope:
+        range: [0.01, 0.16]
+        samples: 4
+        mode: even
+    - name: fault_calibration_offset  # a step change after sensor recalibration
+      type: level_shift
+      offset:
+        range: [1.0, 8.0]
+        samples: 4
+        mode: even
+    # A forecast-based detector extrapolates a regular cycle instead of being
+    # surprised by it: the sweep goes high enough to find where it starts to see it.
+    - name: fault_cooling_cycling  # cooling system cycling every 6 hours
+      type: add_sinusoid
+      frequency: 0.1666667
+      amplitude:
+        range: [1.0, 16.0]
+        samples: 6
+        mode: even
+    # Isolated spikes: the detector scores the mean error over a day, so the
+    # sweep goes high enough to see whether spikes are averaged away.
+    - name: fault_acquisition_glitches  # spikes on 2 % of the hours
+      type: impulse_noise
+      rate: 0.02
+      amplitude:
+        range: [2.0, 16.0]
+        samples: 8
+        mode: even
+      seed: 0

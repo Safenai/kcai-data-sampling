@@ -163,11 +163,11 @@ class TransformationConfig(BaseModel):
             lo, hi = value.bounds
             if self._at_or_below(lo, minimum, exclusive_min):
                 raise ValueError(
-                    self._sweep_bounds_error(name, value.range, minimum, maximum, exclusive_min, exclusive_max)
+                    self._sweep_bounds_error(name, value.shown, minimum, maximum, exclusive_min, exclusive_max)
                 )
             if self._at_or_above(hi, maximum, exclusive_max):
                 raise ValueError(
-                    self._sweep_bounds_error(name, value.range, minimum, maximum, exclusive_min, exclusive_max)
+                    self._sweep_bounds_error(name, value.shown, minimum, maximum, exclusive_min, exclusive_max)
                 )
             return
         if self._at_or_below(value, minimum, exclusive_min):

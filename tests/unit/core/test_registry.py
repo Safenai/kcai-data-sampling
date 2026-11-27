@@ -15,6 +15,7 @@ from kcai_data_sampling_core.utils.registry import PluginLoadedRegistry, get_tra
 from kcai_data_sampling_images.api.selection import ImageBatch
 import kcai_data_sampling_job
 from kcai_data_sampling_job.dataloaders.api.parquet import ParquetDataLoader
+from kcai_data_sampling_job.dataloaders.api.timeseries import TimeSeriesParquetDataLoader
 
 _IMPORT_RE = re.compile(r"^\s*(?:import|from)\s+kcai_data_sampling_images", re.MULTILINE)
 
@@ -37,20 +38,20 @@ def test_transformations_registry_resolves_from_plugin_packages_not_core() -> No
 
 
 def test_dataloaders_registry_resolves_parquet_from_job() -> None:
-    """The dataloaders group resolves the parquet loader from -job."""
+    """The dataloaders group resolves the image and series loaders from -job."""
     registry = PluginLoadedRegistry.get_dataloaders_registry()
-    assert registry == {"parquet": ParquetDataLoader}
-    assert registry["parquet"].__module__.startswith("kcai_data_sampling_job")
+    assert registry == {"parquet": ParquetDataLoader, "timeseries_parquet": TimeSeriesParquetDataLoader}
+    assert all(cls.__module__.startswith("kcai_data_sampling_job") for cls in registry.values())
 
 
 def test_outputwriter_registry_resolves_writers_from_job() -> None:
-    """The outputwriter group resolves the images/parquet writers from -job.
+    """The outputwriter group resolves the images/npy/parquet writers from -job.
 
-    The two writers (payload + ledger) live next to the loader in ``-job``;
-    core only ships the generic ``OutputWriter`` protocol.
+    The writers (two payload formats + the ledger) live next to the loaders in
+    ``-job``; core only ships the generic ``OutputWriter`` protocol.
     """
     registry = PluginLoadedRegistry.get_outputwriter_registry()
-    assert set(registry) == {"images", "parquet"}
+    assert set(registry) == {"images", "npy", "parquet"}
     assert all(cls.__module__.startswith("kcai_data_sampling_job") for cls in registry.values())
 
 
@@ -126,3 +127,20 @@ def test_transformations_are_registry_reachable_by_type_string() -> None:
     """
     assert get_transformations_registry()["horizontal_flip"].algorithm == "horizontal_flip"
     assert get_transformations_registry()["crop_resize"].algorithm == "crop_resize"
+
+
+def test_timeseries_entry_points_are_wired() -> None:
+    """The published smoke test: all nine algorithms, the loader and the writer resolve."""
+    assert {
+        "low_pass",
+        "add_sinusoid",
+        "jitter",
+        "drift",
+        "level_shift",
+        "colored_noise",
+        "ou_noise",
+        "garch_noise",
+        "impulse_noise",
+    } <= set(get_transformations_registry())
+    assert "timeseries_parquet" in PluginLoadedRegistry.get_dataloaders_registry()
+    assert "npy" in PluginLoadedRegistry.get_outputwriter_registry()

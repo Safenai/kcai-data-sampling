@@ -2,7 +2,7 @@
 
 Runs inside the scenario venv, because nbclient, pandas, pyarrow and Pillow are all
 things only that venv has. The notebook itself lives at
-``examples/notebooks/walkthrough.ipynb`` and is a *generated* docs artifact, so this
+``examples/notebooks/image-walkthrough.ipynb`` and is a *generated* docs artifact, so this
 asserts on what it writes to disk rather than on the prose it prints.
 
 Three families are exercised end to end: the procedural pipeline through the job CLI,
@@ -70,7 +70,7 @@ def _max_delta(row: dict, sample_dir: pathlib.Path, payloads: pathlib.Path) -> f
 
 def main() -> int:
     repo = pathlib.Path(sys.argv[1]).resolve()
-    notebook_path = repo / "examples" / "notebooks" / "walkthrough.ipynb"
+    notebook_path = repo / "examples" / "notebooks" / "image-walkthrough.ipynb"
     assert notebook_path.is_file(), notebook_path
 
     sample_dir = repo / "examples" / "data" / "comma10k_sample"

@@ -1,4 +1,4 @@
-"""Display helpers for the walkthrough notebook, presentation only.
+"""Display helpers for the image walkthrough notebook, presentation only.
 
 Drawing an annotation is the notebook's job here: the interface never reads
 the interface batch's pixel data, and the parquet loader reads frames only.

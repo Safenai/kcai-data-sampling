@@ -19,7 +19,7 @@ import pytest
 #: The workspace root — where the UV workspace, ``uv.toml`` and packages live.
 WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 
-#: The seven packages, workspace-name → distribution name.
+#: The eight packages, workspace-name → distribution name.
 PACKAGES = {
     "core": "kcai-data-sampling-core",
     "images": "kcai-data-sampling-images",
@@ -28,9 +28,10 @@ PACKAGES = {
     "lama": "kcai-data-sampling-lama",
     "fgsm": "kcai-data-sampling-fgsm",
     "albumentation": "kcai-data-sampling-albumentation",
+    "timeseries": "kcai-data-sampling-timeseries",
 }
 
-#: The seven packages, workspace-name → importable module root.
+#: The eight packages, workspace-name → importable module root.
 MODULES = {
     "core": "kcai_data_sampling_core",
     "images": "kcai_data_sampling_images",
@@ -39,28 +40,30 @@ MODULES = {
     "lama": "kcai_data_sampling_lama",
     "fgsm": "kcai_data_sampling_fgsm",
     "albumentation": "kcai_data_sampling_albumentation",
+    "timeseries": "kcai_data_sampling_timeseries",
 }
 
 SCENARIOS = {
     "core": ("core",),
     "core+images": ("core", "images"),
     "core+job": ("core", "job"),
-    "all": ("core", "images", "job", "umbrella"),
+    "core+timeseries": ("core", "timeseries"),
+    "all": ("core", "images", "job", "timeseries", "umbrella"),
     # The full user recipe: every kcai package plus the opt-in -lama member and
     # CPU torch. torch is pulled from the PyTorch CPU wheel index, pinned
     # to the same `+cpu` build the workspace's test-lama env resolves.
-    "all+lama": ("core", "images", "job", "umbrella", "lama"),
+    "all+lama": ("core", "images", "job", "timeseries", "umbrella", "lama"),
     # The adversarial recipe: every kcai package plus the numpy-only -fgsm
     # member. No extra index, no torch: the structural proof that the bare
-    # five stay fgsm-free (``all`` never includes ``-fgsm``).
-    "all+fgsm": ("core", "images", "job", "umbrella", "fgsm"),
+    # packages stay fgsm-free (``all`` never includes ``-fgsm``).
+    "all+fgsm": ("core", "images", "job", "timeseries", "umbrella", "fgsm"),
     # The albumentations recipe: every kcai package plus the -albumentation
     # member (its pinned git dependency resolves from the public GitHub repo).
-    "all+albumentation": ("core", "images", "job", "umbrella", "albumentation"),
+    "all+albumentation": ("core", "images", "job", "timeseries", "umbrella", "albumentation"),
 }
 
-#: The seven extras the umbrella publishes, in ``pyproject.toml`` order.
-EXTRAS = ("notebooks", "job", "images", "fgsm", "lama", "albumentation", "all")
+#: The eight extras the umbrella publishes, in ``pyproject.toml`` order.
+EXTRAS = ("notebooks", "job", "images", "fgsm", "lama", "albumentation", "timeseries", "all")
 
 #: Published-index scenarios that install **one** umbrella extra and nothing else
 #: — the spec is only ``kcai-data-sampling[<extra>]``, never the siblings by name,
@@ -76,7 +79,8 @@ EXTRAS_SCENARIOS: dict[str, tuple[str, ...]] = {
     "umbrella+fgsm": ("core", "fgsm", "umbrella"),
     "umbrella+lama": ("core", "lama", "umbrella"),
     "umbrella+albumentation": ("core", "albumentation", "umbrella"),
-    "umbrella+all": ("core", "fgsm", "images", "job", "lama", "albumentation", "umbrella"),
+    "umbrella+timeseries": ("core", "timeseries", "umbrella"),
+    "umbrella+all": ("core", "fgsm", "images", "job", "lama", "albumentation", "timeseries", "umbrella"),
 }
 
 #: Scenario that installs the umbrella under ``all`` for the walkthrough: the notebook
@@ -87,6 +91,7 @@ SMOKE_SCRIPTS = {
     "core": "smoke_core.py",
     "core+images": "smoke_images.py",
     "core+job": "smoke_job.py",
+    "core+timeseries": "smoke_timeseries.py",
     "all": "smoke_all.py",
     "all+lama": "smoke_lama.py",
     "all+fgsm": "smoke_fgsm.py",
@@ -96,9 +101,9 @@ SMOKE_SCRIPTS = {
     **dict.fromkeys(EXTRAS_SCENARIOS, "smoke_extras.py"),
 }
 
-#: The scenarios the published-index runs cover: the seven wheel scenarios plus one per
+#: The scenarios the published-index runs cover: the eight wheel scenarios plus one per
 #: extras scenario. Kept separate from ``SCENARIOS`` so ``nox -s test_packaging`` keeps
-#: running exactly its own seven.
+#: running exactly its own eight.
 PUBLISHED_SCENARIOS = {
     **SCENARIOS,
     **EXTRAS_SCENARIOS,
@@ -402,7 +407,7 @@ def run_script(venv: Path, script: Path, scratch: Path, *args: str) -> subproces
         scratch: Writable scratch directory handed to the script (``argv[1]``)
             for any files it needs to produce; never the source tree.
         *args: Anything after the scratch directory (``argv[2:]``) — ``smoke_extras.py``
-            takes the extra name under test there, since one script serves all seven
+            takes the extra name under test there, since one script serves all eight
             extras scenarios.
 
     Returns:

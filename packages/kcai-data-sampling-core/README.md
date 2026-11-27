@@ -28,6 +28,26 @@ configuration schema; and the plugin registry that discovers everything else.
 No algorithms. The methods live in their own packages — see the sibling
 distributions for the procedural, generative and adversarial examples.
 
+## Sweeps
+
+A parameter that takes a `SweepConfig` expands into one transformation per
+value, each with its own ledger rows and a suffixed name (`crop__0.3`). The
+values are resolved once, when the config is expanded. Exactly one of
+`samples`, `step` and `values`:
+
+```yaml
+fraction: {range: [0.3, 0.5], samples: 3}               # linspace, ends included: 0.3, 0.4, 0.5
+fraction: {range: [0.3, 0.5], samples: 3, mode: random} # 3 uniform draws from compute.seed
+fraction: {range: [0.3, 0.5], step: 0.1}                # 0.3, 0.4, 0.5: up to the bound, a partial step dropped
+sigma: {values: [0.001, 0.01, 0.1]}                     # as listed, in that order (no range)
+```
+
+The values are kept as computed, to 12 significant digits, which drops the
+float noise of the arithmetic (`0.30000000000000004` becomes `0.3`) without
+collapsing small values. `round: n` rounds them to `n` decimals instead. A
+parameter's bounds are checked on the whole sweep: its range, or every listed
+value.
+
 ## Install
 
 ```bash

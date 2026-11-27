@@ -53,6 +53,7 @@ def test_coverage(s: Session) -> None:
         "--cov=packages/kcai-data-sampling-fgsm/src",
         "--cov=packages/kcai-data-sampling-albumentation/src",
         "--cov=packages/kcai-data-sampling-job/src",
+        "--cov=packages/kcai-data-sampling-timeseries/src",
         "--cov=packages/kcai-data-sampling/src",
         "--cov-report=html:docs/reports/htmlcov",
         "--cov-report=json:docs/reports/coverage.json",
@@ -132,7 +133,7 @@ def test_packaging_notebook(s: Session) -> None:
     """Run the real walkthrough notebook against an index install (slow, opt-in).
 
     Installs ``kcai-data-sampling[all]`` from test.pypi.org into a fresh venv and
-    executes ``examples/notebooks/walkthrough.ipynb`` in it: the procedural pipeline,
+    executes ``examples/notebooks/image-walkthrough.ipynb`` in it: the procedural pipeline,
     LaMa inpainting and FGSM against the user's own target model, weights and all.
     Expect several hundred megabytes of downloads and minutes of CPU inference.
     """
@@ -279,6 +280,7 @@ def type_check(s: Session) -> None:
     s.run("mypy", "packages/kcai-data-sampling-lama")
     s.run("mypy", "packages/kcai-data-sampling-fgsm")
     s.run("mypy", "packages/kcai-data-sampling-albumentation")
+    s.run("mypy", "packages/kcai-data-sampling-timeseries")
     s.run("mypy", "packages/kcai-data-sampling")
 
 
