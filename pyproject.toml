@@ -76,7 +76,7 @@ nox = [
 # Test suite: pytest plus reporting plugins. No pytest-randomly — the suite
 # runs in a fixed order.
 test = [
-    "pytest",
+    "pytest<9.2",
     "pytest-cov",
     "pytest-html",
     "pytest-timeout",
